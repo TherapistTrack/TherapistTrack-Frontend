@@ -1,6 +1,6 @@
 <template>
   <div class="customInput">
-    <input :placeholder="pholder" /><img src="../assets/search-line.svg" />
+    <input :placeholder="pholder" /><img src="@/assets/search-line.svg" />
   </div>
 </template>
 

@@ -3,7 +3,11 @@ name: therapisttrack-frontend
 services:
   frontend:
     build:
-      context: ./web
-      dockerfile: Dockerfile
+      dockerfile: ./Dockerfile
+      context: ./
     ports:
       - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+    environment:
+      FRONTEND_PORT : '${FRONTEND_PORT}'
+      BACKEND_URI: '${BACKEND_URI}'
+      VITE_BASE: '${VITE_BASE}'

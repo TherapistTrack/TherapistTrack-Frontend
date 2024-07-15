@@ -20,8 +20,9 @@
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.5.2",
     "@remixicon/vue": "^4.2.0",
+    "husky": "^9.0.11",
     "pinia": "^2.1.7",
-    "vue": "^3.4.21",
+    "vue": "^3.4.31",
     "vue-router": "^4.3.0"
   },
   "devDependencies": {
@@ -37,13 +38,13 @@
     "@storybook/test": "^8.2.2",
     "@storybook/vue3": "^8.2.2",
     "@storybook/vue3-vite": "^8.2.2",
+    "@vitejs/plugin-vue": "^5.0.5",
     "commitizen": "^4.3.0",
     "commitlint": "^19.3.0",
     "eslint": "^9.7.0",
     "eslint-plugin-vue": "^9.27.0",
     "git-commit-msg-linter": "^5.0.7",
     "globals": "^15.8.0",
-    "husky": "^9.0.11",
     "lint-staged": "^15.2.7",
     "storybook": "^8.2.2",
     "vite": "^5.1.6"

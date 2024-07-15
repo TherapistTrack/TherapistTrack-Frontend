@@ -1,6 +1,6 @@
 <template>
   <div class="center">
-    <img class="loading" src="../assets/loader-2-line.svg" alt="" />
+    <img class="loading" src="@/assets/loader-2-line.svg" alt="" />
   </div>
 </template>
 

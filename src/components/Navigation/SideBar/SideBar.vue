@@ -1,8 +1,8 @@
 <template>
   <div class="sideBar">
     <div class="top">
-      <img v-show="minim" src="../assets/LogoGray.png" alt="Therapist Track" />
-      <img class="minimize" src="../assets/arrow-left-double-fill.svg" alt="" @click="setMin" />
+      <img v-show="minim" src="@/assets/Logo/LogoGray.png" alt="Therapist Track" />
+      <img class="minimize" src="@/assets/arrow-left-double-fill.svg" alt="" @click="setMin" />
     </div>
     <br />
     <div class="middle" v-show="minim">

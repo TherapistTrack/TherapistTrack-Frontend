@@ -3,12 +3,12 @@
     <div class="overlay">
       <div class="top">
         <h1>{{ data.nombre }}</h1>
-        <img src="../assets/close-line.svg" alt="close" @click="$emit('closeView')" />
+        <img src="@/assets/close-line.svg" alt="close" @click="$emit('closeView')" />
       </div>
       <br />
       <div class="actions">
-        <img src="../assets/delete-bin-7-fill.svg" alt="" />
-        <img src="../assets/edit-box-line.svg" alt="" />
+        <img src="@/assets/delete-bin-7-fill.svg" alt="" />
+        <img src="@/assets/edit-box-line.svg" alt="" />
       </div>
       <br />
       <div class="grid">

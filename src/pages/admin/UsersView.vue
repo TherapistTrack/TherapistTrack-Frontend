@@ -16,7 +16,7 @@
         <p class="grid-header">Rol</p>
       </div>
       <div v-if="loading">
-        <Loading />
+        <DataLoader />
       </div>
 
       <div
@@ -40,7 +40,7 @@ import { ref, onMounted } from 'vue'
 import '@/assets/arrow-left-double-fill.svg'
 import Button from '@/components/Buttons/ButtonSimple.vue'
 import CustomInput from '@/components/Forms/InputField/CustomInput.vue'
-import Loading from '@/components/Feedback/Spinner/Loading.vue'
+import DataLoader from '@/components/Feedback/Spinner/DataLoader.vue'
 import ViewUser from '@/pages/admin/ViewUser.vue'
 
 const modalOpen = ref(false)
