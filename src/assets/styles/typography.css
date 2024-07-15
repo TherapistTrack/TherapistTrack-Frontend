@@ -1,0 +1,41 @@
+@font-face {
+  font-family: 'MotivaSansMedium';
+  src: url('../fonts/MotivaSansMedium.woff.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@font-face {
+  font-family: 'MotivaSansBold';
+  src: url('../fonts/MotivaSansBold.woff.ttf') format('truetype');
+
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'MotivaSansLighter';
+  src: url('../fonts/MotivaSansLight.woff.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+}
+
+b,
+strong {
+  font-weight: bold;
+}
+
+@media (hover: hover) {
+  a:hover {
+    background-color: hsla(160, 100%, 59%, 0.2);
+  }
+}
+
+@media (min-width: 1024px) {
+  body {
+    display: flex;
+  }
+}

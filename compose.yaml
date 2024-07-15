@@ -1,0 +1,9 @@
+name: therapisttrack-frontend
+
+services:
+  frontend:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    ports:
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
