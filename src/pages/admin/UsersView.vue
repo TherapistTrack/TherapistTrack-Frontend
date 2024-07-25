@@ -37,7 +37,6 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import '@/assets/arrow-left-double-fill.svg'
 import Button from '@/components/Buttons/ButtonSimple.vue'
 import CustomInput from '@/components/Forms/InputField/CustomInput.vue'
 import DataLoader from '@/components/Feedback/Spinner/DataLoader.vue'

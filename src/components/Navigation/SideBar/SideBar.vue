@@ -2,7 +2,7 @@
   <div class="sideBar">
     <div class="top">
       <img v-show="minim" src="@/assets/Logo/LogoGray.png" alt="Therapist Track" />
-      <img class="minimize" src="@/assets/arrow-left-double-fill.svg" alt="" @click="setMin" />
+      <RiArrowLeftDoubleFill size="2rem" color="black" alt="minimize" @click="setMin" />
     </div>
     <br />
     <div class="middle" v-show="minim">
@@ -19,6 +19,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { RiArrowLeftDoubleFill } from '@remixicon/vue'
 
 const minim = ref(true)
 const selected = ref(true)
