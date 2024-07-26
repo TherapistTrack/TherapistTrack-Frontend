@@ -87,45 +87,39 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, computed } from 'vue'
 
-export default {
-  setup() {
-    const user = ref({
-      firstName: '',
-      lastName: '',
-      phone: '',
-      role: '',
-      membershipNumber: '',
-      specialty: '',
-      email: '',
-      startDate: '',
-      endDate: ''
-    })
+const user = ref({
+  firstName: '',
+  lastName: '',
+  phone: '',
+  role: '',
+  membershipNumber: '',
+  specialty: '',
+  email: '',
+  startDate: '',
+  endDate: ''
+})
 
-    const isFormValid = computed(() => {
-      const basicInfoValid =
-        user.value.firstName && user.value.lastName && user.value.phone && user.value.role
-      let roleSpecificValid = true
-      if (user.value.role === 'Doctor') {
-        roleSpecificValid = user.value.membershipNumber && user.value.specialty && user.value.email
-      } else if (user.value.role === 'Asistente') {
-        roleSpecificValid = user.value.email && user.value.startDate && user.value.endDate
-      }
-      return basicInfoValid && roleSpecificValid
-    })
+const isFormValid = computed(() => {
+  const basicInfoValid =
+    user.value.firstName && user.value.lastName && user.value.phone && user.value.role
+  let roleSpecificValid = true
+  if (user.value.role === 'Doctor') {
+    roleSpecificValid = user.value.membershipNumber && user.value.specialty && user.value.email
+  } else if (user.value.role === 'Asistente') {
+    roleSpecificValid = user.value.email && user.value.startDate && user.value.endDate
+  }
+  return basicInfoValid && roleSpecificValid
+})
 
-    const updateUser = () => {
-      if (isFormValid.value) {
-        console.log('Updating user:', user.value)
-        // Implementar llamada a API para actualizar los datos
-      } else {
-        console.error('Form is invalid')
-      }
-    }
-
-    return { user, updateUser, isFormValid }
+const updateUser = () => {
+  if (isFormValid.value) {
+    console.log('Updating user:', user.value)
+    // Implementar llamada a API para actualizar los datos
+  } else {
+    console.error('Form is invalid')
   }
 }
 </script>

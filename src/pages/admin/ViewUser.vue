@@ -37,15 +37,13 @@
   </div>
 </template>
 
-<script>
-export default {
-  props: {
-    data: Object
-  }
-}
+<script setup>
+defineProps({
+  data: Object
+})
 </script>
 
-<style>
+<style scoped>
 .overlayContainer {
   background-color: rgba(0, 0, 0, 0.4);
   height: 100%;
@@ -89,7 +87,6 @@ export default {
 
 .overlayContainer .grid-row {
   margin-bottom: 2vh;
-
   overflow-y: hide;
 }
 
@@ -100,7 +97,6 @@ export default {
 
 .actions * {
   height: 4vh;
-
   border-radius: 1vh;
   transition: background-color 0.2s;
   cursor: pointer;

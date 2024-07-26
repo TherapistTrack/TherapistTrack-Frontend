@@ -39,7 +39,7 @@
 import { ref, onMounted } from 'vue'
 import '@/assets/arrow-left-double-fill.svg'
 import Button from '@/components/Buttons/ButtonSimple.vue'
-import CustomInput from '@/components/Forms/InputField/CustomInput.vue'
+import CustomInput from '@/components/Forms/InputField/SearchBar.vue'
 import DataLoader from '@/components/Feedback/Spinner/DataLoader.vue'
 import ViewUser from '@/pages/admin/ViewUser.vue'
 
