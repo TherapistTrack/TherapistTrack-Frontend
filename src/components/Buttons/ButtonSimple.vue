@@ -17,8 +17,7 @@ function handleClick() {
 
 <style>
 button {
-  background-color: var(--vt-c-green-1);
-  color: white;
+  background-color: var(--green-1);
   border: none;
   padding: 0.4rem 1rem;
   border-radius: 1vh;
@@ -27,8 +26,11 @@ button {
   align-self: flex-end;
   transition: background-color 0.2s;
 }
+button b {
+  color: white;
+}
 
 button:hover {
-  background-color: var(--vt-c-green-2);
+  background-color: var(--green-2);
 }
 </style>
