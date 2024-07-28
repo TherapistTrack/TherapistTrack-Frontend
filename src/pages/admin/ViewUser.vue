@@ -37,12 +37,13 @@
   </div>
 </template>
 
-<script>
-export default {
-  props: {
-    data: Object
+<script setup>
+defineProps({
+  data: {
+    type: Object,
+    required: true
   }
-}
+})
 </script>
 
 <style>
