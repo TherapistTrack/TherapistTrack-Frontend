@@ -39,14 +39,11 @@
 
 <script setup>
 defineProps({
-  data: {
-    type: Object,
-    required: true
-  }
+  data: Object
 })
 </script>
 
-<style>
+<style scoped>
 .overlayContainer {
   background-color: rgba(0, 0, 0, 0.4);
   height: 100%;
@@ -90,7 +87,6 @@ defineProps({
 
 .overlayContainer .grid-row {
   margin-bottom: 2vh;
-
   overflow-y: hide;
 }
 
@@ -101,7 +97,6 @@ defineProps({
 
 .actions * {
   height: 4vh;
-
   border-radius: 1vh;
   transition: background-color 0.2s;
   cursor: pointer;

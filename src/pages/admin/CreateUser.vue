@@ -92,50 +92,44 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, computed } from 'vue'
 
-export default {
-  setup() {
-    const user = ref({
-      firstName: '',
-      lastName: '',
-      phone: '',
-      role: '',
-      membershipNumber: '',
-      specialty: '',
-      email: '',
-      startDate: '',
-      endDate: ''
-    })
+const user = ref({
+  firstName: '',
+  lastName: '',
+  phone: '',
+  role: '',
+  membershipNumber: '',
+  specialty: '',
+  email: '',
+  startDate: '',
+  endDate: ''
+})
 
-    // Computed property para la validación
-    const isFormValid = computed(() => {
-      // Validaciones básicas
-      const basicInfoValid =
-        user.value.firstName && user.value.lastName && user.value.phone && user.value.role
-      let roleSpecificValid = true
+// Computed property para la validación
+const isFormValid = computed(() => {
+  // Validaciones básicas
+  const basicInfoValid =
+    user.value.firstName && user.value.lastName && user.value.phone && user.value.role
+  let roleSpecificValid = true
 
-      // Validaciones específicas por rol
-      if (user.value.role === 'Doctor') {
-        roleSpecificValid = user.value.membershipNumber && user.value.specialty && user.value.email
-      } else if (user.value.role === 'Asistente') {
-        roleSpecificValid = user.value.email && user.value.startDate && user.value.endDate
-      }
+  // Validaciones específicas por rol
+  if (user.value.role === 'Doctor') {
+    roleSpecificValid = user.value.membershipNumber && user.value.specialty && user.value.email
+  } else if (user.value.role === 'Asistente') {
+    roleSpecificValid = user.value.email && user.value.startDate && user.value.endDate
+  }
 
-      return basicInfoValid && roleSpecificValid
-    })
+  return basicInfoValid && roleSpecificValid
+})
 
-    const createUser = () => {
-      if (isFormValid.value) {
-        console.log('Creating user:', user.value)
-        // Aquí implementarías la lógica para enviar los datos al API
-      } else {
-        console.error('Form is invalid')
-      }
-    }
-
-    return { user, createUser, isFormValid }
+const createUser = () => {
+  if (isFormValid.value) {
+    console.log('Creating user:', user.value)
+    // Aquí implementarías la lógica para enviar los datos al API
+  } else {
+    console.error('Form is invalid')
   }
 }
 </script>
