@@ -1,19 +1,17 @@
 <template>
-  <div class="customInput">
+  <div class="searchBar">
     <input :placeholder="pholder" /><img src="@/assets/search-line.svg" />
   </div>
 </template>
 
-<script>
-export default {
-  props: {
-    pholder: String
-  }
-}
+<script setup>
+defineProps({
+  pholder: String
+})
 </script>
 
-<style>
-.customInput {
+<style scoped>
+.searchBar {
   display: flex;
   align-items: center;
   width: fit-content;
@@ -24,12 +22,12 @@ export default {
   color: #6e6e6e;
 }
 
-.customInput input {
+.searchBar input {
   border: none;
   background: none;
 }
 
-.customInput img {
+.searchBar img {
   height: 3vh;
 }
 </style>
