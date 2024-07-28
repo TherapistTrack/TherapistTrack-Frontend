@@ -26,7 +26,7 @@
 import { ref, onMounted } from 'vue'
 import '@/assets/arrow-left-double-fill.svg'
 import Button from '@/components/Buttons/ButtonSimple.vue'
-import CustomInput from '@/components/Forms/InputField/CustomInput.vue'
+import CustomInput from '@/components/Forms/InputField/InputField.vue'
 import ViewUser from '@/pages/admin/ViewUser.vue'
 import DisplayTable from '@/components/DataDisplay/Tables/DisplayTable.vue'
 
