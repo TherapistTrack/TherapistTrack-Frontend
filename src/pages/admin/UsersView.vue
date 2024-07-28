@@ -8,27 +8,14 @@
     <br />
     <div class="options">
       <CustomInput :pholder="'Buscar por nombre'" />
-      <Button :mssg="'Nuevo'" :onClick="clork" />
+      <Button :msg="'Nuevo'" :onClick="clork" />
     </div>
-    <div class="grid-container">
-      <div class="grid-row">
-        <p class="grid-header">Nombre</p>
-        <p class="grid-header">Rol</p>
-      </div>
-      <div v-if="loading">
-        <DataLoader />
-      </div>
-
-      <div
-        class="grid-row"
-        v-for="(item, key) in fetchedData"
-        :key="key"
-        @click="handleOpenView(key)"
-      >
-        <div class="grid-item">{{ item.nombre }}</div>
-        <div class="grid-item">{{ item.rol }}</div>
-      </div>
-    </div>
+    <DisplayTable
+      :data="fetchedData"
+      :headers="headers"
+      :loading="loading"
+      :onClick="handleOpenView"
+    />
   </div>
   <div v-if="modalOpen">
     <ViewUser :data="fetchedData[selected] || { nombre: 'Rayo' }" @closeView="handleCloseView" />
@@ -42,12 +29,18 @@ import Button from '@/components/Buttons/ButtonSimple.vue'
 import CustomInput from '@/components/Forms/InputField/SearchBar.vue'
 import DataLoader from '@/components/Feedback/Spinner/DataLoader.vue'
 import ViewUser from '@/pages/admin/ViewUser.vue'
+import DisplayTable from '@/components/DataDisplay/Tables/DisplayTable.vue'
 
 const modalOpen = ref(false)
 const selected = ref(0)
 const fetchedData = ref(null)
 const loading = ref(false)
+const headers = ref(null)
 
+headers.value = {
+  nombre: 'Nombre',
+  rol: 'Rol'
+}
 onMounted(async () => {
   loading.value = true
   // simulation time
@@ -130,40 +123,5 @@ ul {
   font-weight: lighter;
   font-size: small;
   color: var(--vt-c-dark-gray-1);
-}
-
-.grid-container {
-  display: grid;
-  grid-template-columns: auto;
-  /* Two columns */
-  color: var(--vt-c-dark-1);
-  padding: 1rem;
-}
-
-.grid-row {
-  width: 100%;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-}
-
-.page .grid-header,
-.page .grid-item {
-  padding: 0.5rem;
-  border-bottom: 0.2vh solid #ccc;
-}
-
-.page .grid-header {
-  font-family: 'MotivaSansLighter';
-  border-top: 0.2vh solid #ccc;
-  font-weight: bold;
-}
-
-.page .grid-item + .grid-item {
-  border-left: 1px solid #ccc;
-}
-
-.page .grid-row:hover {
-  background-color: var(--accent-light);
-  cursor: pointer;
 }
 </style>
