@@ -1,10 +1,11 @@
 <template>
-  <div class="searchBar">
-    <input :placeholder="pholder" /><img src="@/assets/search-line.svg" />
+  <div class="customInput">
+    <input :placeholder="pholder" /><RiSearchLine color="black" alt="search" />
   </div>
 </template>
 
 <script setup>
+import { RiSearchLine } from '@remixicon/vue'
 defineProps({
   pholder: String
 })

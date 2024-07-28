@@ -3,12 +3,12 @@
     <div class="overlay">
       <div class="top">
         <h1>{{ data.nombre }}</h1>
-        <img src="@/assets/close-line.svg" alt="close" @click="$emit('closeView')" />
+        <RiCloseLine size="2rem" color="black" alt="close" @click="$emit('closeView')" />
       </div>
       <br />
       <div class="actions">
-        <img src="@/assets/delete-bin-7-fill.svg" alt="" />
-        <img src="@/assets/edit-box-line.svg" alt="" />
+        <RiDeleteBin7Fill size="2rem" color="black" alt="delete" />
+        <RiEditBoxLine size="2rem" color="black" alt="edit" />
       </div>
       <br />
       <div class="grid">
@@ -38,6 +38,7 @@
 </template>
 
 <script setup>
+import { RiCloseLine, RiDeleteBin7Fill, RiEditBoxLine } from '@remixicon/vue'
 defineProps({
   data: Object
 })
