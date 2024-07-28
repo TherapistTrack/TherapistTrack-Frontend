@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="view">
     <SideBar />
     <router-view />
   </div>
@@ -7,4 +7,9 @@
 <script setup>
 import SideBar from '@/components/Navigation/SideBar/SideBar.vue'
 </script>
-<style></style>
+
+<style>
+.view {
+  display: flex;
+}
+</style>

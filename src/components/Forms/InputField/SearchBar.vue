@@ -1,6 +1,6 @@
 <template>
-  <div class="customInput">
-    <input :placeholder="pholder" /><RiSearchLine color="black" alt="search" />
+  <div class="searchBar">
+    <input :placeholder="pholder" /><RiSearchLine size="1rem" color="var(--gray-1)" alt="search" />
   </div>
 </template>
 

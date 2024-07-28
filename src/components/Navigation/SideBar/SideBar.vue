@@ -1,25 +1,33 @@
 <template>
   <div class="sideBar">
-    <div class="top">
-      <img v-show="minim" src="@/assets/Logo/LogoGray.png" alt="Therapist Track" />
-      <RiArrowLeftDoubleFill size="2rem" color="black" alt="minimize" @click="setMin" />
-    </div>
-    <br />
-    <div class="middle" v-show="minim">
-      <div class="option" @click="setSelected(true)" :id="selected ? 'selected' : ''">
-        <h4>Usuarios</h4>
+    <div class="gravityTop">
+      <div class="top">
+        <img v-show="minim" src="@/assets/Logo/LogoGray.png" alt="Therapist Track" />
+        <RiArrowLeftDoubleFill size="1.5rem" color="var(--gray-1)" alt="minimize" @click="setMin" />
       </div>
-      <div class="option" @click="setSelected(false)" :id="!selected ? 'selected' : ''">
-        <h4>Roles</h4>
+      <br />
+      <div class="middle" v-show="minim">
+        <div class="option" @click="setSelected(true)" :id="selected ? 'selected' : ''">
+          <h4>Usuarios</h4>
+        </div>
+        <div class="option" @click="setSelected(false)" :id="!selected ? 'selected' : ''">
+          <h4>Roles</h4>
+        </div>
       </div>
     </div>
-    <div v-show="minim" class="bottom">lol</div>
+    <div v-show="minim" class="bottom">
+      <div class="userData">
+        <p><b>Josue Rodriguez</b></p>
+        <p>Administrador</p>
+      </div>
+      <RiLogoutBoxRLine size="1.5rem" color="var(--gray-2)" />
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import { RiArrowLeftDoubleFill } from '@remixicon/vue'
+import { RiArrowLeftDoubleFill, RiLogoutBoxRLine } from '@remixicon/vue'
 
 const minim = ref(true)
 const selected = ref(true)
@@ -35,15 +43,19 @@ const setSelected = (val) => {
 
 <style>
 .sideBar {
-  background-color: var(--vt-c-light-gray-1);
+  background-color: var(--gray-3);
   padding: 1rem;
-  border-radius: 0 5vh 5vh 0;
+  border-radius: 0 3vh 3vh 0;
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.11);
   width: fit-content;
-  max-width: 15vw;
-  min-width: 3vw;
+  max-width: 19vw;
   transition: width 2s;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
+
+/* Top */
 
 .sideBar .top {
   display: grid;
@@ -52,18 +64,34 @@ const setSelected = (val) => {
   gap: 1vh;
   max-width: 15vw;
 }
-
 .sideBar .top img {
   display: block;
   height: auto;
   width: 100%;
 }
 
+/* Mid */
 .sideBar .middle {
   display: flex;
   flex-direction: column;
 }
 
+/* Bottom */
+.sideBar .bottom {
+  padding: 1vh;
+  height: 10vh;
+  border-top: 1px solid var(--gray-2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1vw;
+}
+.sideBar .bottom * {
+  font-size: smaller;
+  color: var(--gray-1);
+}
+
+/* Other */
 .minimize {
   max-height: 5vh;
   transition: background-color 0.3s;
@@ -72,11 +100,11 @@ const setSelected = (val) => {
 }
 
 .minimize:hover {
-  background-color: var(--vt-c-gray-1);
+  background-color: var(--gray-1);
 }
 
 .sideBar h4 {
-  color: var(--vt-c-dark-gray-1);
+  color: var(--gray-1);
 }
 
 .option {
@@ -87,7 +115,7 @@ const setSelected = (val) => {
 }
 
 #selected {
-  background-color: var(--vt-c-dark-gray-1);
+  background-color: var(--gray-1);
 }
 
 #selected h4 {

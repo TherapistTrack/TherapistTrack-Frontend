@@ -36,7 +36,6 @@ function handleClick(key) {
   grid-template-columns: auto;
   font-family: 'MotivaSansLighter';
   /* Two columns */
-  padding: 1rem;
 }
 
 .header-row,
@@ -74,7 +73,7 @@ function handleClick(key) {
 }
 
 .table-row:hover {
-  background-color: var(--accent-light);
+  background-color: var(--yellow-2);
   cursor: pointer;
 }
 </style>

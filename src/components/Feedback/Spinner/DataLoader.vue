@@ -1,16 +1,11 @@
 <template>
   <div class="center">
-    <RiLoader2Line size="2rem" color="black" alt="loading" class="loading" />
+    <RiLoader2Line size="3rem" color="black" alt="loading" class="loading" />
   </div>
 </template>
 
-<script>
+<script setup>
 import { RiLoader2Line } from '@remixicon/vue'
-export default {
-  components: {
-    RiLoader2Line
-  }
-}
 </script>
 
 <style>
