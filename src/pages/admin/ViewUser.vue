@@ -37,21 +37,14 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { RiCloseLine, RiDeleteBin7Fill, RiEditBoxLine } from '@remixicon/vue'
-export default {
-  components: {
-    RiCloseLine,
-    RiDeleteBin7Fill,
-    RiEditBoxLine
-  },
-  props: {
-    data: Object
-  }
-}
+defineProps({
+  data: Object
+})
 </script>
 
-<style>
+<style scoped>
 .overlayContainer {
   background-color: rgba(0, 0, 0, 0.4);
   height: 100%;
@@ -95,7 +88,6 @@ export default {
 
 .overlayContainer .grid-row {
   margin-bottom: 2vh;
-
   overflow-y: hide;
 }
 
@@ -106,7 +98,6 @@ export default {
 
 .actions * {
   height: 4vh;
-
   border-radius: 1vh;
   transition: background-color 0.2s;
   cursor: pointer;
@@ -118,5 +109,40 @@ export default {
 
 .overlayContainer .grid-row {
   color: var(--vt-c-dark-1);
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: auto;
+  /* Two columns */
+  color: var(--vt-c-dark-1);
+  padding: 1rem;
+}
+
+.grid-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.page .grid-header,
+.page .grid-item {
+  padding: 0.5rem;
+  border-bottom: 0.2vh solid #ccc;
+}
+
+.page .grid-header {
+  font-family: 'MotivaSansLighter';
+  border-top: 0.2vh solid #ccc;
+  font-weight: bold;
+}
+
+.page .grid-item + .grid-item {
+  border-left: 1px solid #ccc;
+}
+
+.page .grid-row:hover {
+  background-color: var(--accent-light);
+  cursor: pointer;
 }
 </style>

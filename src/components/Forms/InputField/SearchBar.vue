@@ -4,20 +4,15 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { RiSearchLine } from '@remixicon/vue'
-export default {
-  components: {
-    RiSearchLine
-  },
-  props: {
-    pholder: String
-  }
-}
+defineProps({
+  pholder: String
+})
 </script>
 
-<style>
-.customInput {
+<style scoped>
+.searchBar {
   display: flex;
   align-items: center;
   width: fit-content;
@@ -28,12 +23,12 @@ export default {
   color: #6e6e6e;
 }
 
-.customInput input {
+.searchBar input {
   border: none;
   background: none;
 }
 
-.customInput img {
+.searchBar img {
   height: 3vh;
 }
 </style>
