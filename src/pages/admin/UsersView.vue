@@ -101,6 +101,7 @@ const handleOpenView = (key) => {
 .page {
   padding: 5vw;
   padding-top: 8vh;
+  width: 80vw;
 }
 
 .options {

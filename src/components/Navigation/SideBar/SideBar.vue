@@ -2,7 +2,8 @@
   <div class="sideBar">
     <div class="gravityTop">
       <div class="top">
-        <img v-show="minim" src="@/assets/Logo/LogoGray.png" alt="Therapist Track" />
+        <img v-show="minim" class="logo" src="@/assets/Logo/LogoGray.png" alt="Therapist Track" />
+
         <RiArrowLeftDoubleFill size="1.5rem" color="var(--gray-1)" alt="minimize" @click="setMin" />
       </div>
       <br />
@@ -20,7 +21,7 @@
         <p><b>Josue Rodriguez</b></p>
         <p>Administrador</p>
       </div>
-      <RiLogoutBoxRLine size="1.5rem" color="var(--gray-2)" />
+      <RiLogoutBoxRLine class="logo" size="1.5rem" color="var(--gray-2)" />
     </div>
   </div>
 </template>
@@ -49,6 +50,7 @@ const setSelected = (val) => {
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.11);
   width: fit-content;
   max-width: 19vw;
+  height: 100vh;
   transition: width 2s;
   display: flex;
   flex-direction: column;
@@ -64,10 +66,13 @@ const setSelected = (val) => {
   gap: 1vh;
   max-width: 15vw;
 }
-.sideBar .top img {
-  display: block;
+.sideBar .top .logo {
   height: auto;
-  width: 100%;
+  max-width: 11vw;
+}
+.sideBar .bottom .logo {
+  height: auto;
+  min-width: 3vw;
 }
 
 /* Mid */
