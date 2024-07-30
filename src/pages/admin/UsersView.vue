@@ -1,24 +1,27 @@
 <template>
+  <ViewUser
+    v-if="modalOpen"
+    :data="fetchedData[selected] || { nombre: 'Rayo' }"
+    @closeView="handleCloseView"
+  />
   <div class="page">
-    <h1>Usuarios</h1>
+    <h1><b>Usuarios</b></h1>
     <p>
       En esta vista puede administrar a los usuarios que tienen acceso a la aplicación y editar su
       información.
     </p>
-    <br />
+
     <div class="options">
       <CustomInput :pholder="'Buscar por nombre'" />
       <Button :msg="'Nuevo'" :onClick="clork" />
     </div>
+
     <DisplayTable
       :data="fetchedData"
       :headers="headers"
       :loading="loading"
       :onClick="handleOpenView"
     />
-  </div>
-  <div v-if="modalOpen">
-    <ViewUser :data="fetchedData[selected] || { nombre: 'Rayo' }" @closeView="handleCloseView" />
   </div>
 </template>
 
@@ -89,10 +92,6 @@ const handleOpenView = (key) => {
 
 <style>
 #app {
-  height: 100vh;
-  width: 100vw;
-  padding: 0;
-  margin: 0;
   display: flex;
   flex-direction: row;
   background-color: white;
@@ -100,26 +99,27 @@ const handleOpenView = (key) => {
 }
 
 .page {
-  padding: 2rem;
-  padding-top: 3rem;
+  padding: 5vw;
+  padding-top: 8vh;
+  width: 80vw;
 }
 
 .options {
   display: flex;
   width: 100%;
   justify-content: space-between;
+  padding: 5vh 0 3vh 0;
 }
 
-h1,
-p,
-h2,
-ul {
-  color: black;
-}
-
-.page p {
+p {
   font-weight: lighter;
   font-size: small;
-  color: var(--vt-c-dark-gray-1);
+}
+@media (max-aspect-ratio: 4/7) {
+  .options {
+    flex-direction: column;
+    align-items: start;
+    gap: 2vh;
+  }
 }
 </style>
