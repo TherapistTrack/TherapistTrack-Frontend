@@ -115,4 +115,11 @@ p {
   font-weight: lighter;
   font-size: small;
 }
+@media (max-aspect-ratio: 4/7) {
+  .options {
+    flex-direction: column;
+    align-items: start;
+    gap: 2vh;
+  }
+}
 </style>

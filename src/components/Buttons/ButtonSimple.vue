@@ -23,7 +23,6 @@ button {
   border-radius: 1vh;
   cursor: pointer;
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
-  align-self: flex-end;
   transition: background-color 0.2s;
 }
 button b {

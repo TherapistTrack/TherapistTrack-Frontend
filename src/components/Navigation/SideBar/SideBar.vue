@@ -62,8 +62,9 @@ const setSelected = (val) => {
   justify-content: center;
   align-items: center;
   background-color: var(--gray-3);
-  height: 5vw;
+  height: 8vh;
   width: 8vw;
+  max-width: 100px;
 }
 
 .sideBtn .sideLogo {
@@ -160,5 +161,50 @@ const setSelected = (val) => {
 
 #selected h4 {
   color: aliceblue;
+}
+
+@media (min-aspect-ratio: 1/1) {
+  .sideBtn {
+    height: 7vh;
+    width: 8vw;
+    max-width: 70px;
+    min-width: 40px;
+
+    max-height: 40px;
+    min-height: 35px;
+  }
+  .sideBtn .bar {
+    max-width: 200px;
+  }
+  .sideBtn .sideLogo {
+    max-height: 32px;
+  }
+}
+
+@media (max-aspect-ratio: 1/1) {
+  .sideBtn {
+    height: 6vh;
+    width: 6vh;
+  }
+  .sideBtn .bar {
+    min-width: 20vh;
+  }
+  .sideBtn .sideLogo {
+    max-height: 4vh;
+  }
+  .bar#minimized {
+    left: -20vh;
+  }
+
+  .bar#maximized {
+    left: 0;
+  }
+  .sideBtn .bar .top .logo {
+    height: auto;
+    max-width: 10vh;
+  }
+  .sideSpace#maximized {
+    width: 0vw;
+  }
 }
 </style>
