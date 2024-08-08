@@ -1,5 +1,5 @@
 <template>
-  <div class="form-group">
+  <div class="input-group">
     <label :for="id">{{ label }}</label>
     <input
       :type="type"
@@ -55,17 +55,17 @@ defineProps({
 </script>
 
 <style scoped>
-.form-group {
+.input-group {
   margin-bottom: 1rem;
 }
 
-.form-group label {
+.input-group label {
   display: block;
   margin-bottom: 0.5rem;
   color: black;
 }
 
-.form-group input {
+.input-group input {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid #ddd;

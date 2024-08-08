@@ -1,47 +1,22 @@
 <template>
   <div class="overlayContainer">
-    <div class="overlay">
+    <div class="view-user">
       <div class="top">
         <h1>{{ data[props.id].nombre }}</h1>
         <RiCloseLine
           class-name="icon"
-          size="1.5rem"
+          size="2rem"
           color="var(--gray-2)"
           alt="close"
           @click="goBack()"
         />
       </div>
-      <br />
       <div class="actions">
         <RiDeleteBin7Fill class-name="act-icon" size="1.5rem" color="var(--gray-1)" alt="delete" />
         <RiEditBoxLine class-name="act-icon" size="1.5rem" color="var(--gray-1)" alt="edit" />
       </div>
-      <br />
-      <div class="grid">
-        <div class="grid-row">
-          <div class="grid-item">Telefonos</div>
-          <div class="grid-item">
-            <div class="grid" v-for="(item, index) in data[props.id].telefonos" :key="index">
-              {{ item }}
-            </div>
-          </div>
-        </div>
-        <div class="grid-row">
-          <div class="grid-item">Rol</div>
-          <div class="grid-item">{{ data[props.id].rol }}</div>
-        </div>
-        <div class="grid-row">
-          <div class="grid-item">No. Colegiado</div>
-          <div class="grid-item">{{ data[props.id].numColegiado }}</div>
-        </div>
-        <div class="grid-row">
-          <div class="grid-item">Correos</div>
-          <div class="grid-item">
-            <div class="grid" v-for="(item, index) in data[props.id].correos" :key="index">
-              {{ item }}
-            </div>
-          </div>
-        </div>
+      <div class="tableContainer">
+        <SimpleTable :data="data[props.id]" :headers="headers" />
       </div>
     </div>
   </div>
@@ -51,10 +26,17 @@
 import { ref } from 'vue'
 import { RiCloseLine, RiDeleteBin7Fill, RiEditBoxLine } from '@remixicon/vue'
 import { useRouter } from 'vue-router'
+import SimpleTable from '@/components/DataDisplay/Tables/SimpleTable.vue'
 const data = ref(null)
+const headers = ref(null)
 const router = useRouter()
 
-console.log('test test')
+headers.value = {
+  rol: 'Rol',
+  telefonos: 'Teléfonos',
+  numColegiado: 'No. Colegiado',
+  correos: 'Correo'
+}
 data.value = {
   1: {
     nombre: 'Daniel Rayo',
@@ -84,7 +66,7 @@ const props = defineProps({
 })
 
 const goBack = () => {
-  router.back() // Navigates back to the previous route
+  router.back()
 }
 </script>
 
@@ -94,6 +76,7 @@ const goBack = () => {
   cursor: pointer;
   max-height: 5vh;
 }
+
 .overlayContainer {
   background-color: rgba(0, 0, 0, 0.4);
   height: 100%;
@@ -106,29 +89,28 @@ const goBack = () => {
   align-items: center;
 }
 
+.view-user {
+  background-color: white;
+  overflow-y: auto;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 2.5vh;
+  width: 600px;
+  max-height: 80vh;
+  padding: 2rem;
+}
+
 .top {
   display: flex;
   justify-content: space-between;
+  padding-bottom: 0.75rem;
 }
 
-.overlayContainer .top img {
-  height: 4vh;
-  border-radius: 1vh;
-  transition: background-color 0.2s;
-  cursor: pointer;
+.tableContainer {
+  padding: 0.6rem;
 }
 
 .overlayContainer .top img:hover {
   background-color: var(--vt-c-light-gray-1);
-}
-
-.overlay {
-  background-color: white;
-  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
-  width: 50vw;
-  height: 70vh;
-  border-radius: 2.5vh;
-  padding: 2rem;
 }
 
 .overlayContainer .grid-row:has(+ .grid-row) {
@@ -143,6 +125,7 @@ const goBack = () => {
 .actions {
   display: flex;
   gap: 4vw;
+  padding-bottom: 1rem;
 }
 
 .actions *:hover {
