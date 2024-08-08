@@ -1,100 +1,113 @@
 <template>
-  <div class="create-user-container">
+  <div class="overlayContainer">
     <div class="create-user-form">
-      <h2>Nuevo Usuario</h2>
-      <form @submit.prevent="createUser">
-        <div class="form-group">
-          <label for="firstName">Nombres</label>
-          <input
-            id="firstName"
-            v-model="user.firstName"
-            type="text"
-            placeholder="Escribe tu nombre..."
-          />
-        </div>
-        <div class="form-group">
-          <label for="lastName">Apellidos</label>
-          <input
-            id="lastName"
-            v-model="user.lastName"
-            type="text"
-            placeholder="Escribe tus apellidos"
-          />
-        </div>
-        <div class="form-group">
-          <label for="phone">Teléfonos</label>
-          <input
-            id="phone"
-            v-model="user.phone"
-            type="text"
-            placeholder="Escribe tu número de teléfono"
-          />
-        </div>
-        <div class="form-group">
-          <label for="role">Rol</label>
-          <select id="role" v-model="user.role">
-            <option disabled value="">Seleccione una opción</option>
-            <option>Doctor</option>
-            <option>Asistente</option>
-            <option>Admin</option>
-          </select>
-        </div>
+      <div class="top">
+        <h1>Nuevo Usuario</h1>
+        <RiCloseLine
+          class-name="icon"
+          size="1.5rem"
+          color="var(--gray-2)"
+          alt="close"
+          @click="goBack()"
+        />
+      </div>
 
-        <!-- Campos condicionales para "Doctor" -->
-        <template v-if="user.role === 'Doctor'">
+      <div class="mid">
+        <form @submit.prevent="createUser">
+          <InputField
+            :label="'Nombres'"
+            :placeholder="'Escribe tu nombre...'"
+            :model-value="user.firstName"
+          />
+          <InputField
+            :label="'Apellidos'"
+            :placeholder="'Escribe tus apellidos...'"
+            :model-value="user.lastName"
+          />
+          <InputField
+            :label="'Teléfonos'"
+            :placeholder="'Escribe tu número de teléfono'"
+            :model-value="user.phone"
+          />
           <div class="form-group">
-            <label for="specialty">No. Colegiado</label>
-            <input
-              id="specialty"
-              v-model="user.specialty"
-              type="text"
-              placeholder="Escribe tu No. de Colegiado"
-            />
+            <label for="role">Rol</label>
+            <select id="role" v-model="user.role">
+              <option disabled value="">Seleccione una opción</option>
+              <option>Doctor</option>
+              <option>Asistente</option>
+              <option>Admin</option>
+            </select>
           </div>
-          <div class="form-group">
-            <label for="specialty">Especialidad</label>
-            <input
-              id="specialty"
-              v-model="user.specialty"
-              type="text"
-              placeholder="Escribe tu especialidad"
-            />
-          </div>
-          <div class="form-group">
-            <label for="email">Correo</label>
-            <input id="email" v-model="user.email" type="email" placeholder="correo@ejemplo.com" />
-          </div>
-        </template>
 
-        <!-- Campos condicionales para "Asistente" -->
-        <template v-if="user.role === 'Asistente'">
-          <div class="form-group">
-            <label for="email">Correo</label>
-            <input id="email" v-model="user.email" type="email" placeholder="correo@ejemplo.com" />
-          </div>
-          <div class="form-group">
-            <label for="startDate">Fecha inicio</label>
-            <input id="startDate" v-model="user.startDate" type="date" />
-          </div>
-          <div class="form-group">
-            <label for="startDate">Fecha Final </label>
-            <input id="startDate" v-model="user.startDate" type="date" />
-          </div>
-        </template>
+          <!-- Campos condicionales para "Doctor" -->
+          <template v-if="user.role === 'Doctor'">
+            <div class="form-group">
+              <label for="specialty">No. Colegiado</label>
+              <input
+                id="specialty"
+                v-model="user.specialty"
+                type="text"
+                placeholder="Escribe tu No. de Colegiado"
+              />
+            </div>
+            <div class="form-group">
+              <label for="specialty">Especialidad</label>
+              <input
+                id="specialty"
+                v-model="user.specialty"
+                type="text"
+                placeholder="Escribe tu especialidad"
+              />
+            </div>
+            <div class="form-group">
+              <label for="email">Correo</label>
+              <input
+                id="email"
+                v-model="user.email"
+                type="email"
+                placeholder="correo@ejemplo.com"
+              />
+            </div>
+          </template>
 
-        <div class="button-container">
-          <button type="submit" :class="{ active: isFormValid }" :disabled="!isFormValid">
-            Crear
-          </button>
-        </div>
-      </form>
+          <!-- Campos condicionales para "Asistente" -->
+          <template v-if="user.role === 'Asistente'">
+            <div class="form-group">
+              <label for="email">Correo</label>
+              <input
+                id="email"
+                v-model="user.email"
+                type="email"
+                placeholder="correo@ejemplo.com"
+              />
+            </div>
+            <div class="form-group">
+              <label for="startDate">Fecha inicio</label>
+              <input id="startDate" v-model="user.startDate" type="date" />
+            </div>
+            <div class="form-group">
+              <label for="startDate">Fecha Final </label>
+              <input id="startDate" v-model="user.startDate" type="date" />
+            </div>
+          </template>
+
+          <div class="button-container">
+            <button type="submit" :class="{ active: isFormValid }" :disabled="!isFormValid">
+              Crear
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-
+import { RiCloseLine } from '@remixicon/vue'
+import { useRouter } from 'vue-router'
+import InputField from '@/components/Forms/InputField/InputField.vue'
+const router = useRouter()
 const user = ref({
   firstName: '',
   lastName: '',
@@ -107,6 +120,9 @@ const user = ref({
   endDate: ''
 })
 
+const goBack = () => {
+  router.back() // Navigates back to the previous route
+}
 // Computed property para la validación
 const isFormValid = computed(() => {
   // Validaciones básicas
@@ -135,6 +151,32 @@ const createUser = () => {
 </script>
 
 <style scoped>
+.overlayContainer {
+  background-color: rgba(0, 0, 0, 0.4);
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.icon {
+  cursor: pointer;
+}
+
+.mid {
+  padding: 1rem;
+}
+
 .create-user-container {
   display: flex;
   justify-content: center;
