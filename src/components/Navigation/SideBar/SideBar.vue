@@ -73,7 +73,7 @@ const setSelected = (val) => {
 
 .sideBtn .bar {
   top: 0vh;
-  z-index: 400;
+  z-index: 200;
   background-color: var(--gray-3);
   display: flex;
   flex-direction: column;

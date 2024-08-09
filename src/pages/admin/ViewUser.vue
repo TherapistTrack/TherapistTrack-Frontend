@@ -1,6 +1,7 @@
 <template>
-  <div class="overlayContainer">
-    <div class="view-user">
+  <router-view :id="selected" />
+  <div class="overlayContainer" @click="goBack()">
+    <div class="view-user" @click.stop="">
       <div class="top">
         <h1>{{ data[props.id].nombre }}</h1>
         <RiCloseLine
@@ -13,7 +14,13 @@
       </div>
       <div class="actions">
         <RiDeleteBin7Fill class-name="act-icon" size="1.5rem" color="var(--gray-1)" alt="delete" />
-        <RiEditBoxLine class-name="act-icon" size="1.5rem" color="var(--gray-1)" alt="edit" />
+        <RiEditBoxLine
+          class-name="act-icon"
+          size="1.5rem"
+          color="var(--gray-1)"
+          alt="edit"
+          @click="handleOpenEdit(props.id)"
+        />
       </div>
       <div class="tableContainer">
         <SimpleTable :data="data[props.id]" :headers="headers" />
@@ -30,7 +37,7 @@ import SimpleTable from '@/components/DataDisplay/Tables/SimpleTable.vue'
 const data = ref(null)
 const headers = ref(null)
 const router = useRouter()
-
+const selected = ref(0)
 headers.value = {
   rol: 'Rol',
   telefonos: 'Teléfonos',
@@ -65,6 +72,11 @@ const props = defineProps({
   id: String
 })
 
+const handleOpenEdit = (key) => {
+  selected.value = key
+  router.push(`/admin/user/edit${key}`)
+}
+
 const goBack = () => {
   router.back()
 }
@@ -81,6 +93,7 @@ const goBack = () => {
   background-color: rgba(0, 0, 0, 0.4);
   height: 100%;
   width: 100%;
+  z-index: 300;
   position: absolute;
   top: 0;
   left: 0;
@@ -90,6 +103,7 @@ const goBack = () => {
 }
 
 .view-user {
+  z-index: 400;
   background-color: white;
   overflow-y: auto;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);

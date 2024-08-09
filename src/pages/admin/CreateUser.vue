@@ -1,6 +1,6 @@
 <template>
-  <div class="overlayContainer">
-    <div class="create-user-form">
+  <div class="overlayContainer" @click="goBack()">
+    <div class="create-user-form" @click.stop="">
       <div class="top">
         <h1>Nuevo Usuario</h1>
         <RiCloseLine
@@ -149,19 +149,20 @@ const createUser = () => {
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 400;
 }
 
-.top {
+.create-user-form .top {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.icon {
+.create-user-form .icon {
   cursor: pointer;
 }
 
-.mid {
+.create-user-form .mid {
   padding: 1rem;
 }
 
@@ -177,11 +178,7 @@ const createUser = () => {
   flex-direction: column;
 }
 
-.form-group {
-  margin-bottom: 20px;
-}
-
-.button-container {
+.create-user-form .button-container {
   display: flex;
   justify-content: end;
   padding: 0.5rem;

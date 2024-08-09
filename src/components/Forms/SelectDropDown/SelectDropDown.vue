@@ -45,10 +45,11 @@ defineProps({
 <style>
 .select-group {
   font-family: 'MotivaSansMedium';
-  display: flex;
-  flex-direction: column;
   margin-bottom: 1rem;
+  display: grid;
+  grid-template-columns: 1fr 3fr;
 }
+
 .select-group label {
   padding-bottom: 1vh;
 }
@@ -63,5 +64,13 @@ defineProps({
   background-color: white;
   border: 1px solid var(--gray-3);
   border-radius: 0.5rem;
+}
+
+@media (max-aspect-ratio: 6/9) {
+  .select-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+  }
 }
 </style>

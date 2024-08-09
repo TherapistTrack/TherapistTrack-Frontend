@@ -31,7 +31,7 @@ defineProps({
 .simple-row {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  grid-template-columns: 1fr 2fr;
   padding-bottom: 5vh;
 }
 

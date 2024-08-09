@@ -57,6 +57,8 @@ defineProps({
 <style scoped>
 .input-group {
   margin-bottom: 1rem;
+  display: grid;
+  grid-template-columns: 1fr 3fr;
 }
 
 .input-group label {
@@ -73,10 +75,17 @@ defineProps({
   box-sizing: border-box;
 }
 
-.icon-eye {
+.input-group .icon-eye {
   position: absolute;
   cursor: pointer;
   right: 1rem;
   top: 1rem;
+}
+
+@media (max-aspect-ratio: 6/9) {
+  .input-group {
+    display: flex;
+    flex-direction: column;
+  }
 }
 </style>
