@@ -1,95 +1,100 @@
 <template>
-  <div class="edit-user-container">
-    <div class="edit-user-form">
-      <h2>Editar Usuario</h2>
-      <form @submit.prevent="updateUser">
-        <div class="form-group">
-          <label for="firstName">Nombres</label>
-          <input
-            id="firstName"
+  <div class="overlayContainer" @click="goBack()">
+    <div class="edit-user-form" @click.stop="">
+      <div class="top">
+        <h1>Editar Usuario</h1>
+        <RiCloseLine
+          class-name="icon"
+          size="2rem"
+          color="var(--gray-2)"
+          alt="close"
+          @click="goBack()"
+        />
+      </div>
+      <div class="mid">
+        <form @submit.prevent="updateUser">
+          <InputField
+            :label="'Nombres'"
             v-model="user.firstName"
-            type="text"
-            placeholder="Escribe tu nombre..."
+            :placeholder="'Escribe tu nombre...'"
           />
-        </div>
-        <div class="form-group">
-          <label for="lastName">Apellidos</label>
-          <input
-            id="lastName"
+          <InputField
+            :label="'Apellidos'"
+            :placeholder="'Escribe tus apellidos...'"
             v-model="user.lastName"
-            type="text"
-            placeholder="Escribe tus apellidos"
           />
-        </div>
-        <div class="form-group">
-          <label for="phone">Teléfonos</label>
-          <input
-            id="phone"
+          <InputField
+            :label="'Teléfonos'"
+            :placeholder="'Escribe tu número de teléfono'"
             v-model="user.phone"
-            type="text"
-            placeholder="Escribe tu número de teléfono"
           />
-        </div>
-        <div class="form-group">
-          <label for="role">Rol</label>
-          <select id="role" v-model="user.role">
-            <option disabled value="">Seleccione una opción</option>
-            <option>Doctor</option>
-            <option>Asistente</option>
-            <option>Admin</option>
-          </select>
-        </div>
-        <template v-if="user.role === 'Doctor'">
-          <div class="form-group">
-            <label for="membershipNumber">No. Colegiado</label>
-            <input
-              id="membershipNumber"
+          <SelectDropDown
+            :disabled-value="'Seleccione una opción'"
+            :label="'Rol'"
+            :id="'role'"
+            v-model="user.role"
+            :options="['Doctor', 'Asistente', 'Admin']"
+          />
+
+          <template v-if="user.role === 'Doctor'">
+            <InputField
+              :id="'col-num'"
+              :label="'No. Colegiado'"
+              :placeholder="'Escribe tu No. de Colegiado'"
               v-model="user.membershipNumber"
-              type="text"
-              placeholder="Escribe tu No. de Colegiado"
             />
-          </div>
-          <div class="form-group">
-            <label for="specialty">Especialidad</label>
-            <input
-              id="specialty"
+
+            <InputField
+              :id="'speciality'"
+              :label="'Especialidad'"
+              :placeholder="'Escribe tu especialidad'"
               v-model="user.specialty"
-              type="text"
-              placeholder="Escribe tu especialidad"
             />
+            <InputField
+              :id="'email'"
+              :label="'Correo'"
+              :placeholder="'correo@ejemplo.com'"
+              v-model="user.email"
+            />
+          </template>
+          <template v-if="user.role === 'Asistente'">
+            <InputField
+              :id="'email'"
+              :label="'Correo'"
+              :placeholder="'correo@ejemplo.com'"
+              v-model="user.email"
+            />
+            <InputField
+              :id="'start-date'"
+              :label="'Fecha inicio'"
+              :type="'date'"
+              v-model="user.startDate"
+            />
+            <InputField
+              :id="'end-date'"
+              :label="'Fecha Final'"
+              :type="'date'"
+              v-model="user.endDate"
+            />
+          </template>
+          <div class="button-container">
+            <ButtonSimple :msg="'Guardar'" :disabled="!isFormValid" />
           </div>
-          <div class="form-group">
-            <label for="email">Correo</label>
-            <input id="email" v-model="user.email" type="email" placeholder="correo@ejemplo.com" />
-          </div>
-        </template>
-        <template v-if="user.role === 'Asistente'">
-          <div class="form-group">
-            <label for="email">Correo</label>
-            <input id="email" v-model="user.email" type="email" placeholder="correo@ejemplo.com" />
-          </div>
-          <div class="form-group">
-            <label for="startDate">Fecha inicio</label>
-            <input id="startDate" v-model="user.startDate" type="date" />
-          </div>
-          <div class="form-group">
-            <label for="endDate">Fecha Final</label>
-            <input id="endDate" v-model="user.endDate" type="date" />
-          </div>
-        </template>
-        <div class="button-container">
-          <button type="submit" :class="{ active: isFormValid }" :disabled="!isFormValid">
-            Guardar
-          </button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-
+import { ref, computed, onMounted, defineProps } from 'vue'
+import { RiCloseLine } from '@remixicon/vue'
+import { useRouter } from 'vue-router'
+import InputField from '@/components/Forms/InputField/InputField.vue'
+import SelectDropDown from '@/components/Forms/SelectDropDown/SelectDropDown.vue'
+import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
+const router = useRouter()
+const data = ref(null)
 const user = ref({
   firstName: '',
   lastName: '',
@@ -101,6 +106,57 @@ const user = ref({
   startDate: '',
   endDate: ''
 })
+
+onMounted(() => {
+  data.value = {
+    1: {
+      firstName: 'Daniel',
+      lastName: 'Rayo',
+      role: 'Doctor',
+      phone: ['555 555', '222 222'],
+      membershipNumber: 32115,
+      email: ['aaa@gmail.com', 'bbb@gmail.com']
+    },
+    2: {
+      firstName: 'Sofia',
+      lastName: 'de la Rosa',
+      role: 'Doctor',
+      phone: ['444 444', '333 333'],
+      membershipNumber: 53515,
+      email: ['ccc@gmail.com', 'ddd@gmail.com']
+    },
+    3: {
+      firstName: 'Ricardo',
+      lastName: 'Morales Sagastume',
+      role: 'Asistente',
+      phone: ['111 111', '777 777'],
+      membershipNumber: null,
+      email: ['eee@gmail.com']
+    }
+  }
+
+  console.log(data.value[props.id].firstName)
+
+  user.value = {
+    firstName: data.value[props.id].firstName || '',
+    lastName: data.value[props.id].lastName || '',
+    phone: data.value[props.id].phone || '',
+    role: data.value[props.id].role || '',
+    membershipNumber: data.value[props.id].membershipNumber || '',
+    specialty: data.value[props.id].specialty || '',
+    email: data.value[props.id].email || '',
+    startDate: data.value[props.id].startDate || '',
+    endDate: data.value[props.id].endDate || ''
+  }
+})
+
+const props = defineProps({
+  id: String
+})
+
+const goBack = () => {
+  router.back()
+}
 
 const isFormValid = computed(() => {
   const basicInfoValid =
@@ -117,7 +173,6 @@ const isFormValid = computed(() => {
 const updateUser = () => {
   if (isFormValid.value) {
     console.log('Updating user:', user.value)
-    // Implementar llamada a API para actualizar los datos
   } else {
     console.error('Form is invalid')
   }
@@ -125,14 +180,19 @@ const updateUser = () => {
 </script>
 
 <style scoped>
-.edit-user-container {
+.overlayContainer {
+  background-color: rgba(0, 0, 0, 0.4);
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  padding: 20px;
-  box-sizing: border-box;
+  z-index: 400;
 }
+
 .edit-user-form {
   background: #fff;
   padding: 2rem;
@@ -143,44 +203,25 @@ const updateUser = () => {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  margin: 2vh;
 }
-.form-group {
-  margin-bottom: 20px;
-}
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: bold;
-}
-.form-group input,
-.form-group select {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-.button-container {
-  display: flex;
-  justify-content: flex-end;
-  width: 100%;
-}
-.button-container button {
-  padding: 12px;
-  background-color: #d3d3d3;
-  color: white;
-  border: none;
-  border-radius: 4px;
+
+.edit-user-form .icon {
   cursor: pointer;
-  width: 20%;
-  margin-top: 20px;
 }
-.button-container button.active {
-  background-color: #068e65;
+
+.edit-user-form .top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
-button:hover {
-  background-color: #1bb889;
+
+.edit-user-form .mid {
+  padding: 1rem;
 }
-.button-container button:disabled {
-  cursor: not-allowed;
+.edit-user-form .button-container {
+  display: flex;
+  justify-content: end;
+  padding: 0.5rem;
 }
 </style>

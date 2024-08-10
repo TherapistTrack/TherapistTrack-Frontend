@@ -1,100 +1,104 @@
 <template>
-  <div class="create-user-container">
-    <div class="create-user-form">
-      <h2>Nuevo Usuario</h2>
-      <form @submit.prevent="createUser">
-        <div class="form-group">
-          <label for="firstName">Nombres</label>
-          <input
-            id="firstName"
+  <div class="overlayContainer" @click="goBack()">
+    <div class="create-user-form" @click.stop="">
+      <div class="top">
+        <h1>Nuevo Usuario</h1>
+        <RiCloseLine
+          class-name="icon"
+          size="2rem"
+          color="var(--gray-2)"
+          alt="close"
+          @click="goBack()"
+        />
+      </div>
+
+      <div class="mid">
+        <form @submit.prevent="createUser">
+          <InputField
+            :label="'Nombres'"
+            :placeholder="'Escribe tu nombre...'"
             v-model="user.firstName"
-            type="text"
-            placeholder="Escribe tu nombre..."
           />
-        </div>
-        <div class="form-group">
-          <label for="lastName">Apellidos</label>
-          <input
-            id="lastName"
+          <InputField
+            :label="'Apellidos'"
+            :placeholder="'Escribe tus apellidos...'"
             v-model="user.lastName"
-            type="text"
-            placeholder="Escribe tus apellidos"
           />
-        </div>
-        <div class="form-group">
-          <label for="phone">Teléfonos</label>
-          <input
-            id="phone"
+          <InputField
+            :label="'Teléfonos'"
+            :placeholder="'Escribe tu número de teléfono'"
             v-model="user.phone"
-            type="text"
-            placeholder="Escribe tu número de teléfono"
           />
-        </div>
-        <div class="form-group">
-          <label for="role">Rol</label>
-          <select id="role" v-model="user.role">
-            <option disabled value="">Seleccione una opción</option>
-            <option>Doctor</option>
-            <option>Asistente</option>
-            <option>Admin</option>
-          </select>
-        </div>
 
-        <!-- Campos condicionales para "Doctor" -->
-        <template v-if="user.role === 'Doctor'">
-          <div class="form-group">
-            <label for="specialty">No. Colegiado</label>
-            <input
-              id="specialty"
-              v-model="user.specialty"
-              type="text"
-              placeholder="Escribe tu No. de Colegiado"
+          <SelectDropDown
+            :disabled-value="'Seleccione una opción'"
+            :label="'Rol'"
+            :id="'role'"
+            v-model="user.role"
+            :options="['Doctor', 'Asistente', 'Admin']"
+          />
+
+          <!-- Campos condicionales para "Doctor" -->
+          <template v-if="user.role === 'Doctor'">
+            <InputField
+              :id="'col-num'"
+              :label="'No. Colegiado'"
+              :placeholder="'Escribe tu No. de Colegiado'"
+              v-model="user.membershipNumber"
             />
-          </div>
-          <div class="form-group">
-            <label for="specialty">Especialidad</label>
-            <input
-              id="specialty"
+            <InputField
+              :id="'speciality'"
+              :label="'Especialidad'"
+              :placeholder="'Escribe tu especialidad'"
               v-model="user.specialty"
-              type="text"
-              placeholder="Escribe tu especialidad"
             />
-          </div>
-          <div class="form-group">
-            <label for="email">Correo</label>
-            <input id="email" v-model="user.email" type="email" placeholder="correo@ejemplo.com" />
-          </div>
-        </template>
+            <InputField
+              :id="'email'"
+              :label="'Correo'"
+              :placeholder="'correo@ejemplo.com'"
+              v-model="user.email"
+            />
+          </template>
 
-        <!-- Campos condicionales para "Asistente" -->
-        <template v-if="user.role === 'Asistente'">
-          <div class="form-group">
-            <label for="email">Correo</label>
-            <input id="email" v-model="user.email" type="email" placeholder="correo@ejemplo.com" />
-          </div>
-          <div class="form-group">
-            <label for="startDate">Fecha inicio</label>
-            <input id="startDate" v-model="user.startDate" type="date" />
-          </div>
-          <div class="form-group">
-            <label for="startDate">Fecha Final </label>
-            <input id="startDate" v-model="user.startDate" type="date" />
-          </div>
-        </template>
+          <!-- Campos condicionales para "Asistente" -->
+          <template v-if="user.role === 'Asistente'">
+            <InputField
+              :id="'email'"
+              :label="'Correo'"
+              :placeholder="'correo@ejemplo.com'"
+              v-model="user.email"
+            />
+            <InputField
+              :id="'start-date'"
+              :label="'Fecha inicio'"
+              :type="'date'"
+              v-model="user.startDate"
+            />
+            <InputField
+              :id="'end-date'"
+              :label="'Fecha Final'"
+              :type="'date'"
+              v-model="user.endDate"
+            />
+          </template>
 
-        <div class="button-container">
-          <button type="submit" :class="{ active: isFormValid }" :disabled="!isFormValid">
-            Crear
-          </button>
-        </div>
-      </form>
+          <div class="button-container">
+            <ButtonSimple :msg="'Crear'" :disabled="!isFormValid" />
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-
+import { RiCloseLine } from '@remixicon/vue'
+import { useRouter } from 'vue-router'
+import InputField from '@/components/Forms/InputField/InputField.vue'
+import SelectDropDown from '@/components/Forms/SelectDropDown/SelectDropDown.vue'
+import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
+const router = useRouter()
 const user = ref({
   firstName: '',
   lastName: '',
@@ -107,20 +111,20 @@ const user = ref({
   endDate: ''
 })
 
-// Computed property para la validación
+const goBack = () => {
+  router.back()
+}
+
 const isFormValid = computed(() => {
-  // Validaciones básicas
   const basicInfoValid =
     user.value.firstName && user.value.lastName && user.value.phone && user.value.role
   let roleSpecificValid = true
 
-  // Validaciones específicas por rol
   if (user.value.role === 'Doctor') {
     roleSpecificValid = user.value.membershipNumber && user.value.specialty && user.value.email
   } else if (user.value.role === 'Asistente') {
     roleSpecificValid = user.value.email && user.value.startDate && user.value.endDate
   }
-
   return basicInfoValid && roleSpecificValid
 })
 
@@ -134,72 +138,50 @@ const createUser = () => {
 }
 </script>
 
-<style scoped>
-.create-user-container {
+<style>
+.overlayContainer {
+  background-color: rgba(0, 0, 0, 0.4);
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  padding: 20px;
-  box-sizing: border-box;
+  z-index: 400;
+}
+
+.create-user-form .top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.create-user-form .icon {
+  cursor: pointer;
+}
+
+.create-user-form .mid {
+  padding: 1rem;
 }
 
 .create-user-form {
   background: #fff;
   padding: 2rem;
-  border-radius: 10px;
+  border-radius: 2.5vh;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   width: 600px;
   max-height: 80vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  margin: 2vh;
 }
 
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: bold;
-}
-
-.form-group input,
-.form-group select {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.button-container {
+.create-user-form .button-container {
   display: flex;
-  justify-content: flex-end;
-  width: 100%;
-}
-
-.button-container button {
-  padding: 12px;
-  background-color: #d3d3d3;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  width: 20%;
-  margin-top: 20px;
-}
-
-.button-container button.active {
-  background-color: #068e65;
-}
-
-button:hover {
-  background-color: #1bb889;
-}
-
-.button-container button:disabled {
-  cursor: not-allowed;
+  justify-content: end;
+  padding: 0.5rem;
 }
 </style>

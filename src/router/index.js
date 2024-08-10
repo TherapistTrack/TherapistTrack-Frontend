@@ -24,12 +24,18 @@ const router = createRouter({
               component: () => import('@/pages/admin/CreateUser.vue')
             },
             {
-              path: 'edit',
-              component: () => import('@/pages/admin/EditUser.vue')
+              path: 'edit:id',
+              component: () => import('@/pages/admin/EditUser.vue'),
+              props: (route) => ({
+                userId: route.params.id // Pass id from route parameters
+              })
             },
             {
-              path: 'view',
-              component: () => import('@/pages/admin/ViewUser.vue')
+              path: 'view:id',
+              component: () => import('@/pages/admin/ViewUser.vue'),
+              props: (route) => ({
+                userId: route.params.id // Pass id from route parameters
+              })
             }
           ]
         }

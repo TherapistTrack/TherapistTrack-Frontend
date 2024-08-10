@@ -1,10 +1,6 @@
 <template>
-  <ViewUser
-    v-if="modalOpen"
-    :data="fetchedData[selected] || { nombre: 'Rayo' }"
-    @closeView="handleCloseView"
-  />
   <div class="page">
+    <router-view :id="selected" />
     <h1><b>Usuarios</b></h1>
     <p>
       En esta vista puede administrar a los usuarios que tienen acceso a la aplicación y editar su
@@ -13,7 +9,7 @@
 
     <div class="options">
       <CustomInput :pholder="'Buscar por nombre'" />
-      <Button :msg="'Nuevo'" :onClick="clork" />
+      <Button :msg="'Nuevo'" :onClick="handleOpenCreate" />
     </div>
 
     <DisplayTable
@@ -29,23 +25,23 @@
 import { ref, onMounted } from 'vue'
 import Button from '@/components/Buttons/ButtonSimple.vue'
 import CustomInput from '@/components/Forms/InputField/SearchBar.vue'
-import ViewUser from '@/pages/admin/ViewUser.vue'
 import DisplayTable from '@/components/DataDisplay/Tables/DisplayTable.vue'
+import { useRouter } from 'vue-router'
 
-const modalOpen = ref(false)
 const selected = ref(0)
 const fetchedData = ref(null)
 const loading = ref(false)
 const headers = ref(null)
-
+const router = useRouter()
 headers.value = {
   nombre: 'Nombre',
   rol: 'Rol'
 }
+
 onMounted(async () => {
   loading.value = true
   // simulation time
-  await new Promise((resolve) => setTimeout(resolve, 5000))
+  await new Promise((resolve) => setTimeout(resolve, 500))
 
   // fetchData for when the backend gets deployed
   // fetchedData.value = await fetchData();
@@ -72,21 +68,20 @@ onMounted(async () => {
       correos: ['eee@gmail.com']
     }
   }
+
   loading.value = false
   return fetchedData
 })
 
-const clork = () => {
-  console.log('Button pressed')
-}
+// Functions
 
-const handleCloseView = () => {
-  modalOpen.value = false
+const handleOpenCreate = () => {
+  router.push('/admin/user/create')
 }
 
 const handleOpenView = (key) => {
   selected.value = key
-  modalOpen.value = true
+  router.push(`/admin/user/view${key}`)
 }
 </script>
 

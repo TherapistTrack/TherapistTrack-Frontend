@@ -15,11 +15,8 @@
           <RiArrowLeftDoubleFill size="1.5rem" color="var(--gray-1)" alt="" />
         </div>
         <div class="mid">
-          <div class="option" @click="setSelected(true)" :id="selected ? 'selected' : ''">
+          <div class="option" id="selected">
             <h4>Usuarios</h4>
-          </div>
-          <div class="option" @click="setSelected(false)" :id="!selected ? 'selected' : ''">
-            <h4>Roles</h4>
           </div>
         </div>
       </div>
@@ -40,14 +37,9 @@
 import { RiArrowLeftDoubleFill, RiLogoutBoxRLine } from '@remixicon/vue'
 import { ref } from 'vue'
 const minim = ref(true)
-const selected = ref(true)
 
 const setMin = (val) => {
   minim.value = val
-}
-
-const setSelected = (val) => {
-  selected.value = val
 }
 </script>
 
@@ -56,7 +48,13 @@ const setSelected = (val) => {
   width: 0vw;
   transition: Width 0.5s;
 }
-
+.icon {
+  transition: fill 0.2s;
+  cursor: pointer;
+}
+.icon:hover {
+  fill: var(--gray-1);
+}
 .sideBtn {
   display: flex;
   justify-content: center;
@@ -73,7 +71,7 @@ const setSelected = (val) => {
 
 .sideBtn .bar {
   top: 0vh;
-  z-index: 400;
+  z-index: 200;
   background-color: var(--gray-3);
   display: flex;
   flex-direction: column;
@@ -112,7 +110,6 @@ const setSelected = (val) => {
   display: flex;
   padding: 0.4vh 0.4vh 0 1.5vh;
   border-radius: 1vh;
-  cursor: pointer;
 }
 /* Bottom */
 .sideBtn .bottom {
