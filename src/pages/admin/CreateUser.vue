@@ -176,6 +176,7 @@ const createUser = () => {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  margin: 2vh;
 }
 
 .create-user-form .button-container {

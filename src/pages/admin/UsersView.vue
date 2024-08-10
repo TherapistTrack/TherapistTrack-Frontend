@@ -68,6 +68,7 @@ onMounted(async () => {
       correos: ['eee@gmail.com']
     }
   }
+
   loading.value = false
   return fetchedData
 })

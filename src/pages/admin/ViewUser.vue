@@ -13,13 +13,18 @@
         />
       </div>
       <div class="actions">
-        <RiDeleteBin7Fill class-name="act-icon" size="1.5rem" color="var(--gray-1)" alt="delete" />
         <RiEditBoxLine
-          class-name="act-icon"
+          class-name="act-edit"
           size="1.5rem"
           color="var(--gray-1)"
           alt="edit"
           @click="handleOpenEdit(props.id)"
+        />
+        <RiDeleteBin7Fill
+          class-name="act-delete"
+          size="1.5rem"
+          color="var(--gray-1)"
+          alt="delete"
         />
       </div>
       <div class="tableContainer">
@@ -84,9 +89,18 @@ const goBack = () => {
 
 <style scoped>
 .icon,
-.act-icon {
+.act-edit,
+.act-delete {
   cursor: pointer;
   max-height: 5vh;
+  transition: fill 0.1s;
+}
+
+.act-edit:hover {
+  fill: var(--yellow-1);
+}
+.act-delete:hover {
+  fill: var(--red-1);
 }
 
 .overlayContainer {
@@ -111,6 +125,7 @@ const goBack = () => {
   width: 600px;
   max-height: 80vh;
   padding: 2rem;
+  margin: 2vh;
 }
 
 .top {

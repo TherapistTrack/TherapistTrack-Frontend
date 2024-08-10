@@ -1,13 +1,24 @@
 <template>
-  <button @click="handleClick" :disabled="disabled" :id="disabled ? 'disabled' : 'active'">
+  <button
+    class="button-component"
+    @click="handleClick"
+    :disabled="disabled"
+    :id="disabled ? 'disabled' : 'active'"
+  >
     <b>{{ msg }}</b>
   </button>
 </template>
 
 <script setup>
 const props = defineProps({
-  msg: String,
-  disabled: Boolean,
+  msg: {
+    type: String,
+    default: ''
+  },
+  disabled: {
+    type: Boolean,
+    default: false
+  },
   onClick: Function
 })
 function handleClick() {
@@ -16,8 +27,7 @@ function handleClick() {
 </script>
 
 <style>
-button#disabled,
-button#active {
+.button-component {
   border: none;
   padding: 0.4rem 1rem;
   border-radius: 1vh;
@@ -25,19 +35,19 @@ button#active {
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
   transition: background-color 0.2s;
 }
-button#disabled {
+.button-component#disabled {
   background-color: var(--gray-1);
   cursor: not-allowed;
 }
-button#active {
+.button-component#active {
   background-color: var(--green-1);
   cursor: pointer;
 }
-button b {
+.button-component b {
   color: white;
 }
 
-button:hover {
+.button-component#active:hover {
   background-color: var(--green-2);
 }
 </style>

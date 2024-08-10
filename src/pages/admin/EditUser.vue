@@ -203,6 +203,7 @@ const updateUser = () => {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  margin: 2vh;
 }
 
 .edit-user-form .icon {

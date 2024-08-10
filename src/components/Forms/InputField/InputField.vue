@@ -70,7 +70,7 @@ defineProps({
 .input-group input {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--gray-3);
   border-radius: 0.5rem;
   box-sizing: border-box;
 }
