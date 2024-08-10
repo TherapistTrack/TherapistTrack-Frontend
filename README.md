@@ -3,6 +3,15 @@
 
 The frontend client for Therapist Track App.
 
+## Environment variables
+This are the environment variables required for building the project
+
+```sh
+FRONTEND_PORT=3000
+BACKEND_URI=http://localhost:3001
+VITE_BASE=/
+```
+
 ## Recommended IDE Setup
 
 [VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
