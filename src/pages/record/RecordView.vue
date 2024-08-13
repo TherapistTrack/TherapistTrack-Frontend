@@ -7,8 +7,9 @@
     <div class="page">
       <h1><b>Expedientes</b></h1>
       <div class="actions">
-        <ButtonSimple :msg="'Ordenar'" />
-        <ButtonSimple :msg="'Filtro'" />
+        <IconButton :msg="'Ordenar'" :firstIcon="RiArrowUpDownLine" :secondIcon="RiAddLine" />
+
+        <IconButton :msg="'Nuevo Filtro'" :firstIcon="RiFilterFill" :secondIcon="RiAddLine" />
         <ButtonSimple :msg="'Nuevo'" />
       </div>
       <div class="established"></div>
@@ -26,6 +27,8 @@
 import RecordSideBar from '@/components/Navigation/SideBar/RecordSideBar.vue'
 import DisplayTable from '@/components/DataDisplay/Tables/DisplayTable.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
+import IconButton from '@/components/Buttons/IconButton.vue'
+import { RiArrowUpDownLine, RiAddLine, RiFilterFill } from '@remixicon/vue'
 import { ref, onMounted } from 'vue'
 
 // Constants
@@ -91,6 +94,7 @@ const handleOpenPreview = () => {
 .tabs {
   background-color: var(--gray-3);
   border-bottom: 1px solid var(--gray-4);
+  display: flex;
 }
 #app {
   display: flex;
@@ -108,6 +112,11 @@ const handleOpenPreview = () => {
   width: 80vw;
 }
 
+.records .actions {
+  display: flex;
+  gap: 1rem;
+  padding-bottom: 0.5rem;
+}
 /* SideBar Space */
 .sideSpace {
   width: 0vw;

@@ -1,16 +1,16 @@
 <template>
-  <div class="sideBtn">
+  <div class="R-sideBtn">
     <img
-      @click="emitUpdate"
+      @click="handleClick"
       class="sideLogo"
       src="@/assets/Logo/LogoSoloWhite.png"
       alt="Therapist Track Logo"
       :id="minim ? 'minimized' : 'maximized'"
     />
 
-    <div class="bar" :id="props.minim ? 'minimized' : 'maximized'">
+    <div class="bar" :id="localMin ? 'minimized' : 'maximized'">
       <div class="gravityTop">
-        <div class="top" @click="emitUpdate">
+        <div class="top" @click="handleClick">
           <img class="logo" src="@/assets/Logo/LogoWhite.png" alt="Therapist Track" />
           <RiArrowLeftDoubleFill size="1.5rem" color="White" alt="minimize" />
         </div>
@@ -37,23 +37,29 @@
       </div>
     </div>
   </div>
-  <div class="sideSpace" :id="props.minim ? 'minimized' : 'maximized'"></div>
+  <div class="sideSpace" :id="localMin ? 'minimized' : 'maximized'"></div>
 </template>
 
 <script setup>
 import { RiArrowLeftDoubleFill, RiSettings3Fill } from '@remixicon/vue'
 import { ref } from 'vue'
 
-const props = defineProps({
+defineProps({
   minim: {
     type: Boolean,
     required: true
   }
 })
+const localMin = ref(false)
 
 const select = ref(0)
 const setSelect = (val) => {
   select.value = val
+}
+
+const handleClick = () => {
+  localMin.value = !localMin.value
+  emitUpdate()
 }
 
 const emit = defineEmits(['updateValue'])
@@ -67,14 +73,14 @@ const emitUpdate = () => {
   width: 0vw;
   transition: Width 0.5s;
 }
-.icon {
+.R-sideBtn .icon {
   transition: fill 0.2s;
   cursor: pointer;
 }
-.icon:hover {
+.R-sideBtn .icon:hover {
   fill: var(--white);
 }
-.sideBtn {
+.R-sideBtn {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -84,11 +90,11 @@ const emitUpdate = () => {
   max-width: 100px;
 }
 
-.sideBtn .sideLogo {
+.R-sideBtn .sideLogo {
   max-height: 6vh;
 }
 
-.sideBtn .bar {
+.R-sideBtn .bar {
   top: 0vh;
   z-index: 200;
   background-color: var(--blue-1);
@@ -106,11 +112,11 @@ const emitUpdate = () => {
   transition: left 0.5s;
 }
 
-.sideBtn .bar * {
+.R-sideBtn .bar * {
   color: var(--white);
 }
 /* Top */
-.sideBtn .bar .top {
+.R-sideBtn .bar .top {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -119,23 +125,23 @@ const emitUpdate = () => {
   cursor: pointer;
 }
 
-.sideBtn .bar .top .logo {
+.R-sideBtn .bar .top .logo {
   height: auto;
   max-width: 11vw;
 }
 /* mid */
-.sideBtn .bar .mid {
+.R-sideBtn .bar .mid {
   padding-top: 6vh;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.sideBtn .bar .mid b {
+.R-sideBtn .bar .mid b {
   color: var(--light-blue-1);
 }
 
-.sideBtn .bar .mid .option {
+.R-sideBtn .bar .mid .option {
   display: flex;
   padding: 0.4vh 0.4vh 0 1.5vh;
   border-radius: 1vh;
@@ -143,7 +149,7 @@ const emitUpdate = () => {
   align-items: center;
 }
 /* Bottom */
-.sideBtn .bottom {
+.R-sideBtn .bottom {
   padding: 1vh;
   height: 10vh;
   border-top: 1px solid var(--white);
@@ -153,17 +159,17 @@ const emitUpdate = () => {
   gap: 1vw;
 }
 
-.sideBtn .bottom * {
+.R-sideBtn .bottom * {
   font-size: smaller;
   color: var(--white);
 }
 
 /* Animations */
-.bar#minimized {
+.R-sideBtn .bar#minimized {
   left: -20vw;
 }
 
-.bar#maximized {
+.R-sideBtn .bar#maximized {
   left: 0;
 }
 
@@ -175,21 +181,21 @@ const emitUpdate = () => {
   width: 12vw;
 }
 
-.sideLogo#minimized {
+.R-sideBtn .sideLogo#minimized {
   cursor: pointer;
 }
 
-.sideLogo#maximized {
+.R-sideBtn .sideLogo#maximized {
   cursor: default;
 }
 
-.option#selected {
+.R-sideBtn .option#selected {
   background-color: var(--light-blue-2);
   color: var(--dark-blue-1);
 }
 
 @media (min-aspect-ratio: 1/1) {
-  .sideBtn {
+  .R-sideBtn {
     height: 7vh;
     width: 8vw;
     max-width: 70px;
@@ -198,23 +204,23 @@ const emitUpdate = () => {
     max-height: 40px;
     min-height: 35px;
   }
-  .sideBtn .bar {
+  .R-sideBtn .bar {
     max-width: 200px;
   }
-  .sideBtn .sideLogo {
+  .R-sideBtn .sideLogo {
     max-height: 32px;
   }
 }
 
 @media (max-aspect-ratio: 1/1) {
-  .sideBtn {
+  .R-sideBtn {
     height: 6vh;
     width: 6vh;
   }
-  .sideBtn .bar {
+  .R-sideBtn .bar {
     min-width: 20vh;
   }
-  .sideBtn .sideLogo {
+  .R-sideBtn .sideLogo {
     max-height: 4vh;
   }
   .bar#minimized {
@@ -224,7 +230,7 @@ const emitUpdate = () => {
   .bar#maximized {
     left: 0;
   }
-  .sideBtn .bar .top .logo {
+  .R-sideBtn .bar .top .logo {
     height: auto;
     max-width: 10vh;
   }
