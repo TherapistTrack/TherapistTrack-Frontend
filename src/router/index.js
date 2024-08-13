@@ -64,7 +64,23 @@ const router = createRouter({
     // RECORD VIEW
     {
       path: '/records',
-      component: () => import('@/pages/record/RecordView.vue')
+      component: () => import('@/pages/record/RecordView.vue'),
+      children: [
+        {
+          path: 'edit:id',
+          component: () => import('@/pages/record/EditRecord.vue'),
+          props: (route) => ({
+            userId: route.params.id // Pass id from route parameters
+          })
+        },
+        {
+          path: 'view:id',
+          component: () => import('@/pages/record/ViewRecord.vue'),
+          props: (route) => ({
+            userId: route.params.id // Pass id from route parameters
+          })
+        }
+      ]
     },
 
     // PATIENT VIEW
