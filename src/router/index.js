@@ -64,7 +64,7 @@ const router = createRouter({
     // RECORD VIEW
     {
       path: '/records',
-      component: () => import('@/pages/notfound/NotFoundView.vue')
+      component: () => import('@/pages/record/RecordView.vue')
     },
 
     // PATIENT VIEW
