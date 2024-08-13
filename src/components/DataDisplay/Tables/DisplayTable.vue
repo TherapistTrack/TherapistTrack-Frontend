@@ -36,6 +36,7 @@ function handleClick(key) {
   grid-template-columns: auto;
   font-family: 'MotivaSansLighter';
   /* Two columns */
+  font-size: 2vh;
 }
 
 .header-row,

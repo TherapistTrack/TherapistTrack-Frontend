@@ -144,8 +144,7 @@ const handleOpenPreview = (key) => {
 
 .page {
   padding: 5vw;
-  padding-top: 8vh;
-  width: 80vw;
+  width: 100vw;
 }
 
 .records .actions {

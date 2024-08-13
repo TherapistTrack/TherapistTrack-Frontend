@@ -47,6 +47,7 @@ function handleClick() {
 
 .icon-button-component p {
   color: var(--gray-1);
+  font-size: 2.2vh;
 }
 
 .icon-button-component:hover {
