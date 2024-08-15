@@ -3,7 +3,7 @@
     <div class="view-record" @click.stop="" :id="start ? 'init' : 'end'">
       <div class="top">
         <h1>
-          <b>{{ data[props.id].nombre }}<br />{{ data[props.id].apellido }}</b>
+          <b>{{ localData[props.id].nombre }}<br />{{ localData[props.id].apellido }}</b>
         </h1>
         <RiCloseLine
           class-name="icon"
@@ -13,9 +13,23 @@
           @click="goBack()"
         />
       </div>
-
+      <div class="actions">
+        <RiEditBoxLine
+          class-name="act-edit"
+          size="1.5rem"
+          color="var(--gray-1)"
+          alt="edit"
+          @click="handleOpenEdit(props.id)"
+        />
+        <RiDeleteBin7Fill
+          class-name="act-delete"
+          size="1.5rem"
+          color="var(--gray-1)"
+          alt="delete"
+        />
+      </div>
       <div class="mid">
-        <SimpleTable :data="data[props.id]" :headers="headers" />
+        <SimpleTable :data="localData[props.id]" :headers="headers" />
       </div>
 
       <div class="bottom">
@@ -26,7 +40,7 @@
 </template>
 
 <script setup>
-import { RiCloseLine } from '@remixicon/vue'
+import { RiCloseLine, RiEditBoxLine, RiDeleteBin7Fill } from '@remixicon/vue'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import SimpleTable from '@/components/DataDisplay/Tables/SimpleTable.vue'
@@ -34,10 +48,12 @@ import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 
 const start = ref(false)
 const router = useRouter()
-const data = ref(null)
+const localData = ref(null)
 const props = defineProps({
-  id: String
+  id: String,
+  data: Object
 })
+localData.value = props.data
 
 onMounted(() => {
   setTimeout(() => {
@@ -53,39 +69,6 @@ const headers = ref({
   estadoCivil: 'Estado Civil',
   nombrePareja: 'Nombre de Pareja'
 })
-
-data.value = {
-  1: {
-    id: 'EXP-001',
-    nombre: 'Esteban',
-    apellido: 'Zambrano',
-    escolaridad: 'Univseridad',
-    ultimaAct: '03/04/2020',
-    estadoCivil: 'Casado',
-    nombrePareja: 'Juan Fernando Menéndez',
-    nacimiento: '03/03/2003'
-  },
-  2: {
-    id: 'EXP-002',
-    nombre: 'Daniel',
-    apellido: 'Rayo',
-    escolaridad: 'Univseridad',
-    ultimaAct: '03/04/2023',
-    estadoCivil: 'Soltero',
-    nombrePareja: '',
-    nacimiento: '05/05/2003'
-  },
-  3: {
-    id: 'EXP-003',
-    nombre: 'Juanito',
-    apellido: 'Del Valle',
-    escolaridad: 'Básicos',
-    ultimaAct: '03/04/2023',
-    estadoCivil: 'Soltero',
-    nombrePareja: '',
-    nacimiento: '03/03/2008'
-  }
-}
 
 const goBack = () => {
   start.value = false
@@ -134,14 +117,36 @@ const goBack = () => {
 .view-record#end {
   right: -400px;
 }
+
+.view-record .icon,
+.view-record .act-edit,
+.view-record .act-delete {
+  cursor: pointer;
+  max-height: 5vh;
+  transition: fill 0.1s;
+}
+
+.act-edit:hover {
+  fill: var(--yellow-1);
+}
+.act-delete:hover {
+  fill: var(--red-1);
+}
+
 .view-record .top {
   display: flex;
   justify-content: space-between;
-  padding-bottom: 2rem;
+  padding-bottom: 1rem;
 }
-
+.view-record .actions {
+  display: flex;
+  gap: 1.5rem;
+  padding-bottom: 1rem;
+}
 .view-record .mid {
   padding: 1rem;
+  height: 360px;
+  overflow-y: auto;
 }
 
 .view-record .bottom {

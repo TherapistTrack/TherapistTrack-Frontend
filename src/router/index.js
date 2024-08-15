@@ -77,8 +77,17 @@ const router = createRouter({
           path: 'view:id',
           component: () => import('@/pages/record/ViewRecord.vue'),
           props: (route) => ({
-            userId: route.params.id // Pass id from route parameters
+            userId: route.params.id, // Pass id from route parameters
+            data: Object
           })
+        },
+        {
+          path: 'table-settings',
+          component: () => import('@/pages/record/RecordShowTable.vue'),
+          props: {
+            shownHeaders: Object,
+            allHeaders: Object
+          }
         }
       ]
     },

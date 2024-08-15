@@ -1,5 +1,10 @@
 <template>
-  <router-view :id="selected" />
+  <router-view
+    :id="selected"
+    v-model:shownHeaders="headers"
+    :allHeaders="allHeaders"
+    :data="fetchedData"
+  />
   <div class="tabs">
     <RecordSideBar :minim="minim" @updateValue="updateMinim" />
   </div>
@@ -14,12 +19,20 @@
         <ButtonSimple :msg="'Nuevo'" />
       </div>
       <div class="established"></div>
-      <DisplayTable
-        :data="fetchedData"
-        :headers="headers"
-        :loading="loading"
-        :onClick="handleOpenPreview"
-      />
+      <div class="table-illusion">
+        <DisplayTable
+          :data="fetchedData"
+          :headers="headers"
+          :loading="loading"
+          :onClick="handleOpenPreview"
+        />
+        <DisplayTable
+          :data="fetchedData"
+          :headers="fakeHeaders"
+          :loading="loading"
+          :onClick="handleTableSettings"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -35,7 +48,7 @@ import { useRouter } from 'vue-router'
 // Constants
 const minim = ref(false)
 const router = useRouter()
-const fetchedData = ref(null)
+const fetchedData = ref({})
 const loading = ref(false)
 const selected = ref(0)
 
@@ -44,6 +57,21 @@ const headers = ref({
   nombre: 'Nombre',
   apellido: 'Apellidos',
   escolaridad: 'Escolaridad'
+})
+
+const allHeaders = ref({
+  id: 'ID',
+  nombre: 'Nombre',
+  apellido: 'Apellidos',
+  escolaridad: 'Escolaridad',
+  ultimaAct: 'Ultima Actualización',
+  estadoCivil: 'Estado Civil',
+  nombrePareja: 'Nombre de Pareja',
+  nacimiento: 'Fecha de Nacimiento'
+})
+
+const fakeHeaders = ref({
+  moreSettings: '...'
 })
 
 // On Mounted
@@ -85,31 +113,78 @@ onMounted(async () => {
       estadoCivil: 'Soltero',
       nombrePareja: '',
       nacimiento: '03/03/2008'
+    },
+    4: {
+      id: 'EXP-004',
+      nombre: 'Maria',
+      apellido: 'González',
+      escolaridad: 'Secundaria',
+      ultimaAct: '10/06/2022',
+      estadoCivil: 'Casada',
+      nombrePareja: 'Luis Martínez',
+      nacimiento: '12/07/2000'
+    },
+    5: {
+      id: 'EXP-005',
+      nombre: 'Carlos',
+      apellido: 'Soto',
+      escolaridad: 'Doctorado',
+      ultimaAct: '01/02/2021',
+      estadoCivil: 'Soltero',
+      nombrePareja: '',
+      nacimiento: '22/08/1998'
+    },
+    6: {
+      id: 'EXP-006',
+      nombre: 'Ana',
+      apellido: 'Ramírez',
+      escolaridad: 'Maestría',
+      ultimaAct: '18/03/2023',
+      estadoCivil: 'Casada',
+      nombrePareja: 'Javier Fernández',
+      nacimiento: '15/04/2001'
+    },
+    7: {
+      id: 'EXP-007',
+      nombre: 'Miguel',
+      apellido: 'Torres',
+      escolaridad: 'Univseridad',
+      ultimaAct: '27/09/2020',
+      estadoCivil: 'Soltero',
+      nombrePareja: '',
+      nacimiento: '30/11/2002'
+    },
+    8: {
+      id: 'EXP-008',
+      nombre: 'Laura',
+      apellido: 'Mendoza',
+      escolaridad: 'Bachillerato',
+      ultimaAct: '05/05/2022',
+      estadoCivil: 'Casada',
+      nombrePareja: 'Carlos Hernández',
+      nacimiento: '01/01/2004'
+    },
+    9: {
+      id: 'EXP-009',
+      nombre: 'Roberto',
+      apellido: 'Pérez',
+      escolaridad: 'Primaria',
+      ultimaAct: '12/12/2021',
+      estadoCivil: 'Soltero',
+      nombrePareja: '',
+      nacimiento: '14/06/2007'
+    },
+    10: {
+      id: 'EXP-010',
+      nombre: 'Elena',
+      apellido: 'Rodríguez',
+      escolaridad: 'Univseridad',
+      ultimaAct: '22/08/2023',
+      estadoCivil: 'Casada',
+      nombrePareja: 'Pedro Morales',
+      nacimiento: '02/02/2000'
     }
   }
-  //   fetchedData.value = {
-  //     1: {
-  //       nombre: 'Daniel Rayo',
-  //       rol: 'Doctor',
-  //       telefonos: ['555 555', '222 222'],
-  //       numColegiado: 32115,
-  //       correos: ['aaa@gmail.com', 'bbb@gmail.com']
-  //     },
-  //     2: {
-  //       nombre: 'Sofia de la Rosa',
-  //       rol: 'Doctor',
-  //       telefonos: ['444 444', '333 333'],
-  //       numColegiado: 53515,
-  //       correos: ['ccc@gmail.com', 'ddd@gmail.com']
-  //     },
-  //     3: {
-  //       nombre: 'Ricardo Morales Sagastume',
-  //       rol: 'Asistente',
-  //       telefonos: ['111 111', '777 777'],
-  //       numColegiado: null,
-  //       correos: ['eee@gmail.com']
-  //     }
-  //   }
 
   loading.value = false
   return fetchedData
@@ -123,6 +198,10 @@ const updateMinim = () => {
 const handleOpenPreview = (key) => {
   selected.value = key
   router.push(`/records/view${key}`)
+}
+
+const handleTableSettings = () => {
+  router.push('/records/table-settings')
 }
 </script>
 
@@ -151,6 +230,11 @@ const handleOpenPreview = (key) => {
   display: flex;
   gap: 1rem;
   padding-bottom: 0.5rem;
+}
+
+.records .table-illusion {
+  display: grid;
+  grid-template-columns: 10fr 1fr;
 }
 /* SideBar Space */
 .sideSpace {

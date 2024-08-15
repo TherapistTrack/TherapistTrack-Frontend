@@ -26,6 +26,7 @@ defineProps({
 .searchBar input {
   border: none;
   background: none;
+  max-width: 150px;
 }
 
 .searchBar img {
