@@ -1,18 +1,40 @@
 <template>
   <div class="table-container">
     <div class="header-row">
-      <p class="header-item" v-for="(item, key) in headers" :key="key">
-        {{ item }}
-      </p>
+      <span
+        class="header-item"
+        :class="item === '...' ? 'special-header' : 'header-item'"
+        v-for="(item, key) in headers"
+        :key="key"
+      >
+        <p v-if="item == '...'" @click="handleClick()">
+          {{ item }}
+        </p>
+        <p v-else>
+          {{ item }}
+        </p>
+      </span>
     </div>
-    <div v-if="loading">
-      <DataLoader />
-    </div>
+    <div class="table-scrollable">
+      <div v-if="loading">
+        <DataLoader />
+      </div>
 
-    <div v-else class="table-row" v-for="(item, key) in data" :key="key" @click="handleClick(key)">
-      <p class="table-item" v-for="(elem, key) in Object.keys(headers)" :key="key">
-        {{ item[elem] }}
-      </p>
+      <div
+        v-else
+        class="table-row"
+        v-for="(item, key) in data"
+        :key="key"
+        @click="handleClick(key)"
+      >
+        <p
+          :class="elem === 'moreSettings' ? 'special' : 'table-item'"
+          v-for="(elem, key) in Object.keys(headers)"
+          :key="key"
+        >
+          {{ item[elem] }}
+        </p>
+      </div>
     </div>
   </div>
 </template>
@@ -32,48 +54,70 @@ function handleClick(key) {
 
 <style>
 .table-container {
-  display: grid;
-  grid-template-columns: auto;
+  display: flex;
+  flex-direction: column;
   font-family: 'MotivaSansLighter';
   /* Two columns */
+  font-size: 2vh;
 }
 
-.header-row,
-.table-row {
+.table-container .header-row,
+.table-container .table-row {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
 }
-.header-row {
+
+.table-container .header-row {
   border-top: 0.2vh solid #ccc;
   color: var(--gray-1);
 }
-.table-row {
+
+.table-container .table-scrollable {
+  max-height: 50vh;
+  overflow: auto;
+}
+.table-container .table-row {
   color: var(--black);
   font-weight: bold;
 }
 
-.header-item,
-.table-item {
+.table-container .header-item,
+.table-container .table-item {
   padding: 0.5rem;
   border-bottom: 0.2vh solid #ccc;
 }
 
-.header-item {
+.table-container .header-item {
   color: var(--gray-1);
 }
 
-.table-item {
+.table-container .table-item {
   color: var(--black);
   font-weight: bold;
+  transition: background-color 0.1s;
 }
 
 .table-item + .table-item {
   border-left: 1px solid #ccc;
 }
 
-.table-row:hover {
+.table-container .special {
+  border-left: 1px solid #ccc;
+}
+
+.table-container .table-row:hover .table-item {
   background-color: var(--yellow-2);
+  cursor: pointer;
+}
+
+.special-header {
+  transition: background-color 0.1s;
+}
+
+.special:hover,
+.special-header:hover {
+  background-color: var(--light-blue-1);
   cursor: pointer;
 }
 </style>

@@ -22,17 +22,19 @@ defineProps({
 </script>
 
 <style>
-.-simple-table-container {
+.simple-table-container {
   display: grid;
   grid-template-columns: auto;
   font-family: 'MotivaSansLighter';
 }
-
+.simple-table-container * {
+  font-size: 2.5vh;
+}
 .simple-row {
   width: 100%;
   display: grid;
   grid-template-columns: 1fr 2fr;
-  padding-bottom: 5vh;
+  padding-bottom: 4vh;
 }
 
 .simple-item-first {
