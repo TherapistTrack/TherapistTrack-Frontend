@@ -9,6 +9,11 @@ const router = createRouter({
       name: 'login',
       component: () => import('@/pages/login/LoginView.vue')
     },
+    {
+      path: '/callback',
+      name: 'loginCallback',
+      component: () => import('@/pages/login/CallbackView.vue')
+    },
 
     // ADMIN VIEW
     {
