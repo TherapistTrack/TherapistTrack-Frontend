@@ -96,7 +96,7 @@ const abortDelete = () => {
 const handleOpenEdit = () => {
   start.value = false
   setTimeout(() => {
-    router.push(`/records/edit${props.id}`)
+    router.push(`/record/main/edit${props.id}`)
   }, 250) // You can adjust the delay if needed
 }
 </script>

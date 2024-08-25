@@ -5,25 +5,25 @@
         <SearchBar :pholder="'Buscar por Nombre'" />
       </div>
       <div class="do-show">
-        <p>Mostrar en la tabla</p>
+        <p class="title">Mostrar en la tabla</p>
         <div v-for="(item, key) in localShownHeaders" :key="key" class="active-field">
           <span>
             <RiDraggable color="var(--gray-1)" size="1.3rem" />
-            {{ item }}
+            <p>{{ item }}</p>
           </span>
-          <RiEyeFill color="var(--gray-1)" size="1.3rem" @click="deactivateField(key)" />
+          <RiEyeFill color="var(--gray-1)" size="1.1rem" @click="deactivateField(key)" />
         </div>
       </div>
 
       <div class="no-show">
-        <p>Ocultar en la Tabla</p>
+        <p class="title">Ocultar en la Tabla</p>
         <template v-for="(item, key) in props.allHeaders" :key="key">
           <div v-if="!Object.keys(localShownHeaders).includes(key)" class="inactive-field">
             <span>
               <RiDraggable color="var(--gray-1)" size="1.3rem" />
-              {{ item }}
+              <p>{{ item }}</p>
             </span>
-            <RiEyeOffFill color="var(--gray-2)" size="1.3rem" @click="activateField(key)" />
+            <RiEyeOffFill color="var(--gray-2)" size="1.1rem" @click="activateField(key)" />
           </div>
         </template>
       </div>
@@ -99,6 +99,13 @@ const updateShownHeaders = () => {
   background-color: none;
 }
 
+.table-overlayContainer p {
+  font-size: small;
+}
+.table-overlayContainer .title {
+  color: var(--gray-1);
+}
+
 .table-settings {
   position: absolute;
   right: -220px;
@@ -128,6 +135,7 @@ const updateShownHeaders = () => {
 /* Areas */
 .table-settings .do-show,
 .table-settings .no-show {
+  padding-top: 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
@@ -142,8 +150,14 @@ const updateShownHeaders = () => {
   font-size: smaller;
   height: fit-content;
   transition: height 1s;
+  padding: 0.1rem;
+  padding-right: 0.4rem;
 }
 
+.table-settings .active-field:hover,
+.table-settings .inactive-field:hover {
+  background-color: var(--gray-3);
+}
 .table-settings .active-field *,
 .table-settings .inactive-field * {
   display: flex;

@@ -63,32 +63,42 @@ const router = createRouter({
 
     // RECORD VIEW
     {
-      path: '/records',
-      component: () => import('@/pages/record/RecordView.vue'),
+      path: '/record',
+      component: () => import('@/pages/record/RecordIndex.vue'),
       children: [
         {
-          path: 'edit:id',
-          component: () => import('@/pages/record/EditRecord.vue'),
-          props: (route) => ({
-            userId: route.params.id, // Pass id from route parameters
-            data: Object
-          })
+          path: 'main',
+          component: () => import('@/pages/record/RecordView.vue'),
+          children: [
+            {
+              path: 'edit:id',
+              component: () => import('@/pages/record/EditRecord.vue'),
+              props: (route) => ({
+                userId: route.params.id, // Pass id from route parameters
+                data: Object
+              })
+            },
+            {
+              path: 'view:id',
+              component: () => import('@/pages/record/ViewRecord.vue'),
+              props: (route) => ({
+                userId: route.params.id, // Pass id from route parameters
+                data: Object
+              })
+            },
+            {
+              path: 'table-settings',
+              component: () => import('@/pages/record/RecordShowTable.vue'),
+              props: {
+                shownHeaders: Object,
+                allHeaders: Object
+              }
+            }
+          ]
         },
         {
-          path: 'view:id',
-          component: () => import('@/pages/record/ViewRecord.vue'),
-          props: (route) => ({
-            userId: route.params.id, // Pass id from route parameters
-            data: Object
-          })
-        },
-        {
-          path: 'table-settings',
-          component: () => import('@/pages/record/RecordShowTable.vue'),
-          props: {
-            shownHeaders: Object,
-            allHeaders: Object
-          }
+          path: 'create',
+          component: () => import('@/pages/record/CreateRecord.vue')
         }
       ]
     },

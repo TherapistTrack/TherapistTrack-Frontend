@@ -42,6 +42,7 @@ const props = defineProps({
   onYes: Function,
   onNo: Function
 })
+
 watch(localName, () => {
   if (localName.value == props.name) {
     confirmDelete.value = true
@@ -49,9 +50,11 @@ watch(localName, () => {
     confirmDelete.value = false
   }
 })
+
 const handleClickYes = () => {
   props.onYes()
 }
+
 const handleClickNo = () => {
   props.onNo()
 }
