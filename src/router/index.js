@@ -70,7 +70,8 @@ const router = createRouter({
           path: 'edit:id',
           component: () => import('@/pages/record/EditRecord.vue'),
           props: (route) => ({
-            userId: route.params.id // Pass id from route parameters
+            userId: route.params.id, // Pass id from route parameters
+            data: Object
           })
         },
         {
