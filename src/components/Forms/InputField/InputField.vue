@@ -14,8 +14,6 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits } from 'vue'
-
 const emit = defineEmits(['update:modelValue'])
 
 const updateValue = (event) => {
@@ -54,21 +52,21 @@ defineProps({
 })
 </script>
 
-<style scoped>
+<style>
 .input-group {
   margin-bottom: 1rem;
-  display: grid;
-  grid-template-columns: 1fr 3fr;
+  display: flex;
+  justify-content: start;
+  gap: 1rem;
+  align-items: center;
 }
 
 .input-group label {
-  display: block;
   margin-bottom: 0.5rem;
   color: black;
 }
 
 .input-group input {
-  width: 100%;
   padding: 0.75rem;
   border: 1px solid var(--gray-3);
   border-radius: 0.5rem;
