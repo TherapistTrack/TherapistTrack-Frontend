@@ -1,6 +1,9 @@
 <template>
   <div class="input-group">
-    <label :for="id">{{ label }}</label>
+    <label @mouseover="onMouseOver" @mouseleave="onMouseLeave" :for="id"
+      >{{ label }}<b class="red">*</b>
+      <div v-if="isHovered" class="descriptor">{{ description }}</div>
+    </label>
     <input
       :type="type"
       :id="id"
@@ -9,17 +12,26 @@
       :placeholder="placeholder"
       :maxlength="maxlength"
     />
-    <span v-if="showIcon" class="icon-eye"></span>
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue'
+
+const isHovered = ref(false)
 const emit = defineEmits(['update:modelValue'])
 
 const updateValue = (event) => {
   emit('update:modelValue', event.target.value)
 }
 
+const onMouseOver = () => {
+  isHovered.value = true
+}
+
+const onMouseLeave = () => {
+  isHovered.value = false
+}
 defineProps({
   modelValue: {
     type: String,
@@ -45,9 +57,9 @@ defineProps({
     type: Number,
     default: 255
   },
-  showIcon: {
-    type: Boolean,
-    default: false
+  description: {
+    type: String,
+    required: true
   }
 })
 </script>
@@ -59,9 +71,25 @@ defineProps({
   grid-template-columns: 1fr 3fr;
 }
 
+.input-group .red {
+  color: var(--red-1);
+}
+
+.input-group .descriptor {
+  padding: 0.2rem;
+  position: absolute;
+  background-color: white;
+  top: -30px;
+  left: 50px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  min-width: 100px;
+  font-size: x-small;
+}
+
 .input-group label {
   margin-bottom: 0.5rem;
   color: black;
+  position: relative;
 }
 
 .input-group input {
