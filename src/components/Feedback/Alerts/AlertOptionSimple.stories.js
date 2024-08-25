@@ -1,5 +1,5 @@
 import { fn } from '@storybook/test'
-import AlertSimple from './AlertSimple.vue'
+import AlertSimple from './AlertOptionSimple.vue'
 
 const meta = {
   component: AlertSimple,
