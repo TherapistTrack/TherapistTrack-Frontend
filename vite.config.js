@@ -14,6 +14,9 @@ export default defineConfig(({ mode }) => {
     server: {
       port: port
     },
+    preview: {
+      port: port
+    },
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url))
