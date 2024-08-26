@@ -3,15 +3,7 @@
     {{ result }}
   </div>
 </template>
-<script setup>
-import { onMounted, ref } from 'vue'
-
-const result = ref('')
-
-onMounted(() => {
-  console.log(window.location)
-})
-</script>
+<script setup></script>
 <style scoped>
 .container {
   width: 100vw;

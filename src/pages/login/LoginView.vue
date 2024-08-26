@@ -10,12 +10,16 @@
 
 <script setup>
 import { useAuth0 } from '@auth0/auth0-vue'
+import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
 const auth0 = useAuth0()
+const router = useRouter()
 
 function login() {
   auth0.loginWithRedirect()
 }
+
 function logout() {
   auth0.logout({
     logoutParams: {
@@ -23,6 +27,14 @@ function logout() {
     }
   })
 }
+
+// TODO : Redirect to Admin or Doctor UI depending on the user info.
+onMounted(() => {
+  const freeNavigation = import.meta.env.VITE_FREE_NAVIGATION || 'FALSE'
+  if (auth0.isAuthenticated.value && freeNavigation === 'FALSE') {
+    router.replace({ path: '/records' })
+  }
+})
 </script>
 
 <style>
