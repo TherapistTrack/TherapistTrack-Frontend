@@ -2,60 +2,62 @@
   <div class="create-record">
     <h1><b>Nuevo Expediente</b></h1>
     <DataLoader v-if="loading" />
-    <div v-else class="actions">
-      <SelectDropDown
-        :id="'escoger-plantilla'"
-        :label="'Plantilla'"
-        :disabledValue="'Seleccione una plantilla'"
-        :options="plantillasOptions"
-        v-model:modelValue="selected"
-      />
-      <div v-for="(key, item) in plantillasData[selected]" :key="key">
-        <span v-if="key.type == 'optioned'">
-          <span v-if="key.required">
-            <SelectDropDownRequired
-              :id="'key'"
-              :label="key.name"
-              :disabledValue="'Seleccione una opción'"
-              :options="key.options"
-              v-model:modelValue="info[item]"
-              :description="key.description"
-            />
+    <span v-else>
+      <div class="actions">
+        <SelectDropDown
+          :id="'escoger-plantilla'"
+          :label="'Plantilla'"
+          :disabledValue="'Seleccione una plantilla'"
+          :options="plantillasOptions"
+          v-model:modelValue="selected"
+        />
+        <div v-for="(key, item) in plantillasData[selected]" :key="key">
+          <span v-if="key.type == 'optioned'">
+            <span v-if="key.required">
+              <SelectDropDownRequired
+                :id="'key'"
+                :label="key.name"
+                :disabledValue="'Seleccione una opción'"
+                :options="key.options"
+                v-model:modelValue="info[item]"
+                :description="key.description"
+              />
+            </span>
+            <span v-else>
+              <SelectDropDown
+                :id="'key'"
+                :label="key.name"
+                :disabledValue="'Seleccione una opción'"
+                :options="key.options"
+                v-model:modelValue="info[item]"
+              />
+            </span>
           </span>
           <span v-else>
-            <SelectDropDown
-              :id="'key'"
-              :label="key.name"
-              :disabledValue="'Seleccione una opción'"
-              :options="key.options"
-              v-model:modelValue="info[item]"
-            />
+            <span v-if="key.required">
+              <InputFieldRequired
+                :id="'required-field'"
+                :label="key.name"
+                :type="key.type"
+                :description="key.description"
+                v-model:modelValue="info[item]"
+              />
+            </span>
+            <span v-else>
+              <InputField
+                :id="'normal-field'"
+                :label="key.name"
+                :type="key.type"
+                v-model:modelValue="info[item]"
+              />
+            </span>
           </span>
-        </span>
-        <span v-else>
-          <span v-if="key.required">
-            <InputFieldRequired
-              :id="'required-field'"
-              :label="key.name"
-              :type="key.type"
-              :description="key.description"
-              v-model:modelValue="info[item]"
-            />
-          </span>
-          <span v-else>
-            <InputField
-              :id="'normal-field'"
-              :label="key.name"
-              :type="key.type"
-              v-model:modelValue="info[item]"
-            />
-          </span>
-        </span>
+        </div>
       </div>
-    </div>
-    <div class="button-space">
-      <ButtonSimple :msg="'Crear'" :disabled="!canCreate" />
-    </div>
+      <div class="button-space">
+        <ButtonSimple :msg="'Crear'" :disabled="!canCreate" />
+      </div>
+    </span>
   </div>
 </template>
 

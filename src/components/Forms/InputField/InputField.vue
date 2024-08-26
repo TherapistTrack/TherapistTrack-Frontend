@@ -57,10 +57,11 @@ defineProps({
   margin-bottom: 1rem;
   display: grid;
   grid-template-columns: 1fr 3fr;
+  gap: 1rem;
+  align-items: center;
 }
 
 .input-group label {
-  margin-bottom: 0.5rem;
   color: black;
 }
 

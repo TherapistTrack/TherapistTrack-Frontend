@@ -65,6 +65,7 @@ defineProps({
   margin-bottom: 1rem;
   display: grid;
   grid-template-columns: 1fr 3fr;
+  gap: 1rem;
 }
 .select-group .red {
   color: var(--red-1);
