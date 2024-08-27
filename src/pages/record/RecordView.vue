@@ -186,7 +186,7 @@ onMounted(async () => {
 
 const handleOpenPreview = (key) => {
   selected.value = key
-  router.push(`/record/main/view${key}`)
+  router.push(`/record/main/view/${key}`)
 }
 
 const handleTableSettings = () => {

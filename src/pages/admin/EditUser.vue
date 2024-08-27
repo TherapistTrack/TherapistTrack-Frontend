@@ -156,6 +156,7 @@ const props = defineProps({
 
 const goBack = () => {
   router.back()
+  router.back()
 }
 
 const isFormValid = computed(() => {
