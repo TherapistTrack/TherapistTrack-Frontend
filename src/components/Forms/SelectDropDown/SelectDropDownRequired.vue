@@ -1,6 +1,10 @@
 <template>
   <div class="select-group">
-    <label :for="id">{{ label }}</label>
+    <label @mouseover="onMouseOver" @mouseleave="onMouseLeave" :for="id"
+      >{{ label }}<b class="red">*</b>
+      <div v-if="isHovered" class="descriptor">{{ description }}</div>
+    </label>
+
     <select :id="id" :value="modelValue" @change="updateValue">
       <option disabled value="">{{ disabledValue }}</option>
       <option v-for="(item, index) in options" :key="index" :value="item">{{ item }}</option>
@@ -9,11 +13,22 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
+
+const isHovered = ref(false)
 const emit = defineEmits(['update:modelValue'])
 
 const updateValue = (event) => {
   emit('update:modelValue', event.target.value)
   console.log(event.target.value)
+}
+
+const onMouseOver = () => {
+  isHovered.value = true
+}
+
+const onMouseLeave = () => {
+  isHovered.value = false
 }
 
 defineProps({
@@ -36,6 +51,10 @@ defineProps({
   options: {
     type: Array,
     default: () => []
+  },
+  description: {
+    type: String,
+    required: true
   }
 })
 </script>
@@ -48,9 +67,24 @@ defineProps({
   grid-template-columns: 1fr 3fr;
   gap: 1rem;
 }
+.select-group .red {
+  color: var(--red-1);
+}
+
+.select-group .descriptor {
+  padding: 0.2rem;
+  position: absolute;
+  background-color: white;
+  top: -30px;
+  left: 50px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  min-width: 100px;
+  font-size: x-small;
+}
 
 .select-group label {
   padding-bottom: 1vh;
+  position: relative;
 }
 .select-group select,
 .select-group select option {

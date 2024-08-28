@@ -26,6 +26,7 @@
           size="1.5rem"
           color="var(--gray-1)"
           alt="delete"
+          @click="handleDelete(props.id)"
         />
       </div>
       <div class="mid">
@@ -37,6 +38,11 @@
       </div>
     </div>
   </div>
+  <AlertDelete
+    v-if="tryDelete"
+    :name="`${props.data[props.id].nombre} ${props.data[props.id].apellido}`"
+    :on-no="abortDelete"
+  />
 </template>
 
 <script setup>
@@ -45,10 +51,12 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import SimpleTable from '@/components/DataDisplay/Tables/SimpleTable.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
+import AlertDelete from '@/components/Feedback/Alerts/AlertDelete.vue'
 
 const start = ref(false)
 const router = useRouter()
 const localData = ref(null)
+const tryDelete = ref(false)
 const props = defineProps({
   id: String,
   data: Object
@@ -74,6 +82,21 @@ const goBack = () => {
   start.value = false
   setTimeout(() => {
     router.back()
+  }, 250) // You can adjust the delay if needed
+}
+
+const handleDelete = (id) => {
+  // Deleting based on the id
+  console.log(id)
+  tryDelete.value = !tryDelete.value
+}
+const abortDelete = () => {
+  tryDelete.value = false
+}
+const handleOpenEdit = () => {
+  start.value = false
+  setTimeout(() => {
+    router.push(`/record/main/edit/${props.id}`)
   }, 250) // You can adjust the delay if needed
 }
 </script>

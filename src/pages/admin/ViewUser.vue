@@ -79,7 +79,7 @@ const props = defineProps({
 
 const handleOpenEdit = (key) => {
   selected.value = key
-  router.push(`/admin/user/edit${key}`)
+  router.push(`/admin/user/edit/${key}`)
 }
 
 const goBack = () => {

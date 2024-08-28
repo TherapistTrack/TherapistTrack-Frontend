@@ -81,7 +81,7 @@ const handleOpenCreate = () => {
 
 const handleOpenView = (key) => {
   selected.value = key
-  router.push(`/admin/user/view${key}`)
+  router.push(`/admin/user/view/${key}`)
 }
 </script>
 
