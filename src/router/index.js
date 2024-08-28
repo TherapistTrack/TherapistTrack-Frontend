@@ -44,15 +44,19 @@ const router = createRouter({
     // CONFIG PAGE
     {
       path: '/config',
-      component: () => import('@/pages/notfound/NotFoundView.vue'),
+      component: () => import('@/pages/config/ConfigContainer.vue'),
       children: [
         {
           path: 'profile',
-          component: () => import('@/pages/notfound/NotFoundView.vue')
+          component: () => import('@/pages/config/ProfileView.vue')
         },
         {
           path: 'patients',
-          component: () => import('@/pages/notfound/NotFoundView.vue')
+          component: () => import('@/pages/config/PatientList.vue')
+        },
+        {
+          path: 'template',
+          component: () => import('@/pages/config/CustomizeTemplate.vue')
         },
         {
           path: 'records',
