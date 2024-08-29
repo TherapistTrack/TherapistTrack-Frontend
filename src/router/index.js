@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { routeGuard } from '@/oauth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -8,6 +9,11 @@ const router = createRouter({
       path: '/',
       name: 'login',
       component: () => import('@/pages/login/LoginView.vue')
+    },
+    {
+      path: '/callback',
+      name: 'loginCallback',
+      component: () => import('@/pages/login/CallbackView.vue')
     },
 
     // ADMIN VIEW
@@ -131,5 +137,11 @@ const router = createRouter({
     }
   ]
 })
+
+// Dev check to allow free navigetion withouth having any JWT tokens.
+const freeNavigation = import.meta.env.VITE_FREE_NAVIGATION || 'FALSE'
+if (freeNavigation === 'FALSE') {
+  router.beforeEach(routeGuard)
+}
 
 export default router
