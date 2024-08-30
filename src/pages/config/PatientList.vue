@@ -69,8 +69,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router' // Importa useRouter
-import SideBarConfig from '@/components/Navigation/SideBar/SideBarConfig.vue'
+import { useRouter } from 'vue-router'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import SearchBar from '@/components/Forms/InputField/SearchBar.vue'
 import DisplayTable from '@/components/DataDisplay/Tables/DisplayTable.vue'
@@ -170,6 +169,11 @@ function handlePatientClick(patientId) {
   height: 100vh;
   margin-left: 0;
   box-shadow: none;
+  overflow-y: hidden;
+}
+
+DisplayTable {
+  max-height: calc(100vh - 150px);
   overflow-y: auto;
 }
 

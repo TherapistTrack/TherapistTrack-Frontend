@@ -64,7 +64,6 @@
 </template>
 
 <script setup>
-import SideBarConfig from '@/components/Navigation/SideBar/SideBarConfig.vue'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import InputField from '@/components/Forms/InputField/InputField.vue'
@@ -103,7 +102,7 @@ function saveTemplate() {
 }
 
 function handleContextMenu(event, field) {
-  event.stopPropagation() // Prevent propagation to hideContextMenu
+  event.stopPropagation()
   selectedField.value = field
   showContextMenu(event)
 }

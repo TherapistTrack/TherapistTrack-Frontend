@@ -73,7 +73,7 @@ const cancel = () => {
 }
 
 .delete-button {
-  background-color: var(--red-1); /* Puedes usar la variable de color que prefieras */
+  background-color: var(--red-1);
   color: white;
   border: none;
   padding: 0.5rem 1rem;

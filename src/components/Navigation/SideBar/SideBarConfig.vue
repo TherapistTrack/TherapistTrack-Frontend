@@ -1,5 +1,6 @@
 <template>
   <div class="sideBtn">
+    <!-- SideBar Configuration -->
     <img
       @click="setMin(false)"
       class="sideLogo"
@@ -21,7 +22,7 @@
         <div class="mid">
           <!-- Enlace a 'Mi Cuenta' -->
           <router-link
-            to="/config/profile"
+            to="/config/account"
             class="option"
             :class="{ selected: selectedOption === 'Mi Cuenta' }"
           >
@@ -35,7 +36,7 @@
           >
             <h4>Pacientes</h4>
           </router-link>
-          <!-- Enlace a 'Backup' (actualizar la ruta según sea necesario) -->
+          <!-- Enlace a 'Backup' -->
           <router-link
             to="/config/backup"
             class="option"
@@ -62,9 +63,8 @@
 
 <script setup>
 import { RiArrowLeftDoubleFill, RiLogoutBoxRLine } from '@remixicon/vue'
-import { ref, defineProps } from 'vue' // Add defineProps import
+import { ref, defineProps } from 'vue'
 
-// Define tus props usando `defineProps`
 const {
   backgroundColor,
   arrowColor,
@@ -77,7 +77,7 @@ const {
 } = defineProps({
   backgroundColor: {
     type: String,
-    default: '#e3f2fd' // Azul claro para el contenedor
+    default: '#e3f2fd'
   },
   arrowColor: {
     type: String,
@@ -139,8 +139,8 @@ const setMin = (val) => {
   height: 8vh;
   width: 8vw;
   max-width: 100px;
-  margin: 0; /* Asegura que no haya margen en la sidebar */
-  padding: 0; /* Elimina cualquier padding */
+  margin: 0;
+  padding: 0;
 }
 
 .sideBtn .sideLogo {
@@ -159,8 +159,8 @@ const setMin = (val) => {
   border-radius: 0 3vh 3vh 0;
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.11);
   transition: left 0.5s;
-  position: absolute; /* Asegúrate de que esté posicionada relativa al contenedor */
-  left: 0; /* Asegura que la barra lateral esté completamente a la izquierda */
+  position: absolute;
+  left: 0;
 }
 
 /* Top */
@@ -180,7 +180,7 @@ const setMin = (val) => {
 
 .sideBtn .bar .mid {
   padding-top: 6vh;
-  margin: 0; /* Elimina cualquier margen en la sección media */
+  margin: 0;
 }
 
 /* mid */
@@ -193,7 +193,7 @@ const setMin = (val) => {
 }
 
 .sideBtn .option.selected {
-  background-color: #1565c0; /* Azul oscuro para la pestaña seleccionada */
+  background-color: #1565c0;
 }
 
 .sideBtn .option h4 {
@@ -202,19 +202,18 @@ const setMin = (val) => {
 }
 
 .mid .option {
-  text-decoration: none; /* Elimina el subrayado */
+  text-decoration: none;
 }
 
 .mid .option h4 {
   margin: 0;
   color: white;
-  text-decoration: none; /* Asegúrate de que no haya subrayado en el texto */
+  text-decoration: none;
 }
 
-/* Estilo para quitar el subrayado cuando el enlace está activo o se pasa el cursor */
 .mid .option:hover h4,
 .mid .option.selected h4 {
-  text-decoration: none; /* Asegura que no haya subrayado en el hover y en el estado activo */
+  text-decoration: none;
 }
 
 /* Bottom */
@@ -229,7 +228,7 @@ const setMin = (val) => {
 }
 
 .sideBtn .bottom .userData {
-  color: #ffffff !important; /* Cambia el color del texto a blanco */
+  color: #ffffff !important;
 }
 
 .sideBtn .bottom p {
@@ -238,11 +237,11 @@ const setMin = (val) => {
 
 .sideBtn .bottom .userData p {
   margin: 0;
-  color: #ffffff !important; /* Asegura que todo el texto dentro de userData sea blanco */
+  color: #ffffff !important;
 }
 
 .sideBtn .bottom .userData b {
-  color: #ffffff !important; /* Asegura que el texto en negrita (nombre del usuario) sea blanco */
+  color: #ffffff !important;
 }
 
 /* Animations */

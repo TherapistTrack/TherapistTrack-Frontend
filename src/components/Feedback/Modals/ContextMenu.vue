@@ -48,21 +48,21 @@ function onRemove() {
 }
 
 .menu-button {
-  background-color: transparent; /* Botón transparente */
-  border: none; /* Sin borde */
+  background-color: transparent;
+  border: none;
   padding: 0.5rem 1rem;
   text-align: left;
   cursor: pointer;
-  color: #000; /* Texto negro por defecto */
-  font-size: 16px; /* Tamaño de fuente */
+  color: #000;
+  font-size: 16px;
 }
 
 .menu-button:hover {
-  background-color: rgba(0, 0, 0, 0.05); /* Fondo ligeramente oscuro al hacer hover */
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .danger {
-  color: red; /* Texto en rojo para el botón de eliminar */
+  color: red;
 }
 
 .menu-button:last-child {
