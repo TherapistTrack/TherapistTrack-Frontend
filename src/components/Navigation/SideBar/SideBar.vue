@@ -26,20 +26,44 @@
           <p><b>Josue Rodriguez</b></p>
           <p>Administrador</p>
         </div>
-        <RiLogoutBoxRLine class="icon" size="1.5rem" color="var(--gray-2)" />
+        <RiLogoutBoxRLine class="icon" size="1.5rem" color="var(--gray-2)" @click="handleLogout" />
       </div>
     </div>
   </div>
   <div class="sideSpace" :id="minim ? 'minimized' : 'maximized'"></div>
+  <AlertOptionSimple
+    v-if="logoutAttempt"
+    msg="¿Estas seguro que deseas cerrar sesión?"
+    :on-no="abortLogout"
+    :on-yes="logout"
+  />
 </template>
 
 <script setup>
 import { RiArrowLeftDoubleFill, RiLogoutBoxRLine } from '@remixicon/vue'
+import AlertOptionSimple from '@/components/Feedback/Alerts/AlertOptionSimple.vue'
 import { ref } from 'vue'
+import { useAuth0 } from '@auth0/auth0-vue'
+const auth0 = useAuth0()
 const minim = ref(true)
+const logoutAttempt = ref(false)
 
 const setMin = (val) => {
   minim.value = val
+}
+
+const handleLogout = () => {
+  logoutAttempt.value = true
+}
+const abortLogout = () => {
+  logoutAttempt.value = false
+}
+const logout = () => {
+  auth0.logout({
+    logoutParams: {
+      returnTo: import.meta.env.VITE_OAUTH_LOGOUT_URI
+    }
+  })
 }
 </script>
 
