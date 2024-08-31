@@ -1,0 +1,68 @@
+[
+    {
+        "username": "jdoe",
+        "name": "John",
+        "lastName": "Doe",
+        "phones": [
+            "+1-555-1234"
+        ],
+        "role": "Doctor",
+        "mails": [
+            "jdoe@example.com"
+        ],
+        "collegiateNumber": "123456",
+        "specialty": "Computer Science",
+        "startDate": "2023-01-15",
+        "endDate": "2026-01-15",
+        "DPI": "0101010101"
+    },
+    {
+        "username": "asmith",
+        "name": "Alice",
+        "lastName": "Smith",
+        "phones": [],
+        "role": "Admin",
+        "mails": [
+            "asmith@example.com",
+            "alice.smith@workplace.com"
+        ],
+        "collegiateNumber": "654321",
+        "specialty": "Data Science",
+        "startDate": "2022-06-01",
+        "endDate": "2025-06-01",
+        "DPI": "0202020202"
+    },
+    {
+        "username": "bwhite",
+        "name": "Bob",
+        "lastName": "White",
+        "phones": [
+            "+1-555-8765",
+            "+1-555-9876"
+        ],
+        "role": "Asistente",
+        "mails": [
+            "bwhite@example.com"
+        ],
+        "collegiateNumber": "789456",
+        "specialty": "Business Management",
+        "startDate": "2024-03-12",
+        "endDate": "2027-03-12",
+        "DPI": "0303030303"
+    },
+    {
+        "username": "cgreen",
+        "name": "Carla",
+        "lastName": "Green",
+        "phones": [
+            "+1-555-4321"
+        ],
+        "role": "Doctor",
+        "mails": [],
+        "collegiateNumber": "321654",
+        "specialty": "Design",
+        "startDate": "2021-09-20",
+        "endDate": "2024-09-20",
+        "DPI": "0404040404"
+    }
+]

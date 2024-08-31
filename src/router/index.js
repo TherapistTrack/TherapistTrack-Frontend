@@ -33,14 +33,16 @@ const router = createRouter({
               path: 'edit/:id',
               component: () => import('@/pages/admin/EditUser.vue'),
               props: (route) => ({
-                userId: route.params.id // Pass id from route parameters
+                userId: route.params.id, // Pass id from route parameters
+                data: Object
               })
             },
             {
               path: 'view/:id',
               component: () => import('@/pages/admin/ViewUser.vue'),
               props: (route) => ({
-                userId: route.params.id // Pass id from route parameters
+                userId: route.params.id, // Pass id from route parameters
+                data: Object
               })
             }
           ]

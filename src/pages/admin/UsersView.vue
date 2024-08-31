@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <router-view :id="selected" />
+    <router-view :userId="`${selected}`" :data="fetchedData" />
     <h1><b>Usuarios</b></h1>
     <p>
       En esta vista puede administrar a los usuarios que tienen acceso a la aplicación y editar su
@@ -27,48 +27,29 @@ import Button from '@/components/Buttons/ButtonSimple.vue'
 import CustomInput from '@/components/Forms/InputField/SearchBar.vue'
 import DisplayTable from '@/components/DataDisplay/Tables/DisplayTable.vue'
 import { useRouter } from 'vue-router'
+import { useApi } from '@/oauth/useApi'
+import users from './users.json'
 
+const { getRequest } = useApi()
 const selected = ref(0)
 const fetchedData = ref(null)
-const loading = ref(false)
 const headers = ref(null)
 const router = useRouter()
+const loading = ref(false)
+
 headers.value = {
-  nombre: 'Nombre',
-  rol: 'Rol'
+  name: 'Nombre',
+  role: 'Rol'
 }
 
 onMounted(async () => {
   loading.value = true
-  // simulation time
-  await new Promise((resolve) => setTimeout(resolve, 500))
-
-  // fetchData for when the backend gets deployed
-  // fetchedData.value = await fetchData();
-  fetchedData.value = {
-    1: {
-      nombre: 'Daniel Rayo',
-      rol: 'Doctor',
-      telefonos: ['555 555', '222 222'],
-      numColegiado: 32115,
-      correos: ['aaa@gmail.com', 'bbb@gmail.com']
-    },
-    2: {
-      nombre: 'Sofia de la Rosa',
-      rol: 'Doctor',
-      telefonos: ['444 444', '333 333'],
-      numColegiado: 53515,
-      correos: ['ccc@gmail.com', 'ddd@gmail.com']
-    },
-    3: {
-      nombre: 'Ricardo Morales Sagastume',
-      rol: 'Asistente',
-      telefonos: ['111 111', '777 777'],
-      numColegiado: null,
-      correos: ['eee@gmail.com']
-    }
+  try {
+    fetchedData.value = await getRequest('/users/list')
+  } catch {
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    fetchedData.value = users
   }
-
   loading.value = false
   return fetchedData
 })
