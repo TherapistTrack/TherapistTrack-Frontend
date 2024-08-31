@@ -1,89 +1,105 @@
 <template>
-  <router-view :id="selected" />
+  <router-view :userId="props.userId" :data="props.data" />
   <div class="overlayContainer" @click="goBack()">
     <div class="view-user" @click.stop="">
-      <div class="top">
-        <h1>{{ data[props.id].nombre }}</h1>
-        <RiCloseLine
-          class-name="icon"
-          size="2rem"
-          color="var(--gray-2)"
-          alt="close"
-          @click="goBack()"
-        />
-      </div>
-      <div class="actions">
-        <RiEditBoxLine
-          class-name="act-edit"
-          size="1.5rem"
-          color="var(--gray-1)"
-          alt="edit"
-          @click="handleOpenEdit(props.id)"
-        />
-        <RiDeleteBin7Fill
-          class-name="act-delete"
-          size="1.5rem"
-          color="var(--gray-1)"
-          alt="delete"
-        />
-      </div>
-      <div class="tableContainer">
-        <SimpleTable :data="data[props.id]" :headers="headers" />
-      </div>
+      <span v-if="isSetup">
+        <div class="top">
+          <h1>{{ props.data[props.userId].name }} {{ props.data[props.userId].lastName }}</h1>
+          <RiCloseLine
+            class-name="icon"
+            size="2rem"
+            color="var(--gray-2)"
+            alt="close"
+            @click="goBack()"
+          />
+        </div>
+        <div class="actions">
+          <RiEditBoxLine
+            class-name="act-edit"
+            size="1.5rem"
+            color="var(--gray-1)"
+            alt="edit"
+            @click="handleOpenEdit(props.userId)"
+          />
+          <RiDeleteBin7Fill
+            class-name="act-delete"
+            size="1.5rem"
+            color="var(--gray-1)"
+            alt="delete"
+            @click="onDelete()"
+          />
+        </div>
+        <div class="tableContainer">
+          <SimpleTable :data="props.data[props.userId]" :headers="headers" />
+        </div>
+      </span>
     </div>
   </div>
+  <AlertDelete
+    v-if="tryDelete"
+    :name="`${props.data[props.userId].name} ${props.data[props.userId].lastName}`"
+    :on-no="abortDelete"
+    :on-yes="handleDelete(data[props.userId].username)"
+  />
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { RiCloseLine, RiDeleteBin7Fill, RiEditBoxLine } from '@remixicon/vue'
 import { useRouter } from 'vue-router'
 import SimpleTable from '@/components/DataDisplay/Tables/SimpleTable.vue'
-const data = ref(null)
+import AlertDelete from '@/components/Feedback/Alerts/AlertDelete.vue'
+import { useApi } from '@/oauth/useApi'
+
+const { deleteRequest } = useApi()
+const localData = ref(null)
 const headers = ref(null)
 const router = useRouter()
 const selected = ref(0)
-headers.value = {
-  rol: 'Rol',
-  telefonos: 'Teléfonos',
-  numColegiado: 'No. Colegiado',
-  correos: 'Correo'
-}
-data.value = {
-  1: {
-    nombre: 'Daniel Rayo',
-    rol: 'Doctor',
-    telefonos: ['555 555', '222 222'],
-    numColegiado: 32115,
-    correos: ['aaa@gmail.com', 'bbb@gmail.com']
-  },
-  2: {
-    nombre: 'Sofia de la Rosa',
-    rol: 'Doctor',
-    telefonos: ['444 444', '333 333'],
-    numColegiado: 53515,
-    correos: ['ccc@gmail.com', 'ddd@gmail.com']
-  },
-  3: {
-    nombre: 'Ricardo Morales Sagastume',
-    rol: 'Asistente',
-    telefonos: ['111 111', '777 777'],
-    numColegiado: null,
-    correos: ['eee@gmail.com']
-  }
-}
+const isSetup = ref(false)
+const tryDelete = ref(false)
 
 const props = defineProps({
-  id: String
+  userId: String,
+  data: Object
 })
+
+onMounted(() => {
+  if (props.data === null || props.data === undefined) {
+    router.push('/admin/user/')
+  } else {
+    isSetup.value = true
+  }
+})
+
+headers.value = {
+  role: 'Rol',
+  phones: 'Teléfonos',
+  collegiateNumber: 'No. Colegiado',
+  mails: 'Correo'
+}
+localData.value = props.data
 
 const handleOpenEdit = (key) => {
   selected.value = key
   router.push(`/admin/user/edit/${key}`)
 }
-
+const onDelete = () => {
+  tryDelete.value = true
+}
+const handleDelete = async (usernameValue) => {
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    await deleteRequest('/users/delete', { username: `${usernameValue}` })
+  } catch {
+    console.error('Cannot delete')
+  }
+}
+const abortDelete = () => {
+  tryDelete.value = false
+}
 const goBack = () => {
-  router.back()
+  router.push('/admin/user/')
 }
 </script>
 
