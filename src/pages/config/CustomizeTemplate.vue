@@ -10,7 +10,7 @@
     />
 
     <div class="content">
-      <h1 class="page-title">Plantilla-2024</h1>
+      <h1 class="page-title">{{ templateName }}</h1>
       <p>Aquí se puede editar los campos de información que se debe registrar sobre un paciente.</p>
 
       <div class="form-header">
@@ -26,14 +26,53 @@
             <span class="field-label">{{ field.name }}</span>
           </div>
           <div class="field-type">
-            <InputField
-              :id="'input-' + index"
-              :type="field.type"
-              :placeholder="field.name"
-              maxlength="255"
-              :showIcon="false"
-              v-model="field.value"
+            <!-- Dropdown para seleccionar el tipo de dato -->
+            <DropdownField
+              v-if="!field.isConfigured"
+              :id="'dropdown-' + index"
+              :label="'Seleccione un tipo'"
+              :disabledValue="'Seleccionar...'"
+              :options="dataTypes"
+              v-model="field.type"
+              @update:modelValue="configureField(index)"
             />
+            <!-- Campos específicos según el tipo seleccionado -->
+            <div v-else>
+              <InputField
+                v-if="field.type === 'SHORT_TEXT'"
+                :id="'input-' + index"
+                type="text"
+                :placeholder="field.name"
+                maxlength="255"
+                v-model="field.value"
+              />
+              <textarea
+                v-if="field.type === 'TEXT'"
+                :id="'textarea-' + index"
+                :placeholder="field.name"
+                v-model="field.value"
+                rows="4"
+                cols="50"
+                @input="autoResizeTextarea($event)"
+              ></textarea>
+              <input
+                v-if="field.type === 'NUMBER' || field.type === 'FLOAT'"
+                :id="'number-' + index"
+                type="number"
+                v-model="field.value"
+                @input="validateNumberInput($event)"
+              />
+              <input
+                v-if="field.type === 'DATE'"
+                :id="'date-' + index"
+                type="date"
+                v-model="field.value"
+              />
+              <!-- Botón para reconfigurar el campo -->
+              <button @click="reconfigureField(index)" class="reconfigure-button">
+                Cambiar Tipo
+              </button>
+            </div>
           </div>
           <div class="field-required">
             <Checkbox :id="'required-' + index" label="" v-model="field.required" />
@@ -42,7 +81,9 @@
             <button class="more-options-btn" @click="handleContextMenu($event, field)">...</button>
           </div>
         </div>
-        <button class="add-field-btn button-component" @click="addField">Agregar Campo +</button>
+        <button class="add-field-btn button-component" @click="showCreateFieldModal">
+          Agregar Campo +
+        </button>
       </div>
 
       <ButtonSimple msg="Guardar" class="save-button button-component" @click="saveTemplate" />
@@ -51,6 +92,7 @@
         :position="contextMenuPosition"
         :visible="contextMenuVisible"
         @remove="showRemoveModal"
+        @rename="showRenameModal"
       />
 
       <RemoveTemplate
@@ -59,31 +101,58 @@
         @close="isRemoveModalVisible = false"
         @remove="removeField"
       />
+
+      <!-- Modal para crear un nuevo campo -->
+      <CreateTemplate
+        v-if="isCreateFieldModalVisible"
+        type="field"
+        @close="isCreateFieldModalVisible = false"
+        @create="addNewField"
+      />
+
+      <!-- Modal para renombrar un campo existente -->
+      <RenameTemplate
+        v-if="isRenameModalVisible"
+        :currentName="selectedField.name"
+        type="field"
+        @close="isRenameModalVisible = false"
+        @rename="renameField"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import InputField from '@/components/Forms/InputField/InputField.vue'
 import Checkbox from '@/components/Forms/CheckBox/CheckBox.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
+import DropdownField from '@/components/Forms/SelectDropDown/SelectDropDown.vue'
 import ContextMenu from '@/components/Feedback/Modals/ContextMenu.vue'
 import RemoveTemplate from '@/components/Feedback/Modals/RemoveTemplate.vue'
+import CreateTemplate from '@/components/Feedback/Modals/CreateTemplate.vue'
+import RenameTemplate from '@/components/Feedback/Modals/RenameTemplate.vue'
 import { useContextMenu } from '@/components/DataDisplay/Composables/useContextMenu.js'
 
 const router = useRouter()
+const route = useRoute()
+
+const templateName = ref(route.query.name || 'Plantilla-2024')
+
+const dataTypes = ['SHORT_TEXT', 'TEXT', 'NUMBER', 'FLOAT', 'DATE']
 
 const fields = ref([
-  { name: 'Nombres', type: 'text', value: '', required: true },
-  { name: 'Apellidos', type: 'text', value: '', required: true },
-  { name: 'Hijos', type: 'text', value: '', required: false },
-  { name: 'Estado Civil', type: 'text', value: '', required: false }
+  { name: 'Nombres', type: '', value: '', required: true, isConfigured: false },
+  { name: 'Apellidos', type: '', value: '', required: true, isConfigured: false },
+  { name: 'Hijos', type: '', value: '', required: false, isConfigured: false },
+  { name: 'Estado Civil', type: '', value: '', required: false, isConfigured: false }
 ])
 
 const selectedField = ref({})
 const isRemoveModalVisible = ref(false)
+const isCreateFieldModalVisible = ref(false)
+const isRenameModalVisible = ref(false)
 
 const {
   position: contextMenuPosition,
@@ -92,8 +161,28 @@ const {
   hideContextMenu
 } = useContextMenu()
 
-function addField() {
-  fields.value.push({ name: '', type: 'text', value: '', required: false })
+function showCreateFieldModal() {
+  isCreateFieldModalVisible.value = true
+}
+
+function showRenameModal() {
+  isRenameModalVisible.value = true
+}
+
+function addNewField({ name, type }) {
+  fields.value.push({
+    name,
+    type,
+    value: '',
+    required: false,
+    isConfigured: true
+  })
+  isCreateFieldModalVisible.value = false
+}
+
+function renameField(newName) {
+  selectedField.value.name = newName
+  isRenameModalVisible.value = false
 }
 
 function saveTemplate() {
@@ -114,6 +203,27 @@ function showRemoveModal() {
 function removeField() {
   fields.value = fields.value.filter((field) => field !== selectedField.value)
   hideContextMenu()
+}
+
+function configureField(index) {
+  fields.value[index].isConfigured = true
+}
+
+function reconfigureField(index) {
+  fields.value[index].isConfigured = false
+  fields.value[index].type = ''
+}
+
+function validateNumberInput(event) {
+  if (event.target.value < 0) {
+    event.target.value = 0
+  }
+}
+
+function autoResizeTextarea(event) {
+  const textarea = event.target
+  textarea.style.height = 'auto'
+  textarea.style.height = textarea.scrollHeight + 'px'
 }
 </script>
 
@@ -223,5 +333,19 @@ function removeField() {
 .button-component {
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
   transition: background-color 0.2s;
+}
+
+.reconfigure-button {
+  margin-top: 10px;
+  background-color: #ffcc00;
+  color: white;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.reconfigure-button:hover {
+  background-color: #ff9900;
 }
 </style>

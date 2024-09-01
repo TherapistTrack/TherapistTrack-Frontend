@@ -1,26 +1,59 @@
 <template>
   <div class="modal-overlay">
     <div class="modal-container">
-      <h2>Crear Nueva Plantilla</h2>
-      <p>¿Con qué nombre te referirás a ella?</p>
-      <input type="text" v-model="templateName" placeholder="Nombre de la plantilla" />
+      <h2>{{ modalTitle }}</h2>
+      <p>{{ modalMessage }}</p>
+      <input type="text" v-model="itemName" :placeholder="placeholderText" />
+      <div v-if="showDropdown" class="select-group">
+        <label for="data-type">Seleccione un tipo</label>
+        <select id="data-type" v-model="selectedType">
+          <option disabled value="">Seleccionar...</option>
+          <option v-for="option in dataTypes" :key="option" :value="option">{{ option }}</option>
+        </select>
+      </div>
       <div class="modal-buttons">
         <button @click="cancel">Cancelar</button>
-        <button class="create-button" @click="createTemplate">Crear</button>
+        <button class="create-button" @click="createItem">Crear</button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, defineEmits } from 'vue'
+import { ref, defineEmits, defineProps, computed } from 'vue'
 
-const templateName = ref('')
 const emit = defineEmits(['close', 'create'])
+const props = defineProps({
+  type: {
+    type: String,
+    default: 'template' // 'template' or 'field'
+  }
+})
 
-const createTemplate = () => {
-  if (templateName.value.trim()) {
-    emit('create', templateName.value)
+const itemName = ref('')
+const selectedType = ref('')
+const dataTypes = ['SHORT_TEXT', 'TEXT', 'NUMBER', 'FLOAT', 'DATE']
+
+const modalTitle = computed(() =>
+  props.type === 'template' ? 'Crear Nueva Plantilla' : 'Crear Nuevo Campo'
+)
+const modalMessage = computed(() =>
+  props.type === 'template'
+    ? '¿Con qué nombre te referirás a ella?'
+    : 'Asigne un nombre y tipo al campo.'
+)
+const placeholderText = computed(() =>
+  props.type === 'template' ? 'Nombre de la plantilla' : 'Nombre del campo'
+)
+const showDropdown = computed(() => props.type === 'field')
+
+const createItem = () => {
+  if (itemName.value.trim() && (props.type !== 'field' || selectedType.value)) {
+    if (props.type === 'template') {
+      emit('create', itemName.value) // Emitir solo el nombre si es una plantilla
+    } else {
+      emit('create', { name: itemName.value, type: selectedType.value }) // Emitir objeto si es un campo
+    }
   }
 }
 
@@ -30,6 +63,7 @@ const cancel = () => {
 </script>
 
 <style scoped>
+/* estilos similares a los ya definidos */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -48,6 +82,11 @@ const cancel = () => {
   border-radius: 8px;
   width: 300px;
   text-align: center;
+}
+
+.select-group {
+  margin-top: 1rem;
+  text-align: left;
 }
 
 .modal-buttons {

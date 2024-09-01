@@ -1,31 +1,44 @@
 <template>
   <div class="modal-overlay">
     <div class="modal-container">
-      <h2>Renombrar Plantilla</h2>
-      <p>¿Cuál será el nuevo nombre?</p>
+      <h2>{{ modalTitle }}</h2>
+      <p>{{ modalMessage }}</p>
       <input type="text" v-model="newName" :placeholder="currentName" />
       <div class="modal-buttons">
         <button @click="cancel">Cancelar</button>
-        <button class="create-button" @click="renameTemplate">Confirmar</button>
+        <button class="create-button" @click="renameItem">Confirmar</button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, defineProps, defineEmits } from 'vue'
+import { ref, defineProps, defineEmits, computed } from 'vue'
 
 const props = defineProps({
   currentName: {
     type: String,
     required: true
+  },
+  type: {
+    type: String,
+    default: 'template' // 'template' or 'field'
   }
 })
 
 const newName = ref(props.currentName)
 const emit = defineEmits(['close', 'rename'])
 
-const renameTemplate = () => {
+const modalTitle = computed(() =>
+  props.type === 'template' ? 'Renombrar Plantilla' : 'Renombrar Campo'
+)
+const modalMessage = computed(() =>
+  props.type === 'template'
+    ? '¿Cuál será el nuevo nombre?'
+    : 'Ingrese el nuevo nombre para el campo.'
+)
+
+const renameItem = () => {
   if (newName.value.trim()) {
     emit('rename', newName.value)
   }
@@ -37,6 +50,7 @@ const cancel = () => {
 </script>
 
 <style scoped>
+/* Aquí puedes mantener el estilo como lo tienes */
 .modal-overlay {
   position: fixed;
   top: 0;
