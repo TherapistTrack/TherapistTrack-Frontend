@@ -124,7 +124,8 @@ function addNewTemplate(templateName) {
     createdAt: new Date().toLocaleDateString()
   })
   isCreateModalVisible.value = false
-  router.push('/config/template/')
+  // Pasa el nombre de la plantilla como un parámetro
+  router.push({ path: '/config/template', query: { name: templateName } })
 }
 
 function showRenameModal() {
