@@ -50,15 +50,20 @@ const router = createRouter({
     // CONFIG PAGE
     {
       path: '/config',
-      component: () => import('@/pages/notfound/NotFoundView.vue'),
+      redirect: '/config/account',
+      component: () => import('@/pages/config/ProfileView.vue'),
       children: [
         {
-          path: 'profile',
-          component: () => import('@/pages/notfound/NotFoundView.vue')
+          path: 'account',
+          component: () => import('@/pages/config/AccountView.vue')
         },
         {
           path: 'patients',
-          component: () => import('@/pages/notfound/NotFoundView.vue')
+          component: () => import('@/pages/config/PatientList.vue')
+        },
+        {
+          path: 'template',
+          component: () => import('@/pages/config/CustomizeTemplate.vue')
         },
         {
           path: 'records',
@@ -66,7 +71,6 @@ const router = createRouter({
         }
       ]
     },
-
     // RECORD VIEW
     {
       path: '/record',
