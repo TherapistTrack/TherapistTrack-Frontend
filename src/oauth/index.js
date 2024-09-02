@@ -4,7 +4,9 @@ export const authClient = createAuth0({
   domain: import.meta.env.VITE_OAUTH_DOMAIN,
   clientId: import.meta.env.VITE_OAUTH_CLIENT_ID,
   authorizationParams: {
-    redirect_uri: import.meta.env.VITE_OAUTH_REDIRECT_URI
+    redirect_uri: import.meta.env.VITE_OAUTH_REDIRECT_URI,
+    audience: import.meta.env.VITE_OAUTH_AUDIENCE
+    // scope: "openid profile email offline_access",
   },
   cacheLocation: 'localstorage',
   useRefreshTokens: true

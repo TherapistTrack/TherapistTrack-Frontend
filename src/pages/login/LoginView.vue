@@ -32,6 +32,7 @@ function logout() {
 onMounted(() => {
   const freeNavigation = import.meta.env.VITE_FREE_NAVIGATION || 'FALSE'
   if (auth0.isAuthenticated.value && freeNavigation === 'FALSE') {
+    // auth0.getAccessTokenSilently().then(a => console.log(a))
     router.replace({ path: '/record/main' })
   }
 })
