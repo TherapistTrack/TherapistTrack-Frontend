@@ -18,6 +18,7 @@ VITE_OAUTH_DOMAIN=<secret>
 VITE_OAUTH_CLIENT_ID=<secret>
 VITE_OAUTH_REDIRECT_URI=http://localhost:3000/callback
 VITE_OAUTH_LOGOUT_URI=http://localhost:3000
+VITE_OAUTH_AUDIENCE=https://therapist-track-api-management.name
 
 # Allow free navigation withouth token authentication
 VITE_FREE_NAVIGATION=TRUE # (TRUE, FALSE)
