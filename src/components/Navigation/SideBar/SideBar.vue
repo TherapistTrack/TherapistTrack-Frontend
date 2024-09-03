@@ -44,15 +44,14 @@ import AlertOptionSimple from '@/components/Feedback/Alerts/AlertOptionSimple.vu
 import { ref } from 'vue'
 import { useAuth0 } from '@auth0/auth0-vue'
 const auth0 = useAuth0()
+const localMin = ref(false)
+const logoutAttempt = ref(false)
 defineProps({
   minim: {
     type: Boolean,
     required: true
   }
 })
-
-const localMin = ref(false)
-const logoutAttempt = ref(false)
 
 const handleClick = () => {
   localMin.value = !localMin.value

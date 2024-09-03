@@ -342,6 +342,7 @@ const updateUser = async () => {
       console.log('Form is invalid')
     }
   }
+  loading.value = false
 }
 
 const emit = defineEmits(['update:openEdit'])
