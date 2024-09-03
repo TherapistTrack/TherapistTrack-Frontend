@@ -15,58 +15,50 @@
       <div class="mid">
         <form @submit.prevent="createUser">
           <InputField
+            :id="'nombres'"
             :label="'Nombres'"
+            v-model="user.names"
             :placeholder="'Escribe tu nombre...'"
-            v-model="user.firstName"
           />
           <InputField
+            :id="'nombres'"
             :label="'Apellidos'"
             :placeholder="'Escribe tus apellidos...'"
-            v-model="user.lastName"
+            v-model="user.lastNames"
           />
-          <InputField
-            :label="'Teléfonos'"
-            :placeholder="'Escribe tu número de teléfono'"
-            v-model="user.phone"
-          />
-
+          <DynamicList :title="'Teléfonos: '" v-model:model-array="user.phones" />
+          <DynamicList :title="'Correos: '" v-model:model-array="user.mails" />
           <SelectDropDown
             :disabled-value="'Seleccione una opción'"
             :label="'Rol'"
             :id="'role'"
-            v-model="user.role"
-            :options="['Doctor', 'Asistente', 'Admin']"
+            v-model="user.rol"
+            :options="['Doctor', 'Assistant']"
           />
-
           <!-- Campos condicionales para "Doctor" -->
-          <template v-if="user.role === 'Doctor'">
+          <span v-if="user.rol === 'Doctor'">
             <InputField
               :id="'col-num'"
               :label="'No. Colegiado'"
               :placeholder="'Escribe tu No. de Colegiado'"
-              v-model="user.membershipNumber"
+              v-model="user.collegiateNumber"
             />
+
             <InputField
               :id="'speciality'"
               :label="'Especialidad'"
               :placeholder="'Escribe tu especialidad'"
               v-model="user.specialty"
             />
-            <InputField
-              :id="'email'"
-              :label="'Correo'"
-              :placeholder="'correo@ejemplo.com'"
-              v-model="user.email"
-            />
-          </template>
+          </span>
 
           <!-- Campos condicionales para "Asistente" -->
-          <template v-if="user.role === 'Asistente'">
+          <span v-else-if="user.rol === 'Assistant'">
             <InputField
-              :id="'email'"
-              :label="'Correo'"
-              :placeholder="'correo@ejemplo.com'"
-              v-model="user.email"
+              :id="'DPI'"
+              :label="'DPI'"
+              :placeholder="'Escribe tu DPI'"
+              v-model="user.DPI"
             />
             <InputField
               :id="'start-date'"
@@ -80,10 +72,14 @@
               :type="'date'"
               v-model="user.endDate"
             />
-          </template>
-
+          </span>
+          <div v-if="!valid" class="error-container">
+            <span class="error-msg" v-for="error in errors" :key="error">
+              {{ error }}
+            </span>
+          </div>
           <div class="button-container">
-            <ButtonSimple :msg="'Crear'" :disabled="!isFormValid" />
+            <ButtonSimple :msg="'Crear'" :disabled="!valid" @click="() => createUser" />
           </div>
         </form>
       </div>
@@ -92,49 +88,101 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, watch } from 'vue'
 import { RiCloseLine } from '@remixicon/vue'
 import { useRouter } from 'vue-router'
 import InputField from '@/components/Forms/InputField/InputField.vue'
 import SelectDropDown from '@/components/Forms/SelectDropDown/SelectDropDown.vue'
+import DynamicList from '@/components/Forms/DynamicList/DynamicList.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
+import { userSchema } from '@/schemas/userSchema'
+import { useApi } from '@/oauth/useApi'
+const { postRequest } = useApi()
 const router = useRouter()
 const user = ref({
-  firstName: '',
-  lastName: '',
-  phone: '',
-  role: '',
-  membershipNumber: '',
+  names: '',
+  lastNames: '',
+  phones: [],
+  rol: '',
+  mails: [],
+  collegiateNumber: '',
   specialty: '',
-  email: '',
+  DPI: '',
   startDate: '',
   endDate: ''
 })
+const formatedUser = ref(null)
+const errors = ref(null)
+const valid = ref(false)
+
+watch(
+  user,
+  () => {
+    if (user.value != null) {
+      userSchema
+        .validate(user.value)
+        .then(() => {
+          valid.value = true
+        })
+        .catch((error) => {
+          valid.value = false
+          errors.value = error.errors
+        })
+    }
+  },
+  { deep: true }
+)
 
 const goBack = () => {
   router.back()
 }
 
-const isFormValid = computed(() => {
-  const basicInfoValid =
-    user.value.firstName && user.value.lastName && user.value.phone && user.value.role
-  let roleSpecificValid = true
-
-  if (user.value.role === 'Doctor') {
-    roleSpecificValid = user.value.membershipNumber && user.value.specialty && user.value.email
-  } else if (user.value.role === 'Asistente') {
-    roleSpecificValid = user.value.email && user.value.startDate && user.value.endDate
+function generateRandomId() {
+  let objectId = ''
+  for (let i = 0; i < 24; i++) {
+    const randomHexDigit = Math.floor(Math.random() * 16).toString(16)
+    objectId += randomHexDigit
   }
-  return basicInfoValid && roleSpecificValid
-})
 
-const createUser = () => {
-  if (isFormValid.value) {
-    console.log('Creating user:', user.value)
-    // Aquí implementarías la lógica para enviar los datos al API
-  } else {
-    console.error('Form is invalid')
+  return objectId
+}
+
+const createUser = async () => {
+  if (valid.value) {
+    let objectId = generateRandomId()
+    formatedUser.value = {
+      id: objectId,
+      names: user.value.names,
+      lastNames: user.value.lastNames,
+      phones: [...user.value.phones],
+      rol: user.value.rol,
+      mails: [...user.value.mails]
+    }
+    if (user.value.rol == 'Doctor') {
+      formatedUser.value['rolDependentInfo'] = {
+        collegiateNumber: user.value.collegiateNumber,
+        specialty: user.value.specialty
+      }
+    } else {
+      formatedUser.value['rolDependentInfo'] = {
+        startDate: user.value.startDate,
+        endDate: user.value.endDate,
+        DPI: user.value.DPI
+      }
+    }
+    try {
+      await postRequest('/users/register', formatedUser.value)
+      emitUpdate()
+      goBack()
+    } catch {
+      console.log('something went bad with the request')
+    }
   }
+}
+
+const emit = defineEmits(['updateData'])
+const emitUpdate = () => {
+  emit('updateData')
 }
 </script>
 
@@ -183,5 +231,15 @@ const createUser = () => {
   display: flex;
   justify-content: end;
   padding: 0.5rem;
+}
+
+.create-user-form .error-container {
+  padding: 1rem;
+}
+.create-user-form .error-msg {
+  color: var(--red-1);
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
 }
 </style>

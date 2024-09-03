@@ -1,7 +1,12 @@
 <template>
   <OverlayLoader v-if="loading2" />
   <div class="page">
-    <router-view :userId="`${selected}`" v-model:data="currentUser" v-model:openEdit="openEdit" />
+    <router-view
+      :userId="`${selected}`"
+      v-model:data="currentUser"
+      @updateData="updateData"
+      @openEdit="handleOpenEdit"
+    />
     <h1><b>Usuarios</b></h1>
     <p>
       En esta vista puede administrar a los usuarios que tienen acceso a la aplicación y editar su
@@ -24,14 +29,14 @@
 
 <script setup>
 import OverlayLoader from '@/components/Feedback/Spinner/OverlayLoader.vue'
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted } from 'vue'
 import Button from '@/components/Buttons/ButtonSimple.vue'
 import CustomInput from '@/components/Forms/InputField/SearchBar.vue'
 import DisplayTable from '@/components/DataDisplay/Tables/DisplayTable.vue'
 import { useRouter } from 'vue-router'
 import { useApi } from '@/oauth/useApi'
 import users from './users.json'
-const openEdit = ref(false)
+
 const { getRequest } = useApi()
 const selected = ref('')
 const fetchedData = ref(null)
@@ -41,14 +46,12 @@ const loading = ref(false)
 const currentUser = ref(null)
 const loading2 = ref(false)
 
-watch(openEdit, () => {
-  console.log(selected.value)
-  if (openEdit.value == true) {
-    handleOpenEdit(selected.value)
-  } else {
-    apiCall()
-  }
-})
+const updateData = async () => {
+  apiCall()
+}
+const handleOpenEdit = () => {
+  router.push(`/admin/user/edit/${selected.value}`)
+}
 
 headers.value = {
   names: 'Nombre',
@@ -88,9 +91,7 @@ onMounted(async () => {
 const handleOpenCreate = () => {
   router.push('/admin/user/create')
 }
-const handleOpenEdit = (key) => {
-  router.push(`/admin/user/edit/${key}`)
-}
+
 const handleOpenView = async (key) => {
   selected.value = fetchedData.value[key].id
   await getCurrentUser()

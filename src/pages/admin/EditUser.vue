@@ -79,7 +79,7 @@
   </div>
   <AlertOptionSimple
     v-if="tryReturn"
-    :msg="'¿Deseas Continuar? tus cambios no serán guardados'"
+    :msg="'¿Deseas Salir? tus cambios no serán guardados'"
     :on-no="abortReturn"
     :on-yes="goBack"
   />
@@ -94,14 +94,15 @@ import InputField from '@/components/Forms/InputField/InputField.vue'
 import SelectDropDown from '@/components/Forms/SelectDropDown/SelectDropDown.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import AlertOptionSimple from '@/components/Feedback/Alerts/AlertOptionSimple.vue'
+
 import DynamicList from '@/components/Forms/DynamicList/DynamicList.vue'
 import { useApi } from '@/oauth/useApi'
-import * as yup from 'yup'
-
+import { userSchema } from '@/schemas/userSchema'
 const router = useRouter()
 const { putRequest } = useApi()
 const startData = ref(null)
 const tryReturn = ref(false)
+
 const localData = ref(null)
 const done = ref(false)
 const user = ref(null)
@@ -110,101 +111,8 @@ const valid = ref(true)
 const formatedUser = ref(null)
 const loading = ref(false)
 
-const userSchema = yup.object().shape({
-  names: yup.string().required('Names are required').trim().min(1, 'Names cannot be empty'),
-  lastNames: yup
-    .string()
-    .required('Last names are required')
-    .trim()
-    .min(1, 'Last names cannot be empty'),
-  phones: yup
-    .array()
-    .of(yup.string().matches(/^[0-9]+$/, 'Phone numbers must contain only numbers'))
-    .required('At least one phone number is required')
-    .min(1, 'At least one phone number is required'),
-  rol: yup
-    .string()
-    .oneOf(['Assistant', 'Doctor'], 'Role must be either "Assistant" or "Doctor"')
-    .required('Role is required'),
-  mails: yup
-    .array()
-    .of(
-      yup
-        .string()
-        .email('Each email must be a valid email address')
-        .required('There cannot be empty emails')
-    )
-    .required('At least one email is required')
-    .min(1, 'At least one email is required'),
-
-  startDate: yup
-    .date()
-    .nullable()
-    .test(
-      'is-valid-date',
-      'Start date must be a valid date',
-      (value) => value === null || value === '' || !isNaN(new Date(value).getTime())
-    )
-    .when('rol', (rol) =>
-      rol == 'Assistant'
-        ? yup
-            .date()
-            .required('Start date is required for Assistants')
-            .typeError('Start date must be in the format yyyy-mm-dd')
-        : yup.string().nullable()
-    ),
-
-  endDate: yup
-    .date()
-    .nullable()
-    .test(
-      'is-valid-date',
-      'End date must be a valid date',
-      (value) => value === null || value === '' || !isNaN(new Date(value).getTime())
-    )
-
-    .when('rol', (rol) =>
-      rol == 'Assistant'
-        ? yup
-            .date()
-            .required('End date is required for Assistants')
-            .typeError('End date must be in the format yyyy-mm-dd')
-            .min(yup.ref('startDate'), 'End date must be after start date')
-        : yup.string().nullable()
-    ),
-
-  DPI: yup
-    .string()
-    .nullable()
-    .when('rol', (rol) =>
-      rol == 'Assistant'
-        ? yup
-            .string()
-            .matches(/^[0-9]+$/, 'DPI must contain only numbers')
-            .required('DPI is required for Assistants')
-        : yup.string().nullable()
-    ),
-  collegiateNumber: yup
-    .string()
-    .nullable()
-    .when('rol', (rol) =>
-      rol == 'Doctor'
-        ? yup.string().trim().required('Collegiate number is required for Doctors')
-        : yup.string().nullable()
-    ),
-  specialty: yup
-    .string()
-    .nullable()
-    .when('rol', (rol) =>
-      rol == 'Doctor'
-        ? yup.string().trim().required('Specialty is required for Doctors')
-        : yup.string().nullable()
-    )
-})
-
 const props = defineProps({
   userId: String,
-  openEdit: Boolean,
   data: Object
 })
 
@@ -215,11 +123,9 @@ watch(
       userSchema
         .validate(user.value)
         .then(() => {
-          console.log('Validation passed!')
           valid.value = true
         })
         .catch((error) => {
-          console.error('Validation failed:', error.errors)
           valid.value = false
           errors.value = error.errors
         })
@@ -285,7 +191,6 @@ const abortReturn = () => {
   tryReturn.value = false
 }
 const goBack = () => {
-  updateEdit(false)
   tryReturn.value = false
   router.back()
   router.push('/admin/user/')
@@ -303,7 +208,6 @@ const hasChanged = () => {
     user.value.startDate === startData.value.startDate &&
     user.value.endDate === startData.value.endDate &&
     user.value.DPI === startData.value.DPI
-  console.log(JSON.stringify(user.value.mails) == JSON.stringify(startData.value.mails))
   return change
 }
 
@@ -318,7 +222,7 @@ const updateUser = async () => {
         rol: user.value.rol,
         mails: [...user.value.mails]
       }
-      if (user.value.role == 'Doctor') {
+      if (user.value.rol == 'Doctor') {
         formatedUser.value['rolDependentInfo'] = {
           collegiateNumber: user.value.collegiateNumber,
           specialty: user.value.specialty
@@ -338,16 +242,22 @@ const updateUser = async () => {
         console.log('something went bad with the request')
       }
       loading.value = false
+      emitUpdate()
     } else {
       console.log('Form is invalid')
     }
+  } else {
+    goBack()
   }
   loading.value = false
 }
 
-const emit = defineEmits(['update:openEdit'])
-const updateEdit = (val) => {
-  emit('update:openEdit', val)
+// Emits
+const emit = defineEmits(['updateData', 'openEdit'])
+
+const emitUpdate = () => {
+  // Refreshes view of users
+  emit('updateData')
 }
 </script>
 

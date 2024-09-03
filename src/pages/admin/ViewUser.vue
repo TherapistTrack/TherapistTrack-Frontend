@@ -37,9 +37,9 @@
 
   <AlertDelete
     v-if="tryDelete"
-    :name="`${userData.names} ${userData.lastName}`"
+    :name="`${userData.names} ${userData.lastNames}`"
     :on-no="abortDelete"
-    :on-yes="handleDelete(userData.username)"
+    :on-yes="handleDelete"
   />
 </template>
 
@@ -49,7 +49,8 @@ import { RiCloseLine, RiDeleteBin7Fill, RiEditBoxLine } from '@remixicon/vue'
 import { useRouter } from 'vue-router'
 import SimpleTable from '@/components/DataDisplay/Tables/SimpleTable.vue'
 import AlertDelete from '@/components/Feedback/Alerts/AlertDelete.vue'
-
+import { useApi } from '@/oauth/useApi'
+const { deleteRequest } = useApi()
 const headers = ref(null)
 const router = useRouter()
 const tryDelete = ref(false)
@@ -57,7 +58,6 @@ const userData = ref({})
 
 const props = defineProps({
   userId: String,
-  openEdit: Boolean,
   data: Object
 })
 
@@ -73,13 +73,22 @@ headers.value = {
 }
 
 const handleOpenEdit = () => {
-  updateEdit(true)
+  updateEdit()
 }
 const onDelete = () => {
   tryDelete.value = true
 }
-const handleDelete = async (usernameValue) => {
-  console.log(usernameValue)
+const handleDelete = async () => {
+  let body = {
+    id: props.userId
+  }
+  try {
+    await deleteRequest('/users/delete', body)
+    emitUpdate()
+    goBack()
+  } catch {
+    console.log('error borrando')
+  }
 }
 const abortDelete = () => {
   tryDelete.value = false
@@ -87,9 +96,17 @@ const abortDelete = () => {
 const goBack = () => {
   router.push('/admin/user/')
 }
-const emit = defineEmits(['update:openEdit'])
-const updateEdit = (val) => {
-  emit('update:openEdit', val)
+
+// Emits
+const emit = defineEmits(['updateData', 'openEdit'])
+
+const emitUpdate = () => {
+  // Refreshes view of users
+  emit('updateData')
+}
+const updateEdit = () => {
+  // Tells parent component to open edit view
+  emit('openEdit')
 }
 </script>
 
