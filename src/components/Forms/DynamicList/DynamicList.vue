@@ -2,7 +2,7 @@
   <span class="dynamic-list">
     <div class="title">
       <div>{{ title }}</div>
-      <RiAddCircleLine fill="var(--green-1)" class="addIcon" @click="addItem" />
+      <RiAddCircleLine fill="var(--green-1)" class="addIcon" @click="() => addItem()" />
     </div>
     <div class="list">
       <div class="list-item" v-for="(item, index) in localList" :key="index">
@@ -41,16 +41,15 @@ const emit = defineEmits(['update:modelArray'])
 
 const removeItem = (index) => {
   localList.value.splice(index, 1)
-  emit('update:modelArray', [...localList.value, ''])
+  emit('update:modelArray', localList.value)
 }
 const addItem = () => {
   try {
-    localList.value.unshift('')
+    localList.value.push('')
   } catch {
     localList.value.push('')
   }
-
-  emit('update:modelArray', [...localList.value, ''])
+  emit('update:modelArray', localList.value)
 }
 </script>
 
@@ -69,6 +68,7 @@ const addItem = () => {
   gap: 1rem;
   flex-direction: column;
   margin-bottom: 2rem;
+  transition: height 1s;
 }
 .dynamic-list .addIcon {
   transition: fill 0.1s;
