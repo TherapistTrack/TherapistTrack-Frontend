@@ -1,10 +1,9 @@
 <template>
-  <router-view :userId="props.userId" :data="props.data" />
-  <div class="overlayContainer" @click="goBack()">
-    <div class="view-user" @click.stop="">
-      <span v-if="isSetup">
+  <span>
+    <div class="overlayContainer" @click="goBack()">
+      <div class="view-user" @click.stop="">
         <div class="top">
-          <h1>{{ props.data[props.userId].name }} {{ props.data[props.userId].lastName }}</h1>
+          <h1>{{ userData.names }} {{ userData.lastNames }}</h1>
           <RiCloseLine
             class-name="icon"
             size="2rem"
@@ -30,16 +29,17 @@
           />
         </div>
         <div class="tableContainer">
-          <SimpleTable :data="props.data[props.userId]" :headers="headers" />
+          <SimpleTable :data="userData" :headers="headers" />
         </div>
-      </span>
+      </div>
     </div>
-  </div>
+  </span>
+
   <AlertDelete
     v-if="tryDelete"
-    :name="`${props.data[props.userId].name} ${props.data[props.userId].lastName}`"
+    :name="`${userData.names} ${userData.lastName}`"
     :on-no="abortDelete"
-    :on-yes="handleDelete(data[props.userId].username)"
+    :on-yes="handleDelete(userData.username)"
   />
 </template>
 
@@ -49,57 +49,47 @@ import { RiCloseLine, RiDeleteBin7Fill, RiEditBoxLine } from '@remixicon/vue'
 import { useRouter } from 'vue-router'
 import SimpleTable from '@/components/DataDisplay/Tables/SimpleTable.vue'
 import AlertDelete from '@/components/Feedback/Alerts/AlertDelete.vue'
-import { useApi } from '@/oauth/useApi'
 
-const { deleteRequest } = useApi()
-const localData = ref(null)
 const headers = ref(null)
 const router = useRouter()
-const selected = ref(0)
-const isSetup = ref(false)
 const tryDelete = ref(false)
+const userData = ref({})
 
 const props = defineProps({
   userId: String,
+  openEdit: Boolean,
   data: Object
 })
 
 onMounted(() => {
-  if (props.data === null || props.data === undefined) {
-    router.push('/admin/user/')
-  } else {
-    isSetup.value = true
-  }
+  userData.value = props.data
 })
 
 headers.value = {
-  role: 'Rol',
+  rol: 'Rol',
   phones: 'Teléfonos',
-  collegiateNumber: 'No. Colegiado',
-  mails: 'Correo'
+  mails: 'Correo',
+  id: 'No. ID'
 }
-localData.value = props.data
 
-const handleOpenEdit = (key) => {
-  selected.value = key
-  router.push(`/admin/user/edit/${key}`)
+const handleOpenEdit = () => {
+  updateEdit(true)
 }
 const onDelete = () => {
   tryDelete.value = true
 }
 const handleDelete = async (usernameValue) => {
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    await deleteRequest('/users/delete', { username: `${usernameValue}` })
-  } catch {
-    console.error('Cannot delete')
-  }
+  console.log(usernameValue)
 }
 const abortDelete = () => {
   tryDelete.value = false
 }
 const goBack = () => {
   router.push('/admin/user/')
+}
+const emit = defineEmits(['update:openEdit'])
+const updateEdit = (val) => {
+  emit('update:openEdit', val)
 }
 </script>
 

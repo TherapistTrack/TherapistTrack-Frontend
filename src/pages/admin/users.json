@@ -20,7 +20,9 @@
         "username": "asmith",
         "name": "Alice",
         "lastName": "Smith",
-        "phones": [],
+        "phones": [
+            "555-0000" 
+        ],
         "role": "Admin",
         "mails": [
             "asmith@example.com",
@@ -58,7 +60,9 @@
             "+1-555-4321"
         ],
         "role": "Doctor",
-        "mails": [],
+        "mails": [
+            "cgreen@example.com"
+        ],
         "collegiateNumber": "321654",
         "specialty": "Design",
         "startDate": "2021-09-20",
