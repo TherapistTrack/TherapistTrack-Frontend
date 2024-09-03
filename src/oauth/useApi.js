@@ -25,6 +25,7 @@ export function useApi() {
 
   const getRequest = async (url) => {
     const token = await getAuthToken()
+    console.log(token)
     if (!token) {
       isLoading.value = false
       throw new Error('User is not authenticated')
