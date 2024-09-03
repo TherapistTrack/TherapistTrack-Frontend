@@ -5,7 +5,7 @@
       class="sideLogo"
       src="@/assets/Logo/LogoSoloWhite.png"
       alt="Therapist Track Logo"
-      :id="minim ? 'minimized' : 'maximized'"
+      :id="localMin ? 'minimized' : 'maximized'"
     />
 
     <div class="bar" :id="localMin ? 'minimized' : 'maximized'">
