@@ -68,6 +68,10 @@ const router = createRouter({
         {
           path: 'records',
           component: () => import('@/pages/notfound/NotFoundView.vue')
+        },
+        {
+          path: 'files',
+          component: () => import('@/pages/config/FileView.vue')
         }
       ]
     },
