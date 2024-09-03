@@ -25,7 +25,6 @@ export function useApi() {
 
   const getRequest = async (url) => {
     const token = await getAuthToken()
-    console.log(token)
     if (!token) {
       isLoading.value = false
       throw new Error('User is not authenticated')
@@ -70,8 +69,29 @@ export function useApi() {
     }
   }
 
+  const postRequest = async (url, body) => {
+    const token = await getAuthToken()
+    if (!token) {
+      isLoading.value = false
+      throw new Error('User is not authenticated')
+    }
+    try {
+      const response = await axios.post(`${url_base}${url}`, body, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        }
+      })
+      isLoading.value = false
+      return response.data
+    } catch (error) {
+      console.error('Error making POST request:', error)
+      isLoading.value = false
+      throw error
+    }
+  }
+
   const deleteRequest = async (url, body) => {
-    const domain = import.meta.env.VITE_OAUTH_DOMAIN
     const token = await getAuthToken()
     if (!token) {
       isLoading.value = false
@@ -79,7 +99,7 @@ export function useApi() {
     }
 
     try {
-      const response = await axios.delete(`${domain}${url}`, {
+      const response = await axios.delete(`${url_base}${url}`, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
@@ -108,6 +128,7 @@ export function useApi() {
     getRequest,
     initialize,
     putRequest,
+    postRequest,
     deleteRequest
   }
 }
