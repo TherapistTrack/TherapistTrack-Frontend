@@ -35,7 +35,6 @@ import CustomInput from '@/components/Forms/InputField/SearchBar.vue'
 import DisplayTable from '@/components/DataDisplay/Tables/DisplayTable.vue'
 import { useRouter } from 'vue-router'
 import { useApi } from '@/oauth/useApi'
-import users from './users.json'
 
 const { getRequest } = useApi()
 const selected = ref('')
@@ -64,8 +63,7 @@ const getCurrentUser = async () => {
     const response = await getRequest(`/users/${selected.value}`)
     currentUser.value = response.data
   } catch {
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    currentUser.value = users
+    console.error('No se pudieron recibir usuarios')
   }
   loading2.value = false
 }
