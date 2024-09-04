@@ -1,16 +1,16 @@
 <template>
   <div class="sideBtn">
     <img
-      @click="setMin(false)"
+      @click="handleClick"
       class="sideLogo"
       src="@/assets/Logo/LogoSoloMono.png"
       alt="Therapist Track Logo"
-      :id="minim ? 'minimized' : 'maximized'"
+      :id="localMin ? 'minimized' : 'maximized'"
     />
 
-    <div class="bar" :id="minim ? 'minimized' : 'maximized'">
+    <div class="bar" :id="localMin ? 'minimized' : 'maximized'">
       <div class="gravityTop">
-        <div class="top" @click="setMin(true)">
+        <div class="top" @click="handleClick">
           <img class="logo" src="@/assets/Logo/LogoGray.png" alt="Therapist Track" />
           <RiArrowLeftDoubleFill size="1.5rem" color="var(--gray-1)" alt="" />
         </div>
@@ -26,20 +26,55 @@
           <p><b>Josue Rodriguez</b></p>
           <p>Administrador</p>
         </div>
-        <RiLogoutBoxRLine class="icon" size="1.5rem" color="var(--gray-2)" />
+        <RiLogoutBoxRLine class="icon" size="1.5rem" color="var(--gray-2)" @click="handleLogout" />
       </div>
     </div>
   </div>
-  <div class="sideSpace" :id="minim ? 'minimized' : 'maximized'"></div>
+  <AlertOptionSimple
+    v-if="logoutAttempt"
+    msg="¿Estas seguro que deseas cerrar sesión?"
+    :on-no="abortLogout"
+    :on-yes="logout"
+  />
 </template>
 
 <script setup>
 import { RiArrowLeftDoubleFill, RiLogoutBoxRLine } from '@remixicon/vue'
+import AlertOptionSimple from '@/components/Feedback/Alerts/AlertOptionSimple.vue'
 import { ref } from 'vue'
-const minim = ref(true)
+import { useAuth0 } from '@auth0/auth0-vue'
+const auth0 = useAuth0()
+const localMin = ref(false)
+const logoutAttempt = ref(false)
+defineProps({
+  minim: {
+    type: Boolean,
+    required: true
+  }
+})
 
-const setMin = (val) => {
-  minim.value = val
+const handleClick = () => {
+  localMin.value = !localMin.value
+  emitUpdate()
+}
+const handleLogout = () => {
+  logoutAttempt.value = true
+}
+const abortLogout = () => {
+  logoutAttempt.value = false
+}
+
+const emit = defineEmits(['updateValue'])
+const emitUpdate = () => {
+  emit('updateValue')
+}
+
+const logout = () => {
+  auth0.logout({
+    logoutParams: {
+      returnTo: import.meta.env.VITE_OAUTH_LOGOUT_URI
+    }
+  })
 }
 </script>
 

@@ -22,11 +22,14 @@
     "@fortawesome/fontawesome-svg-core": "^6.5.2",
     "@remixicon/vue": "^4.2.0",
     "@vitejs/plugin-vue": "^5.0.5",
+    "axios": "^1.7.5",
     "husky": "^9.0.11",
     "pinia": "^2.1.7",
+    "vee-validate": "^4.13.2",
     "vite": "^5.3.3",
     "vue": "^3.4.31",
-    "vue-router": "^4.3.0"
+    "vue-router": "^4.3.0",
+    "yup": "^1.4.0"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^1.6.1",

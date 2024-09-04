@@ -1,5 +1,6 @@
 <template>
-  <div class="overlayContainer" @click="goBack()">
+  <OverlayLoader v-if="loading" />
+  <div v-if="done" class="overlayContainer" @click="handleReturn">
     <div class="edit-user-form" @click.stop="">
       <div class="top">
         <h1>Editar Usuario</h1>
@@ -8,40 +9,31 @@
           size="2rem"
           color="var(--gray-2)"
           alt="close"
-          @click="goBack()"
+          @click="handleReturn"
         />
       </div>
       <div class="mid">
         <form @submit.prevent="updateUser">
           <InputField
+            :id="'nombres'"
             :label="'Nombres'"
-            v-model="user.firstName"
+            v-model="user.names"
             :placeholder="'Escribe tu nombre...'"
           />
           <InputField
+            :id="'nombres'"
             :label="'Apellidos'"
             :placeholder="'Escribe tus apellidos...'"
-            v-model="user.lastName"
+            v-model="user.lastNames"
           />
-          <InputField
-            :label="'Teléfonos'"
-            :placeholder="'Escribe tu número de teléfono'"
-            v-model="user.phone"
-          />
-          <SelectDropDown
-            :disabled-value="'Seleccione una opción'"
-            :label="'Rol'"
-            :id="'role'"
-            v-model="user.role"
-            :options="['Doctor', 'Asistente', 'Admin']"
-          />
-
-          <template v-if="user.role === 'Doctor'">
+          <DynamicList :title="'Teléfonos: '" v-model:model-array="user.phones" />
+          <DynamicList :title="'Correos: '" v-model:model-array="user.mails" />
+          <span v-if="user.rol === 'Doctor'">
             <InputField
               :id="'col-num'"
               :label="'No. Colegiado'"
               :placeholder="'Escribe tu No. de Colegiado'"
-              v-model="user.membershipNumber"
+              v-model="user.collegiateNumber"
             />
 
             <InputField
@@ -50,20 +42,8 @@
               :placeholder="'Escribe tu especialidad'"
               v-model="user.specialty"
             />
-            <InputField
-              :id="'email'"
-              :label="'Correo'"
-              :placeholder="'correo@ejemplo.com'"
-              v-model="user.email"
-            />
-          </template>
-          <template v-if="user.role === 'Asistente'">
-            <InputField
-              :id="'email'"
-              :label="'Correo'"
-              :placeholder="'correo@ejemplo.com'"
-              v-model="user.email"
-            />
+          </span>
+          <span v-else>
             <InputField
               :id="'start-date'"
               :label="'Fecha inicio'"
@@ -76,107 +56,200 @@
               :type="'date'"
               v-model="user.endDate"
             />
-          </template>
+            <InputField :id="'DPI'" :label="'DPI'" v-model="user.DPI" />
+          </span>
+          <span v-if="!valid" class="error-container">
+            <span class="error-msg" v-for="error in errors" :key="error">
+              {{ error }}
+            </span>
+          </span>
           <div class="button-container">
-            <ButtonSimple :msg="'Guardar'" :disabled="!isFormValid" />
+            <ButtonSimple :msg="'Guardar'" :disabled="!valid" @click="() => updateUser" />
           </div>
         </form>
       </div>
     </div>
   </div>
+  <AlertOptionSimple
+    v-if="tryReturn"
+    :msg="'¿Deseas Salir? tus cambios no serán guardados'"
+    :on-no="abortReturn"
+    :on-yes="goBack"
+  />
 </template>
 
 <script setup>
-import { ref, computed, onMounted, defineProps } from 'vue'
+import { ref, onMounted, defineProps, watch } from 'vue'
+import OverlayLoader from '@/components/Feedback/Spinner/OverlayLoader.vue'
 import { RiCloseLine } from '@remixicon/vue'
 import { useRouter } from 'vue-router'
 import InputField from '@/components/Forms/InputField/InputField.vue'
-import SelectDropDown from '@/components/Forms/SelectDropDown/SelectDropDown.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
+import AlertOptionSimple from '@/components/Feedback/Alerts/AlertOptionSimple.vue'
+
+import DynamicList from '@/components/Forms/DynamicList/DynamicList.vue'
+import { useApi } from '@/oauth/useApi'
+import { userSchema } from '@/schemas/userSchema'
 const router = useRouter()
-const data = ref(null)
-const user = ref({
-  firstName: '',
-  lastName: '',
-  phone: '',
-  role: '',
-  membershipNumber: '',
-  specialty: '',
-  email: '',
-  startDate: '',
-  endDate: ''
-})
+const { putRequest } = useApi()
+const startData = ref(null)
+const tryReturn = ref(false)
 
-onMounted(() => {
-  data.value = {
-    1: {
-      firstName: 'Daniel',
-      lastName: 'Rayo',
-      role: 'Doctor',
-      phone: ['555 555', '222 222'],
-      membershipNumber: 32115,
-      email: ['aaa@gmail.com', 'bbb@gmail.com']
-    },
-    2: {
-      firstName: 'Sofia',
-      lastName: 'de la Rosa',
-      role: 'Doctor',
-      phone: ['444 444', '333 333'],
-      membershipNumber: 53515,
-      email: ['ccc@gmail.com', 'ddd@gmail.com']
-    },
-    3: {
-      firstName: 'Ricardo',
-      lastName: 'Morales Sagastume',
-      role: 'Asistente',
-      phone: ['111 111', '777 777'],
-      membershipNumber: null,
-      email: ['eee@gmail.com']
-    }
-  }
-
-  console.log(data.value[props.id].firstName)
-
-  user.value = {
-    firstName: data.value[props.id].firstName || '',
-    lastName: data.value[props.id].lastName || '',
-    phone: data.value[props.id].phone || '',
-    role: data.value[props.id].role || '',
-    membershipNumber: data.value[props.id].membershipNumber || '',
-    specialty: data.value[props.id].specialty || '',
-    email: data.value[props.id].email || '',
-    startDate: data.value[props.id].startDate || '',
-    endDate: data.value[props.id].endDate || ''
-  }
-})
+const localData = ref(null)
+const done = ref(false)
+const user = ref(null)
+const errors = ref(null)
+const valid = ref(true)
+const formatedUser = ref(null)
+const loading = ref(false)
 
 const props = defineProps({
-  id: String
+  userId: String,
+  data: Object
 })
 
-const goBack = () => {
-  router.back()
-  router.back()
+watch(
+  user,
+  () => {
+    if (user.value != null) {
+      userSchema
+        .validate(user.value)
+        .then(() => {
+          valid.value = true
+        })
+        .catch((error) => {
+          valid.value = false
+          errors.value = error.errors
+        })
+    }
+    done.value = true
+  },
+  { deep: true }
+)
+
+onMounted(async () => {
+  try {
+    localData.value = props.data
+  } catch {
+    router.back()
+  }
+  user.value = {
+    id: props.userId,
+    names: localData.value.names || '',
+    lastNames: localData.value.lastNames || '',
+    phones: localData.value.phones || [],
+    rol: localData.value.rol || '',
+    collegiateNumber: localData.value.rolDependentInfo[0].collegiateNumber || '',
+    specialty: localData.value.rolDependentInfo[0].specialty || '',
+    mails: localData.value.mails || [],
+    DPI: localData.value.rolDependentInfo[0].DPI || '',
+    startDate: '',
+    endDate: ''
+  }
+  startData.value = {
+    names: localData.value.names || '',
+    lastNames: localData.value.lastNames || '',
+    phones: JSON.parse(JSON.stringify(localData.value.phones)) || [],
+    rol: localData.value.rol || '',
+    collegiateNumber: localData.value.rolDependentInfo[0].collegiateNumber || '',
+    specialty: localData.value.rolDependentInfo[0].specialty || '',
+    mails: JSON.parse(JSON.stringify(localData.value.mails)) || [],
+    DPI: localData.value.rolDependentInfo[0].DPI || '',
+    startDate: '',
+    endDate: ''
+  }
+  try {
+    user.value.startDate = localData.value.rolDependentInfo[0].startDate.slice(0, 10)
+    user.value.endDate = localData.value.rolDependentInfo[0].endDate.slice(0, 10)
+    startData.value.startDate = localData.value.rolDependentInfo[0].startDate.slice(0, 10)
+    startData.value.endDate = localData.value.rolDependentInfo[0].endDate.slice(0, 10)
+  } catch {
+    user.value.startDate = ''
+    user.value.endDate = ''
+    startData.value.startDate = ''
+    startData.value.endDate = ''
+  }
+})
+
+const handleReturn = () => {
+  if (!hasChanged()) {
+    tryReturn.value = true
+  } else {
+    goBack()
+  }
 }
 
-const isFormValid = computed(() => {
-  const basicInfoValid =
-    user.value.firstName && user.value.lastName && user.value.phone && user.value.role
-  let roleSpecificValid = true
-  if (user.value.role === 'Doctor') {
-    roleSpecificValid = user.value.membershipNumber && user.value.specialty && user.value.email
-  } else if (user.value.role === 'Asistente') {
-    roleSpecificValid = user.value.email && user.value.startDate && user.value.endDate
-  }
-  return basicInfoValid && roleSpecificValid
-})
+const abortReturn = () => {
+  tryReturn.value = false
+}
+const goBack = () => {
+  tryReturn.value = false
+  router.back()
+  router.push('/admin/user/')
+}
 
-const updateUser = () => {
-  if (isFormValid.value) {
-    console.log('Updating user:', user.value)
+const hasChanged = () => {
+  const change =
+    user.value.names === startData.value.names &&
+    user.value.lastNames === startData.value.lastNames &&
+    JSON.stringify(user.value.phones) == JSON.stringify(startData.value.phones) &&
+    user.value.rol === startData.value.rol &&
+    user.value.collegiateNumber === startData.value.collegiateNumber &&
+    user.value.specialty === startData.value.specialty &&
+    JSON.stringify(user.value.mails) == JSON.stringify(startData.value.mails) &&
+    user.value.startDate === startData.value.startDate &&
+    user.value.endDate === startData.value.endDate &&
+    user.value.DPI === startData.value.DPI
+  return change
+}
+
+const updateUser = async () => {
+  if (!hasChanged()) {
+    if (valid.value) {
+      formatedUser.value = {
+        id: user.value.id,
+        names: user.value.names,
+        lastNames: user.value.lastNames,
+        phones: [...user.value.phones],
+        rol: user.value.rol,
+        mails: [...user.value.mails]
+      }
+      if (user.value.rol == 'Doctor') {
+        formatedUser.value['rolDependentInfo'] = {
+          collegiateNumber: user.value.collegiateNumber,
+          specialty: user.value.specialty
+        }
+      } else {
+        formatedUser.value['rolDependentInfo'] = {
+          startDate: user.value.startDate,
+          endDate: user.value.endDate,
+          DPI: user.value.DPI
+        }
+      }
+      loading.value = true
+      try {
+        await putRequest('/users/update', formatedUser.value)
+        goBack()
+      } catch {
+        console.log('something went bad with the request')
+      }
+      loading.value = false
+      emitUpdate()
+    } else {
+      console.log('Form is invalid')
+    }
   } else {
-    console.error('Form is invalid')
+    goBack()
   }
+  loading.value = false
+}
+
+// Emits
+const emit = defineEmits(['updateData', 'openEdit'])
+
+const emitUpdate = () => {
+  // Refreshes view of users
+  emit('updateData')
 }
 </script>
 
@@ -224,5 +297,12 @@ const updateUser = () => {
   display: flex;
   justify-content: end;
   padding: 0.5rem;
+}
+
+.edit-user-form .error-msg {
+  color: var(--red-1);
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
 }
 </style>

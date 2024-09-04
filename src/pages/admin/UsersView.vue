@@ -1,6 +1,12 @@
 <template>
+  <OverlayLoader v-if="loading2" />
   <div class="page">
-    <router-view :id="selected" />
+    <router-view
+      :userId="`${selected}`"
+      v-model:data="currentUser"
+      @updateData="updateData"
+      @openEdit="handleOpenEdit"
+    />
     <h1><b>Usuarios</b></h1>
     <p>
       En esta vista puede administrar a los usuarios que tienen acceso a la aplicación y editar su
@@ -22,55 +28,60 @@
 </template>
 
 <script setup>
+import OverlayLoader from '@/components/Feedback/Spinner/OverlayLoader.vue'
 import { ref, onMounted } from 'vue'
 import Button from '@/components/Buttons/ButtonSimple.vue'
 import CustomInput from '@/components/Forms/InputField/SearchBar.vue'
 import DisplayTable from '@/components/DataDisplay/Tables/DisplayTable.vue'
 import { useRouter } from 'vue-router'
+import { useApi } from '@/oauth/useApi'
 
-const selected = ref(0)
+const { getRequest } = useApi()
+const selected = ref('')
 const fetchedData = ref(null)
-const loading = ref(false)
 const headers = ref(null)
 const router = useRouter()
+const loading = ref(false)
+const currentUser = ref(null)
+const loading2 = ref(false)
+
+const updateData = async () => {
+  apiCall()
+}
+const handleOpenEdit = () => {
+  router.push(`/admin/user/edit/${selected.value}`)
+}
+
 headers.value = {
-  nombre: 'Nombre',
-  rol: 'Rol'
+  names: 'Nombre',
+  lastNames: 'Apellidos'
+}
+
+const getCurrentUser = async () => {
+  loading2.value = true
+  try {
+    const response = await getRequest(`/users/${selected.value}`)
+    currentUser.value = response.data
+  } catch {
+    console.error('No se pudieron recibir usuarios')
+  }
+  loading2.value = false
+}
+
+const apiCall = async () => {
+  loading.value = true
+  try {
+    const response = await getRequest('/users/list')
+    fetchedData.value = response.users
+  } catch {
+    // Oops ocurrio un error :/
+  }
+  loading.value = false
+  return fetchedData
 }
 
 onMounted(async () => {
-  loading.value = true
-  // simulation time
-  await new Promise((resolve) => setTimeout(resolve, 500))
-
-  // fetchData for when the backend gets deployed
-  // fetchedData.value = await fetchData();
-  fetchedData.value = {
-    1: {
-      nombre: 'Daniel Rayo',
-      rol: 'Doctor',
-      telefonos: ['555 555', '222 222'],
-      numColegiado: 32115,
-      correos: ['aaa@gmail.com', 'bbb@gmail.com']
-    },
-    2: {
-      nombre: 'Sofia de la Rosa',
-      rol: 'Doctor',
-      telefonos: ['444 444', '333 333'],
-      numColegiado: 53515,
-      correos: ['ccc@gmail.com', 'ddd@gmail.com']
-    },
-    3: {
-      nombre: 'Ricardo Morales Sagastume',
-      rol: 'Asistente',
-      telefonos: ['111 111', '777 777'],
-      numColegiado: null,
-      correos: ['eee@gmail.com']
-    }
-  }
-
-  loading.value = false
-  return fetchedData
+  apiCall()
 })
 
 // Functions
@@ -79,9 +90,10 @@ const handleOpenCreate = () => {
   router.push('/admin/user/create')
 }
 
-const handleOpenView = (key) => {
-  selected.value = key
-  router.push(`/admin/user/view/${key}`)
+const handleOpenView = async (key) => {
+  selected.value = fetchedData.value[key].id
+  await getCurrentUser()
+  router.push(`/admin/user/view/${fetchedData.value[key].id}`)
 }
 </script>
 
@@ -94,9 +106,8 @@ const handleOpenView = (key) => {
 }
 
 .page {
-  padding: 5vw;
-  padding-top: 8vh;
-  width: 80vw;
+  padding: 2rem 3rem 0 3rem;
+  width: 90%;
 }
 
 .options {

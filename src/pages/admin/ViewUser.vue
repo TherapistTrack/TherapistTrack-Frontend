@@ -1,89 +1,112 @@
 <template>
-  <router-view :id="selected" />
-  <div class="overlayContainer" @click="goBack()">
-    <div class="view-user" @click.stop="">
-      <div class="top">
-        <h1>{{ data[props.id].nombre }}</h1>
-        <RiCloseLine
-          class-name="icon"
-          size="2rem"
-          color="var(--gray-2)"
-          alt="close"
-          @click="goBack()"
-        />
-      </div>
-      <div class="actions">
-        <RiEditBoxLine
-          class-name="act-edit"
-          size="1.5rem"
-          color="var(--gray-1)"
-          alt="edit"
-          @click="handleOpenEdit(props.id)"
-        />
-        <RiDeleteBin7Fill
-          class-name="act-delete"
-          size="1.5rem"
-          color="var(--gray-1)"
-          alt="delete"
-        />
-      </div>
-      <div class="tableContainer">
-        <SimpleTable :data="data[props.id]" :headers="headers" />
+  <span>
+    <div class="overlayContainer" @click="goBack()">
+      <div class="view-user" @click.stop="">
+        <div class="top">
+          <h1>{{ userData.names }} {{ userData.lastNames }}</h1>
+          <RiCloseLine
+            class-name="icon"
+            size="2rem"
+            color="var(--gray-2)"
+            alt="close"
+            @click="goBack()"
+          />
+        </div>
+        <div class="actions">
+          <RiEditBoxLine
+            class-name="act-edit"
+            size="1.5rem"
+            color="var(--gray-1)"
+            alt="edit"
+            @click="handleOpenEdit(props.userId)"
+          />
+          <RiDeleteBin7Fill
+            class-name="act-delete"
+            size="1.5rem"
+            color="var(--gray-1)"
+            alt="delete"
+            @click="onDelete()"
+          />
+        </div>
+        <div class="tableContainer">
+          <SimpleTable :data="userData" :headers="headers" />
+        </div>
       </div>
     </div>
-  </div>
+  </span>
+
+  <AlertDelete
+    v-if="tryDelete"
+    :name="`${userData.names} ${userData.lastNames}`"
+    :on-no="abortDelete"
+    :on-yes="handleDelete"
+  />
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { RiCloseLine, RiDeleteBin7Fill, RiEditBoxLine } from '@remixicon/vue'
 import { useRouter } from 'vue-router'
 import SimpleTable from '@/components/DataDisplay/Tables/SimpleTable.vue'
-const data = ref(null)
+import AlertDelete from '@/components/Feedback/Alerts/AlertDelete.vue'
+import { useApi } from '@/oauth/useApi'
+const { deleteRequest } = useApi()
 const headers = ref(null)
 const router = useRouter()
-const selected = ref(0)
-headers.value = {
-  rol: 'Rol',
-  telefonos: 'Teléfonos',
-  numColegiado: 'No. Colegiado',
-  correos: 'Correo'
-}
-data.value = {
-  1: {
-    nombre: 'Daniel Rayo',
-    rol: 'Doctor',
-    telefonos: ['555 555', '222 222'],
-    numColegiado: 32115,
-    correos: ['aaa@gmail.com', 'bbb@gmail.com']
-  },
-  2: {
-    nombre: 'Sofia de la Rosa',
-    rol: 'Doctor',
-    telefonos: ['444 444', '333 333'],
-    numColegiado: 53515,
-    correos: ['ccc@gmail.com', 'ddd@gmail.com']
-  },
-  3: {
-    nombre: 'Ricardo Morales Sagastume',
-    rol: 'Asistente',
-    telefonos: ['111 111', '777 777'],
-    numColegiado: null,
-    correos: ['eee@gmail.com']
-  }
-}
+const tryDelete = ref(false)
+const userData = ref({})
 
 const props = defineProps({
-  id: String
+  userId: String,
+  data: Object
 })
 
-const handleOpenEdit = (key) => {
-  selected.value = key
-  router.push(`/admin/user/edit/${key}`)
+onMounted(() => {
+  userData.value = props.data
+})
+
+headers.value = {
+  rol: 'Rol',
+  phones: 'Teléfonos',
+  mails: 'Correo',
+  id: 'No. ID'
 }
 
+const handleOpenEdit = () => {
+  updateEdit()
+}
+const onDelete = () => {
+  tryDelete.value = true
+}
+const handleDelete = async () => {
+  let body = {
+    id: props.userId
+  }
+  try {
+    await deleteRequest('/users/delete', body)
+    emitUpdate()
+    goBack()
+  } catch {
+    console.log('error borrando')
+  }
+}
+const abortDelete = () => {
+  tryDelete.value = false
+}
 const goBack = () => {
-  router.back()
+  router.push('/admin/user/')
+}
+
+// Emits
+const emit = defineEmits(['updateData', 'openEdit'])
+
+const emitUpdate = () => {
+  // Refreshes view of users
+  emit('updateData')
+}
+const updateEdit = () => {
+  // Tells parent component to open edit view
+  emit('openEdit')
 }
 </script>
 

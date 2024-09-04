@@ -54,11 +54,11 @@ defineProps({
 
 <style>
 .input-group {
-  margin-bottom: 1rem;
   display: grid;
   grid-template-columns: 1fr 3fr;
   gap: 1rem;
   align-items: center;
+  margin-bottom: 1rem;
 }
 
 .input-group label {
