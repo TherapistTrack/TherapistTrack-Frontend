@@ -11,9 +11,14 @@
           @click="goBack()"
         />
       </div>
-
       <div class="mid">
         <form @submit.prevent="createUser">
+          <InputField
+            :id="'ids'"
+            :label="'ID'"
+            v-model="user.id"
+            :placeholder="'Escribe tu ID...'"
+          />
           <InputField
             :id="'nombres'"
             :label="'Nombres'"
@@ -95,11 +100,12 @@ import InputField from '@/components/Forms/InputField/InputField.vue'
 import SelectDropDown from '@/components/Forms/SelectDropDown/SelectDropDown.vue'
 import DynamicList from '@/components/Forms/DynamicList/DynamicList.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
-import { userSchema } from '@/schemas/userSchema'
+import { createUserSchema } from '@/schemas/createUserSchema'
 import { useApi } from '@/oauth/useApi'
 const { postRequest } = useApi()
 const router = useRouter()
 const user = ref({
+  id: '',
   names: '',
   lastNames: '',
   phones: [],
@@ -111,6 +117,7 @@ const user = ref({
   startDate: '',
   endDate: ''
 })
+
 const formatedUser = ref(null)
 const errors = ref(null)
 const valid = ref(false)
@@ -119,7 +126,7 @@ watch(
   user,
   () => {
     if (user.value != null) {
-      userSchema
+      createUserSchema
         .validate(user.value)
         .then(() => {
           valid.value = true

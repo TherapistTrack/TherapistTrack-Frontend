@@ -26,13 +26,6 @@
             :placeholder="'Escribe tus apellidos...'"
             v-model="user.lastNames"
           />
-          <SelectDropDown
-            :disabled-value="'Seleccione una opción'"
-            :label="'Rol'"
-            :id="'role'"
-            v-model="user.rol"
-            :options="['Doctor', 'Assistant']"
-          />
           <DynamicList :title="'Teléfonos: '" v-model:model-array="user.phones" />
           <DynamicList :title="'Correos: '" v-model:model-array="user.mails" />
           <span v-if="user.rol === 'Doctor'">
@@ -91,7 +84,6 @@ import OverlayLoader from '@/components/Feedback/Spinner/OverlayLoader.vue'
 import { RiCloseLine } from '@remixicon/vue'
 import { useRouter } from 'vue-router'
 import InputField from '@/components/Forms/InputField/InputField.vue'
-import SelectDropDown from '@/components/Forms/SelectDropDown/SelectDropDown.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import AlertOptionSimple from '@/components/Feedback/Alerts/AlertOptionSimple.vue'
 
