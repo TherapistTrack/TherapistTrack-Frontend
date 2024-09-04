@@ -72,6 +72,10 @@ const router = createRouter({
         {
           path: 'files',
           component: () => import('@/pages/config/FileView.vue')
+        },
+        {
+          path: '/config/customize-file',
+          component: () => import('@/pages/config/CustomizeFile.vue')
         }
       ]
     },
