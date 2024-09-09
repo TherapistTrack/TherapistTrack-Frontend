@@ -1,12 +1,13 @@
 <template>
   <div class="sideBtn">
-    <img
-      @click="handleClick"
-      class="sideLogo"
-      src="@/assets/Logo/LogoSoloMono.png"
-      alt="Therapist Track Logo"
-      :id="localMin ? 'minimized' : 'maximized'"
-    />
+    <div class="clickable" @click="handleClick">
+      <img
+        class="sideLogo"
+        src="@/assets/Logo/LogoSoloMono.png"
+        alt="Therapist Track Logo"
+        :id="localMin ? 'minimized' : 'maximized'"
+      />
+    </div>
 
     <div class="bar" :id="localMin ? 'minimized' : 'maximized'">
       <div class="gravityTop">
@@ -23,7 +24,9 @@
 
       <div class="bottom">
         <div class="userData">
-          <p><b>Josue Rodriguez</b></p>
+          <p>
+            <b>{{ user.name }}</b>
+          </p>
           <p>Administrador</p>
         </div>
         <RiLogoutBoxRLine class="icon" size="1.5rem" color="var(--gray-2)" @click="handleLogout" />
@@ -46,11 +49,13 @@ import { useAuth0 } from '@auth0/auth0-vue'
 const auth0 = useAuth0()
 const localMin = ref(false)
 const logoutAttempt = ref(false)
+
 defineProps({
   minim: {
     type: Boolean,
     required: true
-  }
+  },
+  user: Object
 })
 
 const handleClick = () => {
@@ -161,6 +166,12 @@ const logout = () => {
   font-size: smaller;
   color: var(--gray-1);
 }
+.sideBtn .clickable {
+  cursor: pointer;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
 
 /* Animations */
 .bar#minimized {
@@ -177,14 +188,6 @@ const logout = () => {
 
 .sideSpace#maximized {
   width: 12vw;
-}
-
-.sideLogo#minimized {
-  cursor: pointer;
-}
-
-.sideLogo#maximized {
-  cursor: default;
 }
 
 #selected {

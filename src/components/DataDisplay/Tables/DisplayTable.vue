@@ -19,6 +19,10 @@
       <div v-if="loading">
         <DataLoader />
       </div>
+      <div v-else-if="!success" class="failed">
+        <RiAlertFill color="var(--gray-2)" size="1.5rem" />
+        <p>Oops... ocurrio un error</p>
+      </div>
 
       <div
         v-else
@@ -41,11 +45,13 @@
 
 <script setup>
 import DataLoader from '@/components/Feedback/Spinner/DataLoader.vue'
+import { RiAlertFill } from '@remixicon/vue'
 const props = defineProps({
   loading: Boolean,
   onClick: Function,
   data: Object,
-  headers: Object
+  headers: Object,
+  success: Boolean
 })
 function handleClick(key) {
   props.onClick(key)
@@ -104,6 +110,13 @@ function handleClick(key) {
 
 .table-container .special {
   border-left: 1px solid #ccc;
+}
+.table-container .failed {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 2rem;
+  justify-content: center;
 }
 
 .table-container .table-row:hover .table-item {
