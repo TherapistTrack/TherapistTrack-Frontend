@@ -84,10 +84,11 @@ const handleDelete = async () => {
   }
   try {
     await deleteRequest('/users/delete', body)
+    emit('triggerToast', 1, 'Usuario eliminado exitosamente')
     emitUpdate()
     goBack()
   } catch {
-    console.log('error borrando')
+    emit('triggerToast', 0, 'Ocurrio un error eliminando usuario')
   }
 }
 const abortDelete = () => {
@@ -98,7 +99,7 @@ const goBack = () => {
 }
 
 // Emits
-const emit = defineEmits(['updateData', 'openEdit'])
+const emit = defineEmits(['updateData', 'openEdit', 'triggerToast'])
 
 const emitUpdate = () => {
   // Refreshes view of users

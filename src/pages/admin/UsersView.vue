@@ -6,6 +6,7 @@
       v-model:data="currentUser"
       @updateData="updateData"
       @openEdit="handleOpenEdit"
+      @triggerToast="triggerToast"
     />
     <h1><b>Usuarios</b></h1>
     <p>
@@ -14,8 +15,8 @@
     </p>
 
     <div class="options">
-      <CustomInput :pholder="'Buscar por nombre'" />
-      <Button :msg="'Nuevo'" :onClick="handleOpenCreate" />
+      <CustomInput :pholder="'Buscar por nombre'" v-model:search-value="search" />
+      <Button :msg="'Nuevo'" :onClick="handleOpenCreate" :color="'green'" />
     </div>
 
     <DisplayTable
@@ -23,19 +24,19 @@
       :headers="headers"
       :loading="loading"
       :onClick="handleOpenView"
+      :success="success"
     />
   </div>
 </template>
 
 <script setup>
 import OverlayLoader from '@/components/Feedback/Spinner/OverlayLoader.vue'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import Button from '@/components/Buttons/ButtonSimple.vue'
 import CustomInput from '@/components/Forms/InputField/SearchBar.vue'
 import DisplayTable from '@/components/DataDisplay/Tables/DisplayTable.vue'
 import { useRouter } from 'vue-router'
 import { useApi } from '@/oauth/useApi'
-
 const { getRequest } = useApi()
 const selected = ref('')
 const fetchedData = ref(null)
@@ -44,6 +45,14 @@ const router = useRouter()
 const loading = ref(false)
 const currentUser = ref(null)
 const loading2 = ref(false)
+const success = ref(false)
+const search = ref('')
+
+const emit = defineEmits(['addToast'])
+const triggerToast = (type, mssg) => {
+  let toast = { type: type, content: mssg }
+  emit('addToast', toast)
+}
 
 const updateData = async () => {
   apiCall()
@@ -51,10 +60,13 @@ const updateData = async () => {
 const handleOpenEdit = () => {
   router.push(`/admin/user/edit/${selected.value}`)
 }
-
+watch(search, () => {
+  console.log(search.value)
+})
 headers.value = {
   names: 'Nombre',
-  lastNames: 'Apellidos'
+  lastNames: 'Apellidos',
+  rol: 'Rol'
 }
 
 const getCurrentUser = async () => {
@@ -63,7 +75,7 @@ const getCurrentUser = async () => {
     const response = await getRequest(`/users/${selected.value}`)
     currentUser.value = response.data
   } catch {
-    console.error('No se pudieron recibir usuarios')
+    triggerToast(0, `No se pudo obtener el usuario con id ${selected.value}`)
   }
   loading2.value = false
 }
@@ -73,8 +85,9 @@ const apiCall = async () => {
   try {
     const response = await getRequest('/users/list')
     fetchedData.value = response.users
+    success.value = true
   } catch {
-    // Oops ocurrio un error :/
+    triggerToast(0, 'No se pudieron obtener los usuarios disponibles')
   }
   loading.value = false
   return fetchedData
@@ -83,8 +96,6 @@ const apiCall = async () => {
 onMounted(async () => {
   apiCall()
 })
-
-// Functions
 
 const handleOpenCreate = () => {
   router.push('/admin/user/create')
@@ -98,13 +109,6 @@ const handleOpenView = async (key) => {
 </script>
 
 <style>
-#app {
-  display: flex;
-  flex-direction: row;
-  background-color: white;
-  font-family: 'MotivaSansMedium';
-}
-
 .page {
   padding: 2rem 3rem 0 3rem;
   width: 90%;

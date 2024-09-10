@@ -230,8 +230,9 @@ const updateUser = async () => {
       try {
         await putRequest('/users/update', formatedUser.value)
         goBack()
+        emit('triggerToast', 1, 'Tus cambios fueron guardados exitosamente')
       } catch {
-        console.log('something went bad with the request')
+        emit('triggerToast', 0, 'Ocurrio un error guardando los cambios')
       }
       loading.value = false
       emitUpdate()
@@ -245,7 +246,7 @@ const updateUser = async () => {
 }
 
 // Emits
-const emit = defineEmits(['updateData', 'openEdit'])
+const emit = defineEmits(['updateData', 'openEdit', 'triggerToast'])
 
 const emitUpdate = () => {
   // Refreshes view of users
