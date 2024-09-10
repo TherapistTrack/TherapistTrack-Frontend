@@ -21,7 +21,7 @@
       </div>
       <div v-else-if="!success" class="failed">
         <RiAlertFill color="var(--gray-2)" size="1.5rem" />
-        <p>Oops... ocurrio un error</p>
+        <p>Oops... algo salio mal</p>
       </div>
 
       <div
