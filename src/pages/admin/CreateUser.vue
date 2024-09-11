@@ -179,15 +179,17 @@ const createUser = async () => {
     }
     try {
       await postRequest('/users/register', formatedUser.value)
+
+      emit('triggerToast', 1, 'El usuario fue creado exitosamente')
       emitUpdate()
       goBack()
     } catch {
-      console.log('something went bad with the request')
+      emit('triggerToast', 0, 'Hubo un error creando el usuario')
     }
   }
 }
 
-const emit = defineEmits(['updateData'])
+const emit = defineEmits(['updateData', 'triggerToast'])
 const emitUpdate = () => {
   emit('updateData')
 }

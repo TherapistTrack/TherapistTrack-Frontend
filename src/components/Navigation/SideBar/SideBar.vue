@@ -1,12 +1,13 @@
 <template>
   <div class="sideBtn">
-    <img
-      @click="handleClick"
-      class="sideLogo"
-      src="@/assets/Logo/LogoSoloMono.png"
-      alt="Therapist Track Logo"
-      :id="localMin ? 'minimized' : 'maximized'"
-    />
+    <div class="clickable" @click="handleClick">
+      <img
+        class="sideLogo"
+        src="@/assets/Logo/LogoSoloMono.png"
+        alt="Therapist Track Logo"
+        :id="localMin ? 'minimized' : 'maximized'"
+      />
+    </div>
 
     <div class="bar" :id="localMin ? 'minimized' : 'maximized'">
       <div class="gravityTop">
@@ -22,11 +23,13 @@
       </div>
 
       <div class="bottom">
-        <div class="userData">
-          <p><b>Josue Rodriguez</b></p>
+        <span class="userData">
+          <p>
+            <b>{{ user.name }}</b>
+          </p>
           <p>Administrador</p>
-        </div>
-        <RiLogoutBoxRLine class="icon" size="1.5rem" color="var(--gray-2)" @click="handleLogout" />
+        </span>
+        <RiLogoutBoxRLine class="icon" size="1.3rem" color="var(--gray-2)" @click="handleLogout" />
       </div>
     </div>
   </div>
@@ -44,13 +47,15 @@ import AlertOptionSimple from '@/components/Feedback/Alerts/AlertOptionSimple.vu
 import { ref } from 'vue'
 import { useAuth0 } from '@auth0/auth0-vue'
 const auth0 = useAuth0()
-const localMin = ref(false)
+const localMin = ref(true)
 const logoutAttempt = ref(false)
+
 defineProps({
   minim: {
     type: Boolean,
     required: true
-  }
+  },
+  user: Object
 })
 
 const handleClick = () => {
@@ -148,18 +153,28 @@ const logout = () => {
 }
 /* Bottom */
 .sideBtn .bottom {
-  padding: 1vh;
+  padding: 1rem;
   height: 10vh;
   border-top: 1px solid var(--gray-2);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1vw;
+  gap: 1rem flex-s;
 }
 
 .sideBtn .bottom * {
   font-size: smaller;
   color: var(--gray-1);
+}
+
+.sideBtn .bottom .icon {
+  flex-shrink: 0;
+}
+.sideBtn .clickable {
+  cursor: pointer;
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 /* Animations */
@@ -169,22 +184,6 @@ const logout = () => {
 
 .bar#maximized {
   left: 0;
-}
-
-.sideSpace#minimized {
-  width: 0;
-}
-
-.sideSpace#maximized {
-  width: 12vw;
-}
-
-.sideLogo#minimized {
-  cursor: pointer;
-}
-
-.sideLogo#maximized {
-  cursor: default;
 }
 
 #selected {
@@ -234,9 +233,6 @@ const logout = () => {
   .sideBtn .bar .top .logo {
     height: auto;
     max-width: 10vh;
-  }
-  .sideSpace#maximized {
-    width: 0vw;
   }
 }
 </style>

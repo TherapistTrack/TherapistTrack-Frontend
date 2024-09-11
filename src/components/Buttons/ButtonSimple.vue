@@ -46,6 +46,9 @@ button {
   background-color: var(--green-1);
   cursor: pointer;
 }
+button:hover {
+  background-color: var(--green-2);
+}
 button b {
   color: white;
 }
@@ -60,6 +63,10 @@ button#disabled b {
 .button-yellow {
   background-color: var(--yellow-1);
 }
+.button-yellow:hover {
+  background-color: var(--yellow-2);
+}
+
 .button-red {
   background-color: var(--red-1);
 }
@@ -73,9 +80,6 @@ button#disabled b {
 
 .button-green:hover {
   background-color: var(--green-2);
-}
-.button-yellow:hover {
-  background-color: var(--yellow-2);
 }
 .button-red:hover {
   background-color: var(--red-2);
