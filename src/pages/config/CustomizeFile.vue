@@ -34,41 +34,13 @@
               v-model="field.type"
               @update:modelValue="configureField(index)"
             />
-            <div v-else>
-              <InputField
-                v-if="field.type === 'SHORT_TEXT'"
-                :id="'input-' + index"
-                type="text"
-                :placeholder="field.name"
-                maxlength="255"
-                v-model="field.value"
-              />
-              <textarea
-                v-if="field.type === 'TEXT'"
-                :id="'textarea-' + index"
-                :placeholder="field.name"
-                v-model="field.value"
-                rows="4"
-                cols="50"
-                @input="autoResizeTextarea($event)"
-              ></textarea>
-              <input
-                v-if="field.type === 'NUMBER' || field.type === 'FLOAT'"
-                :id="'number-' + index"
-                type="number"
-                v-model="field.value"
-                @input="validateNumberInput($event)"
-              />
-              <input
-                v-if="field.type === 'DATE'"
-                :id="'date-' + index"
-                type="date"
-                v-model="field.value"
-              />
-              <!-- Botón para reconfigurar el campo -->
-              <button @click="reconfigureField(index)" class="reconfigure-button">
-                Cambiar Tipo
-              </button>
+            <div v-else class="field-type-display">
+              <span>{{ field.type }}</span>
+              <div class="reconfigure-button-container">
+                <button @click="reconfigureField(index)" class="reconfigure-button">
+                  Cambiar Tipo
+                </button>
+              </div>
             </div>
           </div>
           <div class="field-options">
@@ -96,7 +68,6 @@
         @remove="removeField"
       />
 
-      <!-- Modal para crear un nuevo campo -->
       <CreateTemplate
         v-if="isCreateFieldModalVisible"
         type="field"
@@ -104,7 +75,6 @@
         @create="addNewField"
       />
 
-      <!-- Modal para renombrar un campo existente -->
       <RenameTemplate
         v-if="isRenameModalVisible"
         :currentName="selectedField.name"
@@ -119,7 +89,6 @@
 <script setup>
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
-import InputField from '@/components/Forms/InputField/InputField.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import DropdownField from '@/components/Forms/SelectDropDown/SelectDropDown.vue'
 import ContextMenu from '@/components/Feedback/Modals/ContextMenu.vue'
@@ -191,24 +160,12 @@ function showRemoveModal() {
 
 function removeField() {
   fields.value = fields.value.filter((field) => field !== selectedField.value)
+  isRemoveModalVisible.value = false
   hideContextMenu()
-}
-
-function autoResizeTextarea(event) {
-  const textarea = event.target
-  textarea.style.height = 'auto'
-  textarea.style.height = textarea.scrollHeight + 'px'
-}
-
-function validateNumberInput(event) {
-  if (event.target.value < 0) {
-    event.target.value = 0
-  }
 }
 
 function saveFile() {
   console.log('Archivo guardado:', fields.value)
-  // Aquí puedes redirigir o hacer alguna acción adicional
 }
 </script>
 
@@ -298,8 +255,21 @@ function saveFile() {
   background-color: #e0e0e0;
 }
 
+.field-type {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centra el tipo de dato */
+}
+
+.field-type-display {
+  text-align: center; /* Centra el texto del tipo de dato */
+}
+
+.reconfigure-button-container {
+  margin-top: 10px; /* Espaciado entre el tipo de dato y el botón */
+}
+
 .reconfigure-button {
-  margin-top: 10px;
   background-color: #ffcc00;
   color: white;
   border: none;

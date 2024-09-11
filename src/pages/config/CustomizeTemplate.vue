@@ -26,7 +26,6 @@
             <span class="field-label">{{ field.name }}</span>
           </div>
           <div class="field-type">
-            <!-- Dropdown para seleccionar el tipo de dato -->
             <DropdownField
               v-if="!field.isConfigured"
               :id="'dropdown-' + index"
@@ -36,42 +35,13 @@
               v-model="field.type"
               @update:modelValue="configureField(index)"
             />
-            <!-- Campos específicos según el tipo seleccionado -->
             <div v-else>
-              <InputField
-                v-if="field.type === 'SHORT_TEXT'"
-                :id="'input-' + index"
-                type="text"
-                :placeholder="field.name"
-                maxlength="255"
-                v-model="field.value"
-              />
-              <textarea
-                v-if="field.type === 'TEXT'"
-                :id="'textarea-' + index"
-                :placeholder="field.name"
-                v-model="field.value"
-                rows="4"
-                cols="50"
-                @input="autoResizeTextarea($event)"
-              ></textarea>
-              <input
-                v-if="field.type === 'NUMBER' || field.type === 'FLOAT'"
-                :id="'number-' + index"
-                type="number"
-                v-model="field.value"
-                @input="validateNumberInput($event)"
-              />
-              <input
-                v-if="field.type === 'DATE'"
-                :id="'date-' + index"
-                type="date"
-                v-model="field.value"
-              />
-              <!-- Botón para reconfigurar el campo -->
-              <button @click="reconfigureField(index)" class="reconfigure-button">
-                Cambiar Tipo
-              </button>
+              <span>{{ field.type }}</span>
+              <div class="reconfigure-button-container">
+                <button @click="reconfigureField(index)" class="reconfigure-button">
+                  Cambiar Tipo
+                </button>
+              </div>
             </div>
           </div>
           <div class="field-required">
@@ -102,7 +72,6 @@
         @remove="removeField"
       />
 
-      <!-- Modal para crear un nuevo campo -->
       <CreateTemplate
         v-if="isCreateFieldModalVisible"
         type="field"
@@ -110,7 +79,6 @@
         @create="addNewField"
       />
 
-      <!-- Modal para renombrar un campo existente -->
       <RenameTemplate
         v-if="isRenameModalVisible"
         :currentName="selectedField.name"
@@ -125,7 +93,6 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import InputField from '@/components/Forms/InputField/InputField.vue'
 import Checkbox from '@/components/Forms/CheckBox/CheckBox.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import DropdownField from '@/components/Forms/SelectDropDown/SelectDropDown.vue'
@@ -202,6 +169,7 @@ function showRemoveModal() {
 
 function removeField() {
   fields.value = fields.value.filter((field) => field !== selectedField.value)
+  isRemoveModalVisible.value = false
   hideContextMenu()
 }
 
@@ -212,18 +180,6 @@ function configureField(index) {
 function reconfigureField(index) {
   fields.value[index].isConfigured = false
   fields.value[index].type = ''
-}
-
-function validateNumberInput(event) {
-  if (event.target.value < 0) {
-    event.target.value = 0
-  }
-}
-
-function autoResizeTextarea(event) {
-  const textarea = event.target
-  textarea.style.height = 'auto'
-  textarea.style.height = textarea.scrollHeight + 'px'
 }
 </script>
 
@@ -335,8 +291,11 @@ function autoResizeTextarea(event) {
   transition: background-color 0.2s;
 }
 
-.reconfigure-button {
+.reconfigure-button-container {
   margin-top: 10px;
+}
+
+.reconfigure-button {
   background-color: #ffcc00;
   color: white;
   border: none;

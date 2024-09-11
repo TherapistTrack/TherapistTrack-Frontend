@@ -102,7 +102,7 @@ const {
   },
   logoGraySrc: {
     type: String,
-    default: new URL('@/assets/Logo/LogoGray.png', import.meta.url).href
+    default: new URL('@/assets/Logo/LogoWhite.png', import.meta.url).href
   },
   userName: {
     type: String,
