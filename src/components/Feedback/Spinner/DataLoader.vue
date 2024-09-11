@@ -1,8 +1,12 @@
 <template>
   <div class="center">
-    <img class="loading" src="@/assets/loader-2-line.svg" alt="" />
+    <RiLoader2Line size="3rem" color="black" alt="loading" class="loading" />
   </div>
 </template>
+
+<script setup>
+import { RiLoader2Line } from '@remixicon/vue'
+</script>
 
 <style>
 .center {

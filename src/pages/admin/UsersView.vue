@@ -1,169 +1,135 @@
 <template>
+  <OverlayLoader v-if="loading2" />
   <div class="page">
-    <h1>Usuarios</h1>
+    <router-view
+      :userId="`${selected}`"
+      v-model:data="currentUser"
+      @updateData="updateData"
+      @openEdit="handleOpenEdit"
+      @triggerToast="triggerToast"
+    />
+    <h1><b>Usuarios</b></h1>
     <p>
       En esta vista puede administrar a los usuarios que tienen acceso a la aplicación y editar su
       información.
     </p>
-    <br />
-    <div class="options">
-      <CustomInput :pholder="'Buscar por nombre'" />
-      <Button :mssg="'Nuevo'" :onClick="clork" />
-    </div>
-    <div class="grid-container">
-      <div class="grid-row">
-        <p class="grid-header">Nombre</p>
-        <p class="grid-header">Rol</p>
-      </div>
-      <div v-if="loading">
-        <DataLoader />
-      </div>
 
-      <div
-        class="grid-row"
-        v-for="(item, key) in fetchedData"
-        :key="key"
-        @click="handleOpenView(key)"
-      >
-        <div class="grid-item">{{ item.nombre }}</div>
-        <div class="grid-item">{{ item.rol }}</div>
-      </div>
+    <div class="options">
+      <CustomInput :pholder="'Buscar por nombre'" v-model:search-value="search" />
+      <Button :msg="'Nuevo'" :onClick="handleOpenCreate" :color="'green'" />
     </div>
-  </div>
-  <div v-if="modalOpen">
-    <ViewUser :data="fetchedData[selected] || { nombre: 'Rayo' }" @closeView="handleCloseView" />
+
+    <DisplayTable
+      :data="fetchedData"
+      :headers="headers"
+      :loading="loading"
+      :onClick="handleOpenView"
+      :success="success"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import '@/assets/arrow-left-double-fill.svg'
+import OverlayLoader from '@/components/Feedback/Spinner/OverlayLoader.vue'
+import { ref, onMounted, watch } from 'vue'
 import Button from '@/components/Buttons/ButtonSimple.vue'
-import CustomInput from '@/components/Forms/InputField/CustomInput.vue'
-import DataLoader from '@/components/Feedback/Spinner/DataLoader.vue'
-import ViewUser from '@/pages/admin/ViewUser.vue'
-
-const modalOpen = ref(false)
-const selected = ref(0)
+import CustomInput from '@/components/Forms/InputField/SearchBar.vue'
+import DisplayTable from '@/components/DataDisplay/Tables/DisplayTable.vue'
+import { useRouter } from 'vue-router'
+import { useApi } from '@/oauth/useApi'
+const { getRequest } = useApi()
+const selected = ref('')
 const fetchedData = ref(null)
+const headers = ref(null)
+const router = useRouter()
 const loading = ref(false)
+const currentUser = ref(null)
+const loading2 = ref(false)
+const success = ref(false)
+const search = ref('')
 
-onMounted(async () => {
+const emit = defineEmits(['addToast'])
+const triggerToast = (type, mssg) => {
+  let toast = { type: type, content: mssg }
+  emit('addToast', toast)
+}
+
+const updateData = async () => {
+  apiCall()
+}
+const handleOpenEdit = () => {
+  router.push(`/admin/user/edit/${selected.value}`)
+}
+watch(search, () => {
+  console.log(search.value)
+})
+headers.value = {
+  names: 'Nombre',
+  lastNames: 'Apellidos',
+  rol: 'Rol'
+}
+
+const getCurrentUser = async () => {
+  loading2.value = true
+  try {
+    const response = await getRequest(`/users/${selected.value}`)
+    currentUser.value = response.data
+  } catch {
+    triggerToast(0, `No se pudo obtener el usuario con id ${selected.value}`)
+  }
+  loading2.value = false
+}
+
+const apiCall = async () => {
   loading.value = true
-  // simulation time
-  await new Promise((resolve) => setTimeout(resolve, 5000))
-
-  // fetchData for when the backend gets deployed
-  // fetchedData.value = await fetchData();
-  fetchedData.value = {
-    1: {
-      nombre: 'Daniel Rayo',
-      rol: 'Doctor',
-      telefonos: ['555 555', '222 222'],
-      numColegiado: 32115,
-      correos: ['aaa@gmail.com', 'bbb@gmail.com']
-    },
-    2: {
-      nombre: 'Sofia de la Rosa',
-      rol: 'Doctor',
-      telefonos: ['444 444', '333 333'],
-      numColegiado: 53515,
-      correos: ['ccc@gmail.com', 'ddd@gmail.com']
-    },
-    3: {
-      nombre: 'Ricardo Morales Sagastume',
-      rol: 'Asistente',
-      telefonos: ['111 111', '777 777'],
-      numColegiado: null,
-      correos: ['eee@gmail.com']
-    }
+  try {
+    const response = await getRequest('/users/list')
+    fetchedData.value = response.users
+    success.value = true
+  } catch {
+    triggerToast(0, 'No se pudieron obtener los usuarios disponibles')
   }
   loading.value = false
   return fetchedData
+}
+
+onMounted(async () => {
+  apiCall()
 })
 
-const clork = () => {
-  console.log('Button pressed')
+const handleOpenCreate = () => {
+  router.push('/admin/user/create')
 }
 
-const handleCloseView = () => {
-  modalOpen.value = false
-}
-
-const handleOpenView = (key) => {
-  selected.value = key
-  modalOpen.value = true
+const handleOpenView = async (key) => {
+  selected.value = fetchedData.value[key].id
+  await getCurrentUser()
+  router.push(`/admin/user/view/${fetchedData.value[key].id}`)
 }
 </script>
 
 <style>
-#app {
-  height: 100vh;
-  width: 100vw;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: row;
-  background-color: white;
-  font-family: 'MotivaSansMedium';
-}
-
 .page {
-  padding: 2rem;
-  padding-top: 3rem;
+  padding: 2rem 3rem 0 3rem;
+  width: 90%;
 }
 
 .options {
   display: flex;
   width: 100%;
   justify-content: space-between;
+  padding: 5vh 0 3vh 0;
 }
 
-h1,
-p,
-h2,
-ul {
-  color: black;
-}
-
-.page p {
+p {
   font-weight: lighter;
   font-size: small;
-  color: var(--vt-c-dark-gray-1);
 }
-
-.grid-container {
-  display: grid;
-  grid-template-columns: auto;
-  /* Two columns */
-  color: var(--vt-c-dark-1);
-  padding: 1rem;
-}
-
-.grid-row {
-  width: 100%;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-}
-
-.page .grid-header,
-.page .grid-item {
-  padding: 0.5rem;
-  border-bottom: 0.2vh solid #ccc;
-}
-
-.page .grid-header {
-  font-family: 'MotivaSansLighter';
-  border-top: 0.2vh solid #ccc;
-  font-weight: bold;
-}
-
-.page .grid-item + .grid-item {
-  border-left: 1px solid #ccc;
-}
-
-.page .grid-row:hover {
-  background-color: var(--accent-light);
-  cursor: pointer;
+@media (max-aspect-ratio: 4/7) {
+  .options {
+    flex-direction: column;
+    align-items: start;
+    gap: 2vh;
+  }
 }
 </style>

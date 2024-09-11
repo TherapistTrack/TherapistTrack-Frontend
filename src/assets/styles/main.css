@@ -8,8 +8,10 @@
   --green-2: #1bb889;
   --yellow-1: #f9bb41;
   --yellow-2: #ffde9d;
+  --yellow-3: #f0a81a;
   --light-yellow-1: #feeed0;
   --red-1: #ca2446;
+  --red-2: #e64464;
   --light-blue-1: #c5cefb;
   --light-blue-2: #a8b6ff;
   --blue-1: #4a63f1;
@@ -19,6 +21,7 @@
   --gray-1: #6e6e6e;
   --gray-2: #b7b7b7;
   --gray-3: #e9e9e9;
+  --gray-4: #c9c9c9;
 }
 
 /* semantic color variables for this project */

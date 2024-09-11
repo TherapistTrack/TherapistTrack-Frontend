@@ -1,144 +1,273 @@
 <template>
-  <div class="edit-user-container">
-    <div class="edit-user-form">
-      <h2>Editar Usuario</h2>
-      <form @submit.prevent="updateUser">
-        <div class="form-group">
-          <label for="firstName">Nombres</label>
-          <input
-            id="firstName"
-            v-model="user.firstName"
-            type="text"
-            placeholder="Escribe tu nombre..."
+  <OverlayLoader v-if="loading" />
+  <div v-if="done" class="overlayContainer" @click="handleReturn">
+    <div class="edit-user-form" @click.stop="">
+      <div class="top">
+        <h1>Editar Usuario</h1>
+        <RiCloseLine
+          class-name="icon"
+          size="2rem"
+          color="var(--gray-2)"
+          alt="close"
+          @click="handleReturn"
+        />
+      </div>
+      <div class="mid">
+        <form @submit.prevent="updateUser">
+          <InputField
+            :id="'nombres'"
+            :label="'Nombres'"
+            v-model="user.names"
+            :placeholder="'Escribe tu nombre...'"
           />
-        </div>
-        <div class="form-group">
-          <label for="lastName">Apellidos</label>
-          <input
-            id="lastName"
-            v-model="user.lastName"
-            type="text"
-            placeholder="Escribe tus apellidos"
+          <InputField
+            :id="'nombres'"
+            :label="'Apellidos'"
+            :placeholder="'Escribe tus apellidos...'"
+            v-model="user.lastNames"
           />
-        </div>
-        <div class="form-group">
-          <label for="phone">Teléfonos</label>
-          <input
-            id="phone"
-            v-model="user.phone"
-            type="text"
-            placeholder="Escribe tu número de teléfono"
-          />
-        </div>
-        <div class="form-group">
-          <label for="role">Rol</label>
-          <select id="role" v-model="user.role">
-            <option disabled value="">Seleccione una opción</option>
-            <option>Doctor</option>
-            <option>Asistente</option>
-            <option>Admin</option>
-          </select>
-        </div>
-        <template v-if="user.role === 'Doctor'">
-          <div class="form-group">
-            <label for="membershipNumber">No. Colegiado</label>
-            <input
-              id="membershipNumber"
-              v-model="user.membershipNumber"
-              type="text"
-              placeholder="Escribe tu No. de Colegiado"
+          <DynamicList :title="'Teléfonos: '" v-model:model-array="user.phones" />
+          <DynamicList :title="'Correos: '" v-model:model-array="user.mails" />
+          <span v-if="user.rol === 'Doctor'">
+            <InputField
+              :id="'col-num'"
+              :label="'No. Colegiado'"
+              :placeholder="'Escribe tu No. de Colegiado'"
+              v-model="user.collegiateNumber"
             />
-          </div>
-          <div class="form-group">
-            <label for="specialty">Especialidad</label>
-            <input
-              id="specialty"
+
+            <InputField
+              :id="'speciality'"
+              :label="'Especialidad'"
+              :placeholder="'Escribe tu especialidad'"
               v-model="user.specialty"
-              type="text"
-              placeholder="Escribe tu especialidad"
             />
+          </span>
+          <span v-else>
+            <InputField
+              :id="'start-date'"
+              :label="'Fecha inicio'"
+              :type="'date'"
+              v-model="user.startDate"
+            />
+            <InputField
+              :id="'end-date'"
+              :label="'Fecha Final'"
+              :type="'date'"
+              v-model="user.endDate"
+            />
+            <InputField :id="'DPI'" :label="'DPI'" v-model="user.DPI" />
+          </span>
+          <span v-if="!valid" class="error-container">
+            <span class="error-msg" v-for="error in errors" :key="error">
+              {{ error }}
+            </span>
+          </span>
+          <div class="button-container">
+            <ButtonSimple :msg="'Guardar'" :disabled="!valid" @click="() => updateUser" />
           </div>
-          <div class="form-group">
-            <label for="email">Correo</label>
-            <input id="email" v-model="user.email" type="email" placeholder="correo@ejemplo.com" />
-          </div>
-        </template>
-        <template v-if="user.role === 'Asistente'">
-          <div class="form-group">
-            <label for="email">Correo</label>
-            <input id="email" v-model="user.email" type="email" placeholder="correo@ejemplo.com" />
-          </div>
-          <div class="form-group">
-            <label for="startDate">Fecha inicio</label>
-            <input id="startDate" v-model="user.startDate" type="date" />
-          </div>
-          <div class="form-group">
-            <label for="endDate">Fecha Final</label>
-            <input id="endDate" v-model="user.endDate" type="date" />
-          </div>
-        </template>
-        <div class="button-container">
-          <button type="submit" :class="{ active: isFormValid }" :disabled="!isFormValid">
-            Guardar
-          </button>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   </div>
+  <AlertOptionSimple
+    v-if="tryReturn"
+    :msg="'¿Deseas Salir? tus cambios no serán guardados'"
+    :on-no="abortReturn"
+    :on-yes="goBack"
+  />
 </template>
 
-<script>
-import { ref, computed } from 'vue'
+<script setup>
+import { ref, onMounted, defineProps, watch } from 'vue'
+import OverlayLoader from '@/components/Feedback/Spinner/OverlayLoader.vue'
+import { RiCloseLine } from '@remixicon/vue'
+import { useRouter } from 'vue-router'
+import InputField from '@/components/Forms/InputField/InputField.vue'
+import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
+import AlertOptionSimple from '@/components/Feedback/Alerts/AlertOptionSimple.vue'
 
-export default {
-  setup() {
-    const user = ref({
-      firstName: '',
-      lastName: '',
-      phone: '',
-      role: '',
-      membershipNumber: '',
-      specialty: '',
-      email: '',
-      startDate: '',
-      endDate: ''
-    })
+import DynamicList from '@/components/Forms/DynamicList/DynamicList.vue'
+import { useApi } from '@/oauth/useApi'
+import { userSchema } from '@/schemas/userSchema'
+const router = useRouter()
+const { putRequest } = useApi()
+const startData = ref(null)
+const tryReturn = ref(false)
 
-    const isFormValid = computed(() => {
-      const basicInfoValid =
-        user.value.firstName && user.value.lastName && user.value.phone && user.value.role
-      let roleSpecificValid = true
-      if (user.value.role === 'Doctor') {
-        roleSpecificValid = user.value.membershipNumber && user.value.specialty && user.value.email
-      } else if (user.value.role === 'Asistente') {
-        roleSpecificValid = user.value.email && user.value.startDate && user.value.endDate
-      }
-      return basicInfoValid && roleSpecificValid
-    })
+const localData = ref(null)
+const done = ref(false)
+const user = ref(null)
+const errors = ref(null)
+const valid = ref(true)
+const formatedUser = ref(null)
+const loading = ref(false)
 
-    const updateUser = () => {
-      if (isFormValid.value) {
-        console.log('Updating user:', user.value)
-        // Implementar llamada a API para actualizar los datos
-      } else {
-        console.error('Form is invalid')
-      }
+const props = defineProps({
+  userId: String,
+  data: Object
+})
+
+watch(
+  user,
+  () => {
+    if (user.value != null) {
+      userSchema
+        .validate(user.value)
+        .then(() => {
+          valid.value = true
+        })
+        .catch((error) => {
+          valid.value = false
+          errors.value = error.errors
+        })
     }
+    done.value = true
+  },
+  { deep: true }
+)
 
-    return { user, updateUser, isFormValid }
+onMounted(async () => {
+  try {
+    localData.value = props.data
+  } catch {
+    router.back()
   }
+  user.value = {
+    id: props.userId,
+    names: localData.value.names || '',
+    lastNames: localData.value.lastNames || '',
+    phones: localData.value.phones || [],
+    rol: localData.value.rol || '',
+    collegiateNumber: localData.value.rolDependentInfo[0].collegiateNumber || '',
+    specialty: localData.value.rolDependentInfo[0].specialty || '',
+    mails: localData.value.mails || [],
+    DPI: localData.value.rolDependentInfo[0].DPI || '',
+    startDate: '',
+    endDate: ''
+  }
+  startData.value = {
+    names: localData.value.names || '',
+    lastNames: localData.value.lastNames || '',
+    phones: JSON.parse(JSON.stringify(localData.value.phones)) || [],
+    rol: localData.value.rol || '',
+    collegiateNumber: localData.value.rolDependentInfo[0].collegiateNumber || '',
+    specialty: localData.value.rolDependentInfo[0].specialty || '',
+    mails: JSON.parse(JSON.stringify(localData.value.mails)) || [],
+    DPI: localData.value.rolDependentInfo[0].DPI || '',
+    startDate: '',
+    endDate: ''
+  }
+  try {
+    user.value.startDate = localData.value.rolDependentInfo[0].startDate.slice(0, 10)
+    user.value.endDate = localData.value.rolDependentInfo[0].endDate.slice(0, 10)
+    startData.value.startDate = localData.value.rolDependentInfo[0].startDate.slice(0, 10)
+    startData.value.endDate = localData.value.rolDependentInfo[0].endDate.slice(0, 10)
+  } catch {
+    user.value.startDate = ''
+    user.value.endDate = ''
+    startData.value.startDate = ''
+    startData.value.endDate = ''
+  }
+})
+
+const handleReturn = () => {
+  if (!hasChanged()) {
+    tryReturn.value = true
+  } else {
+    goBack()
+  }
+}
+
+const abortReturn = () => {
+  tryReturn.value = false
+}
+const goBack = () => {
+  tryReturn.value = false
+  router.back()
+  router.push('/admin/user/')
+}
+
+const hasChanged = () => {
+  const change =
+    user.value.names === startData.value.names &&
+    user.value.lastNames === startData.value.lastNames &&
+    JSON.stringify(user.value.phones) == JSON.stringify(startData.value.phones) &&
+    user.value.rol === startData.value.rol &&
+    user.value.collegiateNumber === startData.value.collegiateNumber &&
+    user.value.specialty === startData.value.specialty &&
+    JSON.stringify(user.value.mails) == JSON.stringify(startData.value.mails) &&
+    user.value.startDate === startData.value.startDate &&
+    user.value.endDate === startData.value.endDate &&
+    user.value.DPI === startData.value.DPI
+  return change
+}
+
+const updateUser = async () => {
+  if (!hasChanged()) {
+    if (valid.value) {
+      formatedUser.value = {
+        id: user.value.id,
+        names: user.value.names,
+        lastNames: user.value.lastNames,
+        phones: [...user.value.phones],
+        rol: user.value.rol,
+        mails: [...user.value.mails]
+      }
+      if (user.value.rol == 'Doctor') {
+        formatedUser.value['rolDependentInfo'] = {
+          collegiateNumber: user.value.collegiateNumber,
+          specialty: user.value.specialty
+        }
+      } else {
+        formatedUser.value['rolDependentInfo'] = {
+          startDate: user.value.startDate,
+          endDate: user.value.endDate,
+          DPI: user.value.DPI
+        }
+      }
+      loading.value = true
+      try {
+        await putRequest('/users/update', formatedUser.value)
+        goBack()
+        emit('triggerToast', 1, 'Tus cambios fueron guardados exitosamente')
+      } catch {
+        emit('triggerToast', 0, 'Ocurrio un error guardando los cambios')
+      }
+      loading.value = false
+      emitUpdate()
+    } else {
+      console.log('Form is invalid')
+    }
+  } else {
+    goBack()
+  }
+  loading.value = false
+}
+
+// Emits
+const emit = defineEmits(['updateData', 'openEdit', 'triggerToast'])
+
+const emitUpdate = () => {
+  // Refreshes view of users
+  emit('updateData')
 }
 </script>
 
 <style scoped>
-.edit-user-container {
+.overlayContainer {
+  background-color: rgba(0, 0, 0, 0.4);
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  padding: 20px;
-  box-sizing: border-box;
+  z-index: 400;
 }
+
 .edit-user-form {
   background: #fff;
   padding: 2rem;
@@ -149,44 +278,32 @@ export default {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  margin: 2vh;
 }
-.form-group {
-  margin-bottom: 20px;
-}
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: bold;
-}
-.form-group input,
-.form-group select {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-.button-container {
-  display: flex;
-  justify-content: flex-end;
-  width: 100%;
-}
-.button-container button {
-  padding: 12px;
-  background-color: #d3d3d3;
-  color: white;
-  border: none;
-  border-radius: 4px;
+
+.edit-user-form .icon {
   cursor: pointer;
-  width: 20%;
-  margin-top: 20px;
 }
-.button-container button.active {
-  background-color: #068e65;
+
+.edit-user-form .top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
-button:hover {
-  background-color: #1bb889;
+
+.edit-user-form .mid {
+  padding: 1rem;
 }
-.button-container button:disabled {
-  cursor: not-allowed;
+.edit-user-form .button-container {
+  display: flex;
+  justify-content: end;
+  padding: 0.5rem;
+}
+
+.edit-user-form .error-msg {
+  color: var(--red-1);
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
 }
 </style>

@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { routeGuard } from '@/oauth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -8,6 +9,11 @@ const router = createRouter({
       path: '/',
       name: 'login',
       component: () => import('@/pages/login/LoginView.vue')
+    },
+    {
+      path: '/callback',
+      name: 'loginCallback',
+      component: () => import('@/pages/login/CallbackView.vue')
     },
 
     // ADMIN VIEW
@@ -24,12 +30,20 @@ const router = createRouter({
               component: () => import('@/pages/admin/CreateUser.vue')
             },
             {
-              path: 'edit',
-              component: () => import('@/pages/admin/EditUser.vue')
+              path: 'edit/:userId',
+              name: 'EditUser',
+              component: () => import('@/pages/admin/EditUser.vue'),
+              props: (route) => ({
+                userId: route.params.userId
+              })
             },
             {
-              path: 'view',
-              component: () => import('@/pages/admin/ViewUser.vue')
+              path: 'view/:userId',
+              component: () => import('@/pages/admin/ViewUser.vue'),
+              props: (route) => ({
+                userId: route.params.userId, // Pass id from route parameters
+                data: Object
+              })
             }
           ]
         }
@@ -38,27 +52,75 @@ const router = createRouter({
     // CONFIG PAGE
     {
       path: '/config',
-      component: () => import('@/pages/notfound/NotFoundView.vue'),
+      redirect: '/config/account',
+      component: () => import('@/pages/config/ProfileView.vue'),
       children: [
         {
-          path: 'profile',
-          component: () => import('@/pages/notfound/NotFoundView.vue')
+          path: 'account',
+          component: () => import('@/pages/config/AccountView.vue')
         },
         {
           path: 'patients',
-          component: () => import('@/pages/notfound/NotFoundView.vue')
+          component: () => import('@/pages/config/PatientList.vue')
+        },
+        {
+          path: 'template',
+          component: () => import('@/pages/config/CustomizeTemplate.vue')
         },
         {
           path: 'records',
           component: () => import('@/pages/notfound/NotFoundView.vue')
+        },
+        {
+          path: 'files',
+          component: () => import('@/pages/config/FileView.vue')
+        },
+        {
+          path: '/config/customize-file',
+          component: () => import('@/pages/config/CustomizeFile.vue')
         }
       ]
     },
-
     // RECORD VIEW
     {
-      path: '/records',
-      component: () => import('@/pages/notfound/NotFoundView.vue')
+      path: '/record',
+      component: () => import('@/pages/record/RecordIndex.vue'),
+      children: [
+        {
+          path: 'main',
+          component: () => import('@/pages/record/RecordView.vue'),
+          children: [
+            {
+              path: 'edit/:id',
+              component: () => import('@/pages/record/EditRecord.vue'),
+              props: (route) => ({
+                userId: route.params.id, // Pass id from route parameters
+                data: Object
+              })
+            },
+            {
+              path: 'view/:id',
+              component: () => import('@/pages/record/ViewRecord.vue'),
+              props: (route) => ({
+                userId: route.params.id, // Pass id from route parameters
+                data: Object
+              })
+            },
+            {
+              path: 'table-settings',
+              component: () => import('@/pages/record/RecordShowTable.vue'),
+              props: {
+                shownHeaders: Object,
+                allHeaders: Object
+              }
+            }
+          ]
+        },
+        {
+          path: 'create',
+          component: () => import('@/pages/record/CreateRecord.vue')
+        }
+      ]
     },
 
     // PATIENT VIEW
@@ -89,5 +151,11 @@ const router = createRouter({
     }
   ]
 })
+
+// Dev check to allow free navigetion withouth having any JWT tokens.
+const freeNavigation = import.meta.env.VITE_FREE_NAVIGATION || 'FALSE'
+if (freeNavigation === 'FALSE') {
+  router.beforeEach(routeGuard)
+}
 
 export default router

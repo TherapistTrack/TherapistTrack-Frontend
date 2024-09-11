@@ -1,31 +1,22 @@
-# Stage 1: Build Image
-FROM node:22.3.0 as build
+# Base Image
+FROM nginx:1.27.1-alpine
+
+RUN apk add --update nodejs npm
 
 WORKDIR /web
+
+# Copy the application code
 COPY package*.json ./
 RUN npm install --omit=dev
 COPY . .
-RUN npm run build
-
-# Use the official Nginx image from the Docker Hub
-FROM nginx:latest
-
-WORKDIR /
 
 
-COPY gen_nginx_conf.sh /gen_nginx_conf.sh
+# Copy Nginx configuration if needed
+# RUN chmod ./conf_server.sh /web/conf_server.sh
+RUN chmod +x /web/conf_server.sh
 
-# Copy your static website files
-COPY --from=build /web/dist/ /usr/share/nginx/html
-#RUN ls -la /user/share/nginx/html
-
-# Make the script executable
-RUN chmod +x /gen_nginx_conf.sh
-
-# Set the entrypoint to the script, which will then run Nginx
-ENTRYPOINT ["/gen_nginx_conf.sh"]
-
-CMD ["nginx", "-g", "daemon off;"]
+# Set the entrypoint to generate the env file and build the project
+ENTRYPOINT ["/bin/sh", "-c", "ls -la /web && /web/conf_server.sh"]
 
 # Expose port 80
 EXPOSE 80
