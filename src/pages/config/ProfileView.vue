@@ -39,6 +39,10 @@ function updateSelectedOption(path) {
     currentOption.value = 'Pacientes'
   } else if (path.includes('/config/template')) {
     currentOption.value = 'Pacientes'
+  } else if (path.includes('/config/files')) {
+    currentOption.value = 'Archivos'
+  } else if (path.includes('/config/backup')) {
+    currentOption.value = 'Backup'
   } else {
     currentOption.value = ''
   }

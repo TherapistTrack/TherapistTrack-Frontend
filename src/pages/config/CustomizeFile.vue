@@ -5,18 +5,17 @@
       arrowColor="#ffffff"
       iconColor="#ffffff"
       userName="Jose Marchena"
-      userRole="Administrador"
-      selectedOption="Pacientes"
+      userRole="Usuario"
+      selectedOption="Archivos"
     />
 
     <div class="content">
-      <h1 class="page-title">{{ templateName }}</h1>
-      <p>Aquí se puede editar los campos de información que se debe registrar sobre un paciente.</p>
+      <h1 class="page-title">{{ fileName }}</h1>
+      <p>Aquí puede editar los campos de información que se deben registrar en el archivo.</p>
 
       <div class="form-header">
         <span class="header-item">Nombre del Campo</span>
         <span class="header-item">Tipo de Dato</span>
-        <span class="header-item">Obligatorio</span>
         <span class="header-item">Opciones</span>
       </div>
 
@@ -35,7 +34,7 @@
               v-model="field.type"
               @update:modelValue="configureField(index)"
             />
-            <div v-else>
+            <div v-else class="field-type-display">
               <span>{{ field.type }}</span>
               <div class="reconfigure-button-container">
                 <button @click="reconfigureField(index)" class="reconfigure-button">
@@ -43,9 +42,6 @@
                 </button>
               </div>
             </div>
-          </div>
-          <div class="field-required">
-            <Checkbox :id="'required-' + index" label="" v-model="field.required" />
           </div>
           <div class="field-options">
             <button class="more-options-btn" @click="handleContextMenu($event, field)">...</button>
@@ -56,7 +52,7 @@
         </button>
       </div>
 
-      <ButtonSimple msg="Guardar" class="save-button button-component" @click="saveTemplate" />
+      <ButtonSimple msg="Guardar" class="save-button button-component" @click="saveFile" />
 
       <ContextMenu
         :position="contextMenuPosition"
@@ -92,8 +88,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import Checkbox from '@/components/Forms/CheckBox/CheckBox.vue'
+import { useRoute } from 'vue-router'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import DropdownField from '@/components/Forms/SelectDropDown/SelectDropDown.vue'
 import ContextMenu from '@/components/Feedback/Modals/ContextMenu.vue'
@@ -102,24 +97,17 @@ import CreateTemplate from '@/components/Feedback/Modals/CreateTemplate.vue'
 import RenameTemplate from '@/components/Feedback/Modals/RenameTemplate.vue'
 import { useContextMenu } from '@/components/DataDisplay/Composables/useContextMenu.js'
 
-const router = useRouter()
 const route = useRoute()
-
-const templateName = ref(route.query.name || 'Plantilla-2024')
+const fileName = ref(route.query.name || 'Nuevo Archivo')
 
 const dataTypes = ['SHORT_TEXT', 'TEXT', 'NUMBER', 'FLOAT', 'DATE']
 
-const fields = ref([
-  { name: 'Nombres', type: '', value: '', required: true, isConfigured: false },
-  { name: 'Apellidos', type: '', value: '', required: true, isConfigured: false },
-  { name: 'Hijos', type: '', value: '', required: false, isConfigured: false },
-  { name: 'Estado Civil', type: '', value: '', required: false, isConfigured: false }
-])
+const fields = ref([])
 
 const selectedField = ref({})
-const isRemoveModalVisible = ref(false)
 const isCreateFieldModalVisible = ref(false)
 const isRenameModalVisible = ref(false)
+const isRemoveModalVisible = ref(false)
 
 const {
   position: contextMenuPosition,
@@ -132,35 +120,38 @@ function showCreateFieldModal() {
   isCreateFieldModalVisible.value = true
 }
 
-function showRenameModal() {
-  isRenameModalVisible.value = true
-}
-
 function addNewField({ name, type }) {
   fields.value.push({
     name,
     type,
     value: '',
-    required: false,
     isConfigured: true
   })
   isCreateFieldModalVisible.value = false
 }
 
-function renameField(newName) {
-  selectedField.value.name = newName
-  isRenameModalVisible.value = false
+function configureField(index) {
+  fields.value[index].isConfigured = true
 }
 
-function saveTemplate() {
-  console.log('Plantilla guardada:', fields.value)
-  router.push('/config/patients')
+function reconfigureField(index) {
+  fields.value[index].isConfigured = false
+  fields.value[index].type = ''
 }
 
 function handleContextMenu(event, field) {
   event.stopPropagation()
   selectedField.value = field
   showContextMenu(event)
+}
+
+function showRenameModal() {
+  isRenameModalVisible.value = true
+}
+
+function renameField(newName) {
+  selectedField.value.name = newName
+  isRenameModalVisible.value = false
 }
 
 function showRemoveModal() {
@@ -173,13 +164,8 @@ function removeField() {
   hideContextMenu()
 }
 
-function configureField(index) {
-  fields.value[index].isConfigured = true
-}
-
-function reconfigureField(index) {
-  fields.value[index].isConfigured = false
-  fields.value[index].type = ''
+function saveFile() {
+  console.log('Archivo guardado:', fields.value)
 }
 </script>
 
@@ -206,7 +192,7 @@ function reconfigureField(index) {
 
 .form-header {
   display: grid;
-  grid-template-columns: 3fr 2fr 1fr auto;
+  grid-template-columns: 3fr 2fr auto;
   align-items: center;
   margin-bottom: 15px;
   font-weight: bold;
@@ -216,18 +202,9 @@ function reconfigureField(index) {
   text-align: center;
 }
 
-.form-header .header-item:first-child {
-  text-align: left;
-  padding-left: 10px;
-}
-
-.form-section {
-  margin-bottom: 20px;
-}
-
 .form-group {
   display: grid;
-  grid-template-columns: 3fr 2fr 1fr auto;
+  grid-template-columns: 3fr 2fr auto;
   align-items: center;
   margin-bottom: 10px;
   background-color: #f8f8f8;
@@ -242,18 +219,26 @@ function reconfigureField(index) {
 }
 
 .field-name {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
   padding-left: 10px;
 }
 
-.field-type,
-.field-required,
 .field-options {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.add-field-btn {
+  background-color: var(--green-1);
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.save-button {
+  margin-top: 20px;
 }
 
 .more-options-btn {
@@ -270,29 +255,18 @@ function reconfigureField(index) {
   background-color: #e0e0e0;
 }
 
-.add-field-btn,
-.save-button {
-  background-color: var(--green-1);
-  color: white;
-  border: none;
-  padding: 0.75rem;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-top: 20px;
+.field-type {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centra el tipo de dato */
 }
 
-.add-field-btn:hover,
-.save-button:hover {
-  background-color: var(--green-2);
-}
-
-.button-component {
-  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
-  transition: background-color 0.2s;
+.field-type-display {
+  text-align: center; /* Centra el texto del tipo de dato */
 }
 
 .reconfigure-button-container {
-  margin-top: 10px;
+  margin-top: 10px; /* Espaciado entre el tipo de dato y el botón */
 }
 
 .reconfigure-button {

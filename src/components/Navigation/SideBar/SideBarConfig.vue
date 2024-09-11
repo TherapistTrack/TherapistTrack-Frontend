@@ -36,6 +36,15 @@
           >
             <h4>Pacientes</h4>
           </router-link>
+          <!-- Enlace a 'Archivos' -->
+          <router-link
+            to="/config/files"
+            class="option"
+            :class="{ selected: selectedOption === 'Archivos' }"
+          >
+            <h4>Archivos</h4>
+            <!-- Corregido a 'Archivos' -->
+          </router-link>
           <!-- Enlace a 'Backup' -->
           <router-link
             to="/config/backup"
@@ -93,7 +102,7 @@ const {
   },
   logoGraySrc: {
     type: String,
-    default: new URL('@/assets/Logo/LogoGray.png', import.meta.url).href
+    default: new URL('@/assets/Logo/LogoWhite.png', import.meta.url).href
   },
   userName: {
     type: String,
