@@ -12,7 +12,7 @@
 <script setup>
 import RecordSideBar from '@/components/Navigation/SideBar/RecordSideBar.vue'
 import { ref } from 'vue'
-const minim = ref(false)
+const minim = ref(true)
 
 const updateMinim = () => {
   minim.value = !minim.value

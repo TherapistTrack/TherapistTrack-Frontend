@@ -2,7 +2,7 @@
   <div class="table-overlayContainer" @click="goBack()" :id="start ? 'init' : 'end'">
     <div class="table-settings" @click.stop="" :id="start ? 'init' : 'end'">
       <div class="top">
-        <SearchBar :pholder="'Buscar por Nombre'" />
+        <SearchBar :pholder="'Buscar por Nombre'" v-model:search-value="search" />
       </div>
       <div class="do-show">
         <p class="title">Mostrar en la tabla</p>
@@ -11,19 +11,19 @@
             <RiDraggable color="var(--gray-1)" size="1.3rem" />
             <p>{{ item }}</p>
           </span>
-          <RiEyeFill color="var(--gray-1)" size="1.1rem" @click="deactivateField(key)" />
+          <RiEyeFill color="var(--gray-1)" size="1.1rem" @click="deactivateField(item)" />
         </div>
       </div>
 
       <div class="no-show">
         <p class="title">Ocultar en la Tabla</p>
         <template v-for="(item, key) in props.allHeaders" :key="key">
-          <div v-if="!Object.keys(localShownHeaders).includes(key)" class="inactive-field">
+          <div v-if="!Object.values(localShownHeaders).includes(item)" class="inactive-field">
             <span>
               <RiDraggable color="var(--gray-1)" size="1.3rem" />
               <p>{{ item }}</p>
             </span>
-            <RiEyeOffFill color="var(--gray-2)" size="1.1rem" @click="activateField(key)" />
+            <RiEyeOffFill color="var(--gray-2)" size="1.1rem" @click="activateField(item)" />
           </div>
         </template>
       </div>
@@ -41,9 +41,12 @@ const props = defineProps({
   shownHeaders: Object
 })
 
+const emit = defineEmits(['update:shownHeaders'])
+
 const start = ref(false)
+const search = ref('')
 const router = useRouter()
-const localShownHeaders = ref({ ...props.shownHeaders })
+const localShownHeaders = ref(props.shownHeaders)
 
 onMounted(() => {
   setTimeout(() => {
@@ -58,19 +61,18 @@ const goBack = () => {
   }, 250) // You can adjust the delay if needed
 }
 
-const deactivateField = (key) => {
-  delete localShownHeaders.value[key]
+const deactivateField = (field) => {
+  localShownHeaders.value.splice(localShownHeaders.value.indexOf(field), 1)
   updateShownHeaders()
 }
 
-const activateField = (key) => {
-  if (!localShownHeaders.value[key]) {
-    localShownHeaders.value[key] = props.allHeaders[key]
+const activateField = (field) => {
+  if (!localShownHeaders.value.includes(field)) {
+    localShownHeaders.value.push(field)
+    updateShownHeaders()
   }
-  updateShownHeaders()
 }
 // Emiting change for shown headers:
-const emit = defineEmits(['update:shownHeaders'])
 const updateShownHeaders = () => {
   emit('update:shownHeaders', localShownHeaders.value)
 }
@@ -114,7 +116,7 @@ const updateShownHeaders = () => {
   overflow-y: auto;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   border-radius: 2vh 0 0 0;
-  width: 220px;
+  width: 270px;
   height: 80vh;
   padding: 1.5rem;
   transition: right 0.3s;
