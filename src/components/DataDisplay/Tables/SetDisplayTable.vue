@@ -1,17 +1,7 @@
 <template>
   <div class="table-container">
     <div class="header-row">
-      <span
-        class="header-item"
-        @contextmenu.prevent="handleRightClick(item)"
-        v-for="(item, key) in headers"
-        :key="key"
-      >
-        <HideButton
-          v-if="headerHide[item]"
-          :on-click-outside="hideAll"
-          :on-click="() => handleHide(item)"
-        />
+      <span class="header-item" v-for="(item, key) in headers" :key="key">
         <p>
           {{ item }}
         </p>
@@ -34,7 +24,7 @@
         @click="handleClick(key)"
       >
         <p class="table-item" v-for="(elem, key) in headers" :key="key">
-          {{ item[elem] }}
+          {{ item[key] }}
         </p>
       </div>
     </div>
@@ -44,9 +34,6 @@
 <script setup>
 import DataLoader from '@/components/Feedback/Spinner/DataLoader.vue'
 import { RiAlertFill } from '@remixicon/vue'
-import HideButton from '@/components/Buttons/HideButton.vue'
-import { ref } from 'vue'
-const emit = defineEmits(['hideHeader'])
 const props = defineProps({
   loading: Boolean,
   onClick: Function,
@@ -54,35 +41,8 @@ const props = defineProps({
   headers: Array,
   success: Boolean
 })
-
-const headerHide = ref({})
-
-props.headers.map((value) => {
-  headerHide.value[value] = false
-})
-
 function handleClick(key) {
   props.onClick(key)
-}
-
-const handleHide = (key) => {
-  hideAll()
-  emit('hideHeader', key)
-}
-
-const hideAll = () => {
-  for (let head in headerHide.value) {
-    headerHide.value[head] = false
-  }
-}
-
-const handleRightClick = (key) => {
-  if (Object.values(headerHide.value).includes(true)) {
-    hideAll()
-    headerHide.value[key] = !headerHide.value[key]
-  } else {
-    headerHide.value[key] = !headerHide.value[key]
-  }
 }
 </script>
 
@@ -123,16 +83,14 @@ const handleRightClick = (key) => {
 }
 
 .table-container .header-item {
+  border-top: 0.2vh solid #ccc;
   color: var(--gray-1);
-  position: relative;
 }
 
 .table-container .table-item {
   color: var(--black);
   font-weight: bold;
   transition: background-color 0.1s;
-  overflow-x: hidden;
-  text-overflow: ellipsis;
 }
 
 .table-item + .table-item {

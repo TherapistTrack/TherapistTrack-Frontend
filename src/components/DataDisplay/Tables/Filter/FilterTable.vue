@@ -113,6 +113,7 @@ const cleanFilter = () => {
 <style>
 .field-table {
   padding-bottom: 1rem;
+  z-index: 1;
 }
 .field-header {
   display: flex;
