@@ -4,19 +4,13 @@
     <input :placeholder="pholder" :value="searchValue" @input="updateValue" />
 
     <div class="container" :id="isEmpty ? '' : 'active'">
-      <RiCloseCircleLine
-        v-if="showIcon"
-        size="1rem"
-        color="var(--gray-1)"
-        class="close"
-        @click="empty"
-      />
+      <RiCloseLine v-if="showIcon" size="1rem" color="var(--gray-1)" class="close" @click="empty" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { RiSearchLine, RiCloseCircleLine } from '@remixicon/vue'
+import { RiSearchLine, RiCloseLine } from '@remixicon/vue'
 import { ref, watch } from 'vue'
 const isEmpty = ref(true)
 const showIcon = ref(false)
@@ -28,7 +22,11 @@ defineProps({
 watch(isEmpty, async () => {
   if (isEmpty.value == false) {
     setTimeout(() => {
-      showIcon.value = true
+      if (isEmpty.value == false) {
+        showIcon.value = true
+      } else {
+        showIcon.value = false
+      }
     }, 300)
   } else {
     showIcon.value = false

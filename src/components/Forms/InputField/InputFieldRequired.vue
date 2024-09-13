@@ -5,6 +5,7 @@
       <div v-if="isHovered" class="descriptor">{{ description }}</div>
     </label>
     <input
+      :class="alert ? 'alert' : ''"
       :type="type"
       :id="id"
       :value="modelValue"
@@ -17,22 +18,7 @@
 
 <script setup>
 import { ref } from 'vue'
-
-const isHovered = ref(false)
-const emit = defineEmits(['update:modelValue'])
-
-const updateValue = (event) => {
-  emit('update:modelValue', event.target.value)
-}
-
-const onMouseOver = () => {
-  isHovered.value = true
-}
-
-const onMouseLeave = () => {
-  isHovered.value = false
-}
-defineProps({
+const props = defineProps({
   modelValue: {
     type: String,
     required: true
@@ -59,9 +45,29 @@ defineProps({
   },
   description: {
     type: String,
-    required: true
+    required: false
+  },
+  alert: {
+    type: Boolean,
+    default: false
   }
 })
+const isHovered = ref(false)
+const emit = defineEmits(['update:modelValue'])
+
+const updateValue = (event) => {
+  emit('update:modelValue', event.target.value)
+}
+
+const onMouseOver = () => {
+  if (props.description !== '' && props.description !== undefined) {
+    isHovered.value = true
+  }
+}
+
+const onMouseLeave = () => {
+  isHovered.value = false
+}
 </script>
 
 <style>
@@ -100,6 +106,9 @@ defineProps({
   box-sizing: border-box;
 }
 
+.input-group .alert {
+  border: 2px solid var(--red-1);
+}
 .input-group .icon-eye {
   position: absolute;
   cursor: pointer;

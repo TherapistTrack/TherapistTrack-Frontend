@@ -1,34 +1,25 @@
 <template>
   <div class="icon-button-component" @click="handleClick">
-    <component :is="firstIcon" size="1.5rem" color="var(--gray-2)" />
+    <RiArrowUpDownLine v-if="type == 'sort'" size="1.2rem" color="var(--gray-2)" />
+    <RiFilterFill size="1.2rem" color="var(--gray-2)" v-else />
 
-    <p>{{ msg }}</p>
-
-    <component :is="secondIcon" size="1.5rem" color="var(--gray-2)" />
+    <p v-if="type == 'sort'">Ordenar</p>
+    <p v-else>Nuevo Filtro</p>
+    <RiAddLine size="1.2rem" color="var(--gray-2)" />
   </div>
 </template>
 
 <script setup>
+import { RiArrowUpDownLine, RiFilterFill, RiAddLine } from '@remixicon/vue'
 const props = defineProps({
-  msg: {
-    type: String,
-    default: ''
-  },
   disabled: {
     type: Boolean,
     default: false
   },
-  firstIcon: {
-    type: Object,
-    required: true
-  },
-  secondIcon: {
-    type: Object,
-    required: true
-  },
+  type: String,
   onClick: Function
 })
-function handleClick() {
+const handleClick = () => {
   props.onClick()
 }
 </script>
@@ -47,7 +38,7 @@ function handleClick() {
 
 .icon-button-component p {
   color: var(--gray-1);
-  font-size: 2.2vh;
+  font-size: small;
 }
 
 .icon-button-component:hover {

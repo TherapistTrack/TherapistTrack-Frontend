@@ -50,7 +50,7 @@ defineProps({
     required: true
   }
 })
-const localMin = ref(false)
+const localMin = ref(true)
 
 const select = ref(0)
 const setSelect = (val) => {
