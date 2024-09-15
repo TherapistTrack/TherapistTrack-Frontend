@@ -6,12 +6,32 @@
       </div>
       <div class="do-show">
         <p class="title">Mostrar en la tabla</p>
-        <div v-for="(item, key) in localShownHeaders" :key="key" class="active-field">
+        <div
+          v-for="(item, key) in localShownHeaders"
+          :key="key"
+          class="active-field"
+          :draggable="false"
+          @dragstart="handleDragStart(key)"
+          @dragover.prevent=""
+          @drop="handleDrop(key)"
+          @dragend="handleDragEnd"
+        >
           <span>
-            <RiDraggable color="var(--gray-1)" size="1.3rem" />
+            <RiDraggable
+              class="drag-icon"
+              @mousedown="enableDrag"
+              @mouseleave="disableDrag"
+              color="var(--gray-1)"
+              size="1.3rem"
+            />
             <p>{{ item }}</p>
           </span>
-          <RiEyeFill color="var(--gray-1)" size="1.1rem" @click="deactivateField(item)" />
+          <RiEyeFill
+            class="see-icon"
+            color="var(--gray-1)"
+            size="1.1rem"
+            @click="deactivateField(item)"
+          />
         </div>
       </div>
 
@@ -47,7 +67,27 @@ const start = ref(false)
 const search = ref('')
 const router = useRouter()
 const localShownHeaders = ref(props.shownHeaders)
+const draggedItem = ref(null)
 
+const handleDragStart = (key) => {
+  draggedItem.value = key
+}
+
+const handleDrop = (key) => {
+  const droppedItem = localShownHeaders.value.splice(draggedItem.value, 1)[0]
+  localShownHeaders.value.splice(key, 0, droppedItem)
+}
+
+const handleDragEnd = () => {
+  draggedItem.value = null
+}
+const enableDrag = (event) => {
+  event.target.closest('.active-field').setAttribute('draggable', 'true')
+}
+
+const disableDrag = (event) => {
+  event.target.closest('.active-field').setAttribute('draggable', 'false')
+}
 onMounted(() => {
   setTimeout(() => {
     start.value = true
@@ -154,6 +194,13 @@ const updateShownHeaders = () => {
   transition: height 1s;
   padding: 0.1rem;
   padding-right: 0.4rem;
+}
+
+.table-settings .active-field .drag-icon {
+  cursor: grab;
+}
+.table-settings .active-field .see-icon {
+  cursor: pointer;
 }
 
 .table-settings .active-field:hover,
