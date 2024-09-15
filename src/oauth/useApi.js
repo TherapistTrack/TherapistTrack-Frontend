@@ -5,7 +5,7 @@ import axios from 'axios'
 export function useApi() {
   const { isAuthenticated, user, getAccessTokenSilently } = useAuth0()
   const isLoading = ref(true)
-  let url_base = 'http://api.therapisttrack.name'
+  let url_base = 'https://api.therapisttrack.name'
 
   const getAuthToken = async () => {
     isLoading.value = true
