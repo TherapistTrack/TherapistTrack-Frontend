@@ -51,7 +51,6 @@ function handleClick(key) {
   display: flex;
   flex-direction: column;
   font-family: 'MotivaSansLighter';
-  /* Two columns */
   font-size: 2vh;
 }
 

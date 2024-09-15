@@ -1,43 +1,50 @@
 <template>
-  <div class="table-container">
-    <div class="header-row">
-      <span
-        class="header-item"
-        @contextmenu.prevent="handleRightClick(item)"
-        v-for="(item, key) in headers"
-        :key="key"
-      >
-        <HideButton
-          v-if="headerHide[item]"
-          :on-click-outside="hideAll"
-          :on-click="() => handleHide(item)"
-        />
-        <p>
-          {{ item }}
-        </p>
-      </span>
-    </div>
-    <div class="table-scrollable">
-      <div v-if="loading">
-        <DataLoader />
+  <div class="table-component">
+    <div class="table-container">
+      <div class="header-row">
+        <span
+          class="header-item"
+          @contextmenu.prevent="handleRightClick(item)"
+          v-for="(item, key) in headers"
+          :key="key"
+        >
+          <HideButton
+            v-if="headerHide[item]"
+            :on-click-outside="hideAll"
+            :on-click="() => handleHide(item)"
+          />
+          <p>
+            {{ item }}
+          </p>
+        </span>
       </div>
-      <div v-else-if="!success" class="failed">
-        <RiAlertFill color="var(--gray-2)" size="1.5rem" />
-        <p>Oops... algo salio mal</p>
-      </div>
+      <div class="table-scrollable">
+        <div v-if="loading">
+          <DataLoader />
+        </div>
+        <div v-else-if="!success" class="failed">
+          <RiAlertFill color="var(--gray-2)" size="1.5rem" />
+          <p>Oops... algo salio mal</p>
+        </div>
 
-      <div
-        v-else
-        class="table-row"
-        v-for="(item, key) in data"
-        :key="key"
-        @click="handleClick(key)"
-      >
-        <p class="table-item" v-for="(elem, key) in headers" :key="key">
-          {{ item[elem] }}
-        </p>
+        <div
+          v-else
+          class="table-row"
+          v-for="(item, key) in localData"
+          :key="key"
+          @click="handleClick(key)"
+        >
+          <p class="table-item" v-for="(elem, key) in headers" :key="key">
+            {{ item[elem] }}
+          </p>
+        </div>
       </div>
     </div>
+    <TablePageButton
+      :page-count="pageCount"
+      v-model:current-page="currentPage"
+      @updateCurrentPage="handleNewPage"
+    />
   </div>
 </template>
 
@@ -45,7 +52,8 @@
 import DataLoader from '@/components/Feedback/Spinner/DataLoader.vue'
 import { RiAlertFill } from '@remixicon/vue'
 import HideButton from '@/components/Buttons/HideButton.vue'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import TablePageButton from '@/components/Buttons/TablePageButton.vue'
 const emit = defineEmits(['hideHeader'])
 const props = defineProps({
   loading: Boolean,
@@ -54,15 +62,28 @@ const props = defineProps({
   headers: Array,
   success: Boolean
 })
-
+const localData = ref(null)
 const headerHide = ref({})
-
+const pageCount = ref(1)
+const currentPage = ref(1)
+const maxPage = ref(6)
 props.headers.map((value) => {
   headerHide.value[value] = false
 })
 
+watch(() => {
+  if (!props.loading) {
+    localData.value = props.data.slice(0, maxPage.value)
+    pageCount.value = Math.ceil(props.data.length / maxPage.value)
+  }
+})
 function handleClick(key) {
-  props.onClick(key)
+  const calcPage = key + (currentPage.value - 1) * maxPage.value
+  props.onClick(calcPage)
+}
+const handleNewPage = (newPage) => {
+  localData.value = props.data.slice(maxPage.value * (newPage - 1), maxPage.value * newPage)
+  currentPage.value = newPage
 }
 
 const handleHide = (key) => {
@@ -87,19 +108,24 @@ const handleRightClick = (key) => {
 </script>
 
 <style scoped>
+.table-component {
+  display: grid;
+}
 .table-container {
   display: flex;
   flex-direction: column;
   font-family: 'MotivaSansLighter';
   /* Two columns */
   font-size: 2vh;
+  overflow-x: scroll;
 }
 
 .table-container .header-row,
 .table-container .table-row {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-auto-flow: column;
 }
 
 .table-container .header-row {
@@ -109,7 +135,6 @@ const handleRightClick = (key) => {
 
 .table-container .table-scrollable {
   max-height: 50vh;
-  overflow: auto;
 }
 .table-container .table-row {
   color: var(--black);
@@ -118,6 +143,7 @@ const handleRightClick = (key) => {
 
 .table-container .header-item,
 .table-container .table-item {
+  min-width: 120px;
   padding: 0.5rem;
   border-bottom: 0.2vh solid #ccc;
 }
@@ -132,7 +158,9 @@ const handleRightClick = (key) => {
   font-weight: bold;
   transition: background-color 0.1s;
   overflow-x: hidden;
+  overflow-y: initial;
   text-overflow: ellipsis;
+  max-height: 40px;
 }
 
 .table-item + .table-item {
