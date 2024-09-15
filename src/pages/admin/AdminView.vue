@@ -19,6 +19,7 @@ import { ref } from 'vue'
 import { useAuth0 } from '@auth0/auth0-vue'
 import ToastLoader from '@/components/Feedback/Toast/ToastLoader.vue'
 const auth0 = useAuth0()
+console.log(auth0.user)
 const minim = ref(true)
 const toastList = ref([])
 

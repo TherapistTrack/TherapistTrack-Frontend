@@ -91,19 +91,20 @@ const router = createRouter({
           component: () => import('@/pages/record/RecordView.vue'),
           children: [
             {
-              path: 'edit/:id',
+              path: 'edit/:recordId',
               component: () => import('@/pages/record/EditRecord.vue'),
               props: (route) => ({
-                userId: route.params.id, // Pass id from route parameters
-                data: Object
+                recordId: route.params.id, // Pass id from route parameters
+                viewData: Object,
+                allData: Object
               })
             },
             {
-              path: 'view/:id',
+              path: 'view/:recordId',
               component: () => import('@/pages/record/ViewRecord.vue'),
               props: (route) => ({
-                userId: route.params.id, // Pass id from route parameters
-                data: Object
+                recordId: route.params.id, // Pass id from route parameters
+                viewData: Object
               })
             },
             {

@@ -162,6 +162,10 @@ const updateEdit = () => {
   padding: 0.6rem;
 }
 
+.tableContainer * {
+  font-size: 1rem;
+}
+
 .overlayContainer .top img:hover {
   background-color: var(--vt-c-light-gray-1);
 }
