@@ -25,7 +25,7 @@
       <DisplayTable
         :data="processedData"
         :headers="shownHeaders"
-        :loading="loading"
+        v-model:loading="loading"
         :onClick="handleOpenPreview"
         @hideHeader="onHideField"
         :success="true"
@@ -43,64 +43,25 @@ import { useRouter } from 'vue-router'
 import ConfigButton from '@/components/Buttons/ConfigButton.vue'
 import FilterTable from '@/components/DataDisplay/Tables/Filter/FilterTable.vue'
 import records from './records.json'
-
+import { filterAndSort } from './filterAndSort'
+const refineComposable = filterAndSort()
 // Constants
 const router = useRouter()
 const fetchedData = ref({})
 const processedData = ref({})
-const loading = ref(false)
+const loading = ref(true)
 const selected = ref(0)
-const sortCriteria = ref([])
-const filterCriteria = ref([])
-
 // refining Data, (sort and filters)
-const refineData = () => {
-  if (
-    // both are unset,
-    ((sortCriteria.value === undefined) | (sortCriteria.value.length === 0)) &
-    ((filterCriteria.value === undefined) | (filterCriteria.value.length === 0))
-  ) {
-    // full reset of processed data
-    processedData.value = convertToObject(fetchedData.value)
-  } else if (
-    // sorts are unset, only filters
-    (sortCriteria.value === undefined) |
-    (sortCriteria.value.length === 0)
-  ) {
-    processedData.value = convertToObject(fetchedData.value)
-    processedData.value = filterJsonEntries(
-      processedData.value,
-      filterCriteria.value[0].name,
-      filterCriteria.value[0].operation,
-      filterCriteria.value[0].value
-    )
-  } else if (
-    // filters are unset, only sorts
-    (filterCriteria.value === undefined) |
-    (filterCriteria.value.length === 0)
-  ) {
-    processedData.value = convertToObject(fetchedData.value)
-    sortJsonEntries(processedData.value)
-  } else {
-    // Both are processed
-    sortJsonEntries(processedData.value)
-    processedData.value = filterJsonEntries(
-      processedData.value,
-      filterCriteria.value[0].name,
-      filterCriteria.value[0].operation,
-      filterCriteria.value[0].value
-    )
-  }
+const updateSorts = async (sorts) => {
+  await refineComposable.updateSorts(sorts)
+  refineComposable.refineData(processedData.value)
+  updateData()
 }
 
-const updateSorts = (sorts) => {
-  sortCriteria.value = sorts
-  refineData()
-}
-
-const updateFilters = (filters) => {
-  filterCriteria.value = filters
-  refineData()
+const updateFilters = async (filters) => {
+  await refineComposable.updateFilters(filters)
+  refineComposable.refineData(processedData.value)
+  updateData()
 }
 
 // Emissions from children
@@ -119,7 +80,6 @@ const allHeaders = ref([])
 const onHideField = (header) => {
   shownHeaders.value.splice(shownHeaders.value.indexOf(header), 1)
 }
-
 // On Mounted
 const getHeaders = (json) => {
   let fieldArray = Object.entries(json)
@@ -162,7 +122,6 @@ onMounted(async () => {
   // Obtaining headers from data fetch
   allHeaders.value = getHeaders(records)
   shownHeaders.value = allHeaders.value.slice(0, 4)
-  console.log(shownHeaders)
   // Convert fetched data into working object
   processedData.value = convertToObject(records)
   loading.value = false
@@ -183,44 +142,6 @@ const handleTableSettings = () => {
 
 const handleNewRecord = () => {
   router.push('/record/create')
-}
-const comparison = (a, b) => {
-  for (const { name, mode } of sortCriteria.value) {
-    console.log(name, mode)
-    const valueA = a[name]
-    const valueB = b[name]
-
-    // Handle comparison based on order
-    if (valueA < valueB) return mode === 'asc' ? -1 : 1
-    if (valueA > valueB) return mode === 'asc' ? 1 : -1
-  }
-  return 0
-}
-
-const sortJsonEntries = (data) => {
-  const temData = ref(data)
-  temData.value.sort(comparison)
-  console.log(temData.value)
-  return temData.value
-}
-
-const filterJsonEntries = (data, key, option, value) => {
-  const temData = ref(null)
-
-  if (option === 'Contiene') {
-    temData.value = data.filter(
-      (item) => item[key] !== undefined && item[key].toLowerCase().includes(value.toLowerCase())
-    )
-  } else if (option === 'es') {
-    temData.value = data.filter(
-      (item) => item[key] !== undefined && item[key].toLowerCase() === value.toLowerCase()
-    )
-  } else if (option === 'Mayor a') {
-    temData.value = data.filter((item) => item[key] !== undefined && item[key] > value)
-  } else if (option === 'Menor a') {
-    temData.value = data.filter((item) => item[key] !== undefined && item[key] < value)
-  }
-  return temData.value
 }
 </script>
 

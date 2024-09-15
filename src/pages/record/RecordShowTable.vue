@@ -4,8 +4,8 @@
       <div class="top">
         <SearchBar :pholder="'Buscar por Nombre'" v-model:search-value="search" />
       </div>
+      <p class="title">Mostrar en la tabla</p>
       <div class="do-show">
-        <p class="title">Mostrar en la tabla</p>
         <div
           v-for="(item, key) in localShownHeaders"
           :key="key"
@@ -34,9 +34,8 @@
           />
         </div>
       </div>
-
+      <p class="title">Ocultar en la Tabla</p>
       <div class="no-show">
-        <p class="title">Ocultar en la Tabla</p>
         <template v-for="(item, key) in props.allHeaders" :key="key">
           <div v-if="!Object.values(localShownHeaders).includes(item)" class="inactive-field">
             <span>
@@ -146,6 +145,7 @@ const updateShownHeaders = () => {
 }
 .table-overlayContainer .title {
   color: var(--gray-1);
+  margin-top: 1rem;
 }
 
 .table-settings {
@@ -177,10 +177,11 @@ const updateShownHeaders = () => {
 /* Areas */
 .table-settings .do-show,
 .table-settings .no-show {
-  padding-top: 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
+  max-height: 180px;
+  overflow-y: scroll;
 }
 
 /* Draggable Fields */
