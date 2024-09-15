@@ -1,14 +1,10 @@
 import { fn } from '@storybook/test'
 import MyButton from './IconButton.vue'
-import { RiAddLine, RiFilterFill } from '@remixicon/vue'
 
 export default {
   title: 'Components/Buttons/IconButton',
   component: MyButton,
-  args: { onClick: fn(), firstIcon: RiFilterFill, secondIcon: RiAddLine },
-  argTypes: {
-    msg: { control: 'text' }
-  }
+  args: { onClick: fn() }
 }
 
 const Template = (args) => ({
@@ -19,5 +15,12 @@ const Template = (args) => ({
   template: '<MyButton v-bind="args" />'
 })
 
-export const Default = Template.bind({})
-Default.args = { msg: 'Nuevo Filtro' }
+export const Sort = Template.bind({})
+Sort.args = {
+  type: 'sort'
+}
+
+export const Filter = Template.bind({})
+Filter.args = {
+  type: 'filter'
+}

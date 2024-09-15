@@ -12,10 +12,6 @@
 <script setup>
 import { RiArrowUpDownLine, RiFilterFill, RiAddLine } from '@remixicon/vue'
 const props = defineProps({
-  disabled: {
-    type: Boolean,
-    default: false
-  },
   type: String,
   onClick: Function
 })
