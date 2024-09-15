@@ -144,21 +144,10 @@ const goBack = () => {
   router.back()
 }
 
-function generateRandomId() {
-  let objectId = ''
-  for (let i = 0; i < 24; i++) {
-    const randomHexDigit = Math.floor(Math.random() * 16).toString(16)
-    objectId += randomHexDigit
-  }
-
-  return objectId
-}
-
 const createUser = async () => {
   if (valid.value) {
-    let objectId = generateRandomId()
     formatedUser.value = {
-      id: objectId,
+      id: user.value.id,
       names: user.value.names,
       lastNames: user.value.lastNames,
       phones: [...user.value.phones],

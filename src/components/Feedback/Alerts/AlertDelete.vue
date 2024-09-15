@@ -61,6 +61,8 @@ const props = defineProps({
 })
 
 watch(localName, () => {
+  console.log(localName.value)
+  console.log(props.name)
   if (localName.value == props.name) {
     confirmDelete.value = true
   } else {
