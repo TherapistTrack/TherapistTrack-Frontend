@@ -30,19 +30,65 @@
 
       <div class="bottom">
         <div class="userData">
-          <p><b>Josue Rodriguez</b></p>
+          <p>
+            <b>{{ auth0.user.value.name }}</b>
+          </p>
           <p>Administrador</p>
         </div>
-        <RiSettings3Fill class="icon" size="1.5rem" color="var(--light-blue-1)" />
+
+        <div class="settings-menu">
+          <SettingsMenu
+            v-if="trySetting"
+            v-on:logout="handleLogout"
+            :on-profile="handleProfile"
+            :onClickOutside="undoSetting"
+          />
+          <RiSettings3Fill
+            class="icon"
+            size="1.4rem"
+            color="var(--light-blue-1)"
+            @click="doSetting"
+          />
+        </div>
       </div>
     </div>
   </div>
   <div class="sideSpace" :id="localMin ? 'minimized' : 'maximized'"></div>
+  <AlertOptionSimple
+    v-if="logoutAttempt"
+    msg="¿Estas seguro que deseas cerrar sesión?"
+    :on-no="abortLogout"
+    :on-yes="logout"
+  />
 </template>
 
 <script setup>
 import { RiArrowLeftDoubleFill, RiSettings3Fill } from '@remixicon/vue'
+import SettingsMenu from '@/components/DataDisplay/Tooltip/SettingsTooltip.vue'
+import AlertOptionSimple from '@/components/Feedback/Alerts/AlertOptionSimple.vue'
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuth0 } from '@auth0/auth0-vue'
+const auth0 = useAuth0()
+const trySetting = ref(false)
+const logoutAttempt = ref(false)
+const router = useRouter()
+
+const doSetting = () => {
+  trySetting.value = true
+}
+const undoSetting = () => {
+  trySetting.value = false
+}
+const handleLogout = () => {
+  logoutAttempt.value = true
+}
+const abortLogout = () => {
+  logoutAttempt.value = false
+}
+const handleProfile = () => {
+  router.push('/config')
+}
 
 defineProps({
   minim: {
@@ -66,19 +112,35 @@ const emit = defineEmits(['updateValue'])
 const emitUpdate = () => {
   emit('updateValue')
 }
+const logout = () => {
+  auth0.logout({
+    logoutParams: {
+      returnTo: import.meta.env.VITE_OAUTH_LOGOUT_URI
+    }
+  })
+}
 </script>
 
 <style>
+.settings-menu {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 .sideSpace {
   width: 0vw;
   transition: Width 0.5s;
 }
 .R-sideBtn .icon {
-  transition: fill 0.2s;
+  transition:
+    fill 0.2s,
+    transform 0.5s;
   cursor: pointer;
 }
 .R-sideBtn .icon:hover {
   fill: var(--white);
+  transform: rotate(45deg);
 }
 .R-sideBtn {
   display: flex;
