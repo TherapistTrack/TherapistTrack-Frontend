@@ -2,9 +2,9 @@
   <span class="visible" :id="ready == 0 ? '' : ready == 1 ? 'startup' : 'wrapup'">
     <div class="setting-component" ref="myDiv">
       <div class="setting-container">
-        <div class="setting-option" @click="handleLogout">
+        <div class="setting-option-red" @click="handleLogout">
           <p>Cerrar Sesión</p>
-          <RiLogoutBoxRLine color="var(--blue-1)" size="1.2rem" />
+          <RiLogoutBoxRLine color="var(--red-1)" size="1.2rem" />
         </div>
         <div class="setting-option" @click="handleProfile">
           <p>Perfil</p>
@@ -84,12 +84,14 @@ onBeforeUnmount(() => {
   z-index: 2;
 }
 
-.setting-component .setting-option {
+.setting-component .setting-option,
+.setting-component .setting-option-red {
   padding: 0.4rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   z-index: 11500;
+  transition: all 0.2s;
 }
 
 .setting-container {
@@ -102,6 +104,21 @@ onBeforeUnmount(() => {
   font-weight: bold;
   font-size: 0.7rem;
   z-index: 60;
+}
+
+.setting-component .setting-option-red p {
+  color: var(--red-1);
+  font-weight: bold;
+  font-size: 0.7rem;
+  z-index: 60;
+}
+.setting-component .setting-option-red:hover {
+  background-color: var(--red-1);
+  cursor: pointer;
+}
+.setting-component .setting-option-red:hover * {
+  fill: var(--white);
+  color: var(--white);
 }
 
 .setting-component .setting-option:hover {

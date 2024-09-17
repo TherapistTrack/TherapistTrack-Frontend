@@ -119,6 +119,7 @@ const onMouseLeave = () => {
 @media (max-aspect-ratio: 6/9) {
   .input-group {
     display: flex;
+    align-items: start;
     flex-direction: column;
   }
 }

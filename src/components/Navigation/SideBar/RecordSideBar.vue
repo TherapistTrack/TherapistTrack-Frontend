@@ -1,12 +1,13 @@
 <template>
   <div class="R-sideBtn">
-    <img
-      @click="handleClick"
-      class="sideLogo"
-      src="@/assets/Logo/LogoSoloWhite.png"
-      alt="Therapist Track Logo"
-      :id="localMin ? 'minimized' : 'maximized'"
-    />
+    <div class="clickable" @click="handleClick">
+      <img
+        class="sideLogo"
+        src="@/assets/Logo/LogoSoloWhite.png"
+        alt="Therapist Track Logo"
+        :id="localMin ? 'minimized' : 'maximized'"
+      />
+    </div>
 
     <div class="bar" :id="localMin ? 'minimized' : 'maximized'">
       <div class="gravityTop">
@@ -226,10 +227,13 @@ const logout = () => {
   color: var(--white);
 }
 
-/* Animations */
-.R-sideBtn .bar#minimized {
-  left: -20vw;
+.R-sideBtn .clickable {
+  cursor: pointer;
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
+/* Animations */
 
 .R-sideBtn .bar#maximized {
   left: 0;
@@ -241,14 +245,6 @@ const logout = () => {
 
 .sideSpace#maximized {
   width: 12vw;
-}
-
-.R-sideBtn .sideLogo#minimized {
-  cursor: pointer;
-}
-
-.R-sideBtn .sideLogo#maximized {
-  cursor: default;
 }
 
 .R-sideBtn .option#selected {
@@ -272,6 +268,9 @@ const logout = () => {
   .R-sideBtn .sideLogo {
     max-height: 32px;
   }
+  .bar#minimized {
+    left: -200px;
+  }
 }
 
 @media (max-aspect-ratio: 1/1) {
@@ -280,13 +279,13 @@ const logout = () => {
     width: 6vh;
   }
   .R-sideBtn .bar {
-    min-width: 20vh;
+    min-width: 200px;
   }
   .R-sideBtn .sideLogo {
     max-height: 4vh;
   }
   .bar#minimized {
-    left: -20vh;
+    left: -200px;
   }
 
   .bar#maximized {
@@ -294,7 +293,7 @@ const logout = () => {
   }
   .R-sideBtn .bar .top .logo {
     height: auto;
-    max-width: 10vh;
+    max-width: 13vh;
   }
   .sideSpace#maximized {
     width: 0vw;

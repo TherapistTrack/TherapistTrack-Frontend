@@ -180,8 +180,16 @@ const handleNewRecord = () => {
 
 /* Media tags */
 @media (max-aspect-ratio: 1/1) {
+  .page {
+    padding: 2rem 1.2rem 0 1.2rem;
+    width: 100vw;
+  }
+
   .sideSpace#max {
     width: 0vw;
+  }
+  .page .actions {
+    flex-direction: column;
   }
 }
 </style>
