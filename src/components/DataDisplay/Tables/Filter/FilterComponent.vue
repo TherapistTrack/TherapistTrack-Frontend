@@ -45,7 +45,7 @@ defineProps({
 }
 .filter-component .text {
   margin-left: 1rem;
-  font-size: x-small;
+  font-size: 0.7rem;
 }
 .filter-component .text * {
   color: var(--gray-1);
