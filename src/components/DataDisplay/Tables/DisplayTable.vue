@@ -52,7 +52,7 @@
 import DataLoader from '@/components/Feedback/Spinner/DataLoader.vue'
 import { RiAlertFill } from '@remixicon/vue'
 import HideButton from '@/components/Buttons/HideButton.vue'
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import TablePageButton from '@/components/Buttons/TablePageButton.vue'
 const emit = defineEmits(['hideHeader'])
 const props = defineProps({
@@ -67,10 +67,19 @@ const headerHide = ref({})
 const pageCount = ref(1)
 const currentPage = ref(1)
 const maxPage = ref(6)
+const aspectRatio = ref(null)
 props.headers.map((value) => {
   headerHide.value[value] = false
 })
-
+onMounted(() => {
+  aspectRatio.value = window.innerWidth / window.innerHeight
+  console.log(aspectRatio.value)
+  if (aspectRatio.value < 1) {
+    maxPage.value = 9
+  } else {
+    maxPage.value = 5
+  }
+})
 watch(() => {
   if (!props.loading) {
     localData.value = props.data.slice(0, maxPage.value)

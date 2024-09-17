@@ -104,7 +104,6 @@ const onDelete = () => {
 const handleOpenEdit = () => {
   start.value = false
   setTimeout(() => {
-    router.back()
     emit('openEdit')
   }, 250) // You can adjust the delay if needed
 }
@@ -190,5 +189,14 @@ const handleOpenEdit = () => {
   width: 100%;
   display: flex;
   justify-content: end;
+}
+
+@media (max-aspect-ratio: 1/1) {
+  .view-record {
+    width: 280px;
+  }
+  .view-record .mid {
+    height: 65vh;
+  }
 }
 </style>

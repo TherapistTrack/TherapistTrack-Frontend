@@ -3,7 +3,7 @@
     <div class="view-record" @click.stop="" :id="start ? 'init' : 'end'">
       <div class="top">
         <h1>
-          <b>{{ userData['Nombre'] }}<br />{{ userData['Apellidos'] }}</b>
+          <b>{{ userData['Nombre'] }} </b>
         </h1>
         <RiCloseLine
           class-name="icon"
@@ -110,7 +110,6 @@ onMounted(() => {
   userHeaders.value = Object.keys(userData.value)
   ready.value = true
   fieldInfo.value = getFieldInfo()
-
   setTimeout(() => {
     start.value = true
   }, 2) // You can adjust the delay if needed
@@ -197,5 +196,14 @@ const goBack = () => {
   width: 100%;
   display: flex;
   justify-content: end;
+}
+
+@media (max-aspect-ratio: 1/1) {
+  .view-record {
+    width: 280px;
+  }
+  .view-record .mid {
+    height: 65vh;
+  }
 }
 </style>

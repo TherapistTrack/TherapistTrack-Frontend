@@ -180,7 +180,6 @@ const updateShownHeaders = () => {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
-  max-height: 180px;
   overflow-y: scroll;
 }
 
