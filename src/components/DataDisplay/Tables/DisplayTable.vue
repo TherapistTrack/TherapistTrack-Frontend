@@ -43,7 +43,9 @@
     <TablePageButton
       :page-count="pageCount"
       v-model:current-page="currentPage"
+      :max-page="maxPage"
       @updateCurrentPage="handleNewPage"
+      @updateMax="handleNewMax"
     />
   </div>
 </template>
@@ -86,6 +88,10 @@ watch(() => {
     pageCount.value = Math.ceil(props.data.length / maxPage.value)
   }
 })
+
+const handleNewMax = (max) => {
+  maxPage.value = max
+}
 function handleClick(key) {
   const calcPage = key + (currentPage.value - 1) * maxPage.value
   props.onClick(calcPage)

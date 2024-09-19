@@ -35,6 +35,9 @@ const updateMinim = () => {
 
 .view {
   display: flex;
+  height: auto;
+  background-color: white;
+  padding-bottom: 2rem;
 }
 
 .sideSpace {

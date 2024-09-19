@@ -1,33 +1,56 @@
 <template>
-  <div class="table-nav">
-    <RiArrowLeftSLine
-      color="var(--blue-1)"
-      class="icon"
-      size="1.5rem"
-      @click="handleDown"
-      :id="currentPage === 1 ? 'disabled' : ''"
-    />
-    <div v-for="n in pageCount" :key="n">
-      <p class="page-num" :id="n === currentPage ? 'selected' : ''" @click="handleClick(n)">
-        {{ n }}
-      </p>
+  <div class="ts-component">
+    <div class="table-nav">
+      <RiArrowLeftSLine
+        color="var(--blue-1)"
+        class="icon"
+        size="1.5rem"
+        @click="handleDown"
+        :id="currentPage === 1 ? 'disabled' : ''"
+      />
+      <div v-for="n in pageCount" :key="n">
+        <p class="page-num" :id="n === currentPage ? 'selected' : ''" @click="handleClick(n)">
+          {{ n }}
+        </p>
+      </div>
+      <RiArrowRightSLine
+        class="icon"
+        size="1.5rem"
+        color="var(--blue-1)"
+        @click="handleUp"
+        :id="currentPage === pageCount ? 'disabled' : ''"
+      />
     </div>
-    <RiArrowRightSLine
-      class="icon"
-      size="1.5rem"
-      color="var(--blue-1)"
-      @click="handleUp"
-      :id="currentPage === pageCount ? 'disabled' : ''"
-    />
+    <span class="rows">
+      <p>Rows per page</p>
+      <span class="limiter">
+        <InputFieldSimple :type="'number'" v-model:model-value="localMaxPage" />
+      </span>
+    </span>
   </div>
 </template>
 
 <script setup>
 import { RiArrowLeftSLine, RiArrowRightSLine } from '@remixicon/vue'
-const emit = defineEmits(['updateCurrentPage'])
+import InputFieldSimple from '../Forms/InputField/InputFieldSimple.vue'
+import { ref, watch } from 'vue'
+const emit = defineEmits(['updateCurrentPage', 'updateMax'])
+
 const props = defineProps({
   pageCount: Number,
-  currentPage: Number
+  currentPage: Number,
+  maxPage: Number
+})
+const localMaxPage = ref(props.maxPage)
+
+watch(localMaxPage, () => {
+  try {
+    if (parseInt(localMaxPage.value) > 0) {
+      emit('updateMax', localMaxPage.value)
+    }
+  } catch {
+    ;() => {}
+  }
 })
 
 const handleClick = (key) => {
@@ -52,6 +75,25 @@ const handleDown = () => {
 </script>
 
 <style>
+.ts-component {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: row;
+  gap: 5rem;
+}
+.rows {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+.limiter * {
+  max-width: 4rem;
+  padding: 0.5rem;
+}
+.rows p {
+  display: inline-block;
+  font-size: 0.8rem;
+}
 .table-nav {
   display: flex;
   padding: 0.3rem;

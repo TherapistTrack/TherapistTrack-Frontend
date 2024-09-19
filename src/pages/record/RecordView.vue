@@ -153,6 +153,7 @@ const handleNewRecord = () => {
 .page {
   padding: 2rem 3rem 0 3rem;
   width: 100vw;
+  height: auto;
 }
 
 .page .actions {
