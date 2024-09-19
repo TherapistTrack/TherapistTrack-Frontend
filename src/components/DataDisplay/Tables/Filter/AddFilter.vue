@@ -33,15 +33,17 @@
               v-model:model-value="localValue.operation"
             />
           </span>
-          <InputFieldSimple
-            :id="'value'"
-            :placeholder="'Escriba el valor a comparar'"
-            v-model:model-value="localValue.value"
-          />
+          <span class="filter-input">
+            <InputFieldSimple
+              :id="'value'"
+              :placeholder="'Escriba el valor a comparar'"
+              v-model:model-value="localValue.value"
+            />
+          </span>
         </div>
       </div>
       <div class="filter-bottom">
-        <ButtonSimple :msg="'CREAR'" :color="'white'" :onClick="handleSave" />
+        <ButtonSimple :msg="'CREAR'" :color="'white'" :onClick="handleSave" :disabled="!valid" />
       </div>
     </div>
   </div>
@@ -55,7 +57,8 @@ import InputFieldSimple from '@/components/Forms/InputField/InputFieldSimple.vue
 const emit = defineEmits(['addComponent', 'closeAdd'])
 const myDiv = ref(null)
 const filterOptions = ref(['Is', 'Is Not', 'Is Not Empty'])
-
+const valid = ref(false)
+const lastType = ref('')
 const props = defineProps({
   fields: Array,
   type: String
@@ -81,6 +84,11 @@ watch(
   localValue,
   () => {
     let type = getType(localValue.value.name)
+    if (lastType.value !== type && lastType.value !== '') {
+      localValue.value.operation = ''
+    }
+    lastType.value = type
+
     if (['short_text', 'text'].includes(type)) {
       filterOptions.value = ['Contains', 'Starts with', 'Ends with']
     } else if (type === 'date') {
@@ -89,6 +97,25 @@ watch(
       filterOptions.value = ['Less Than', 'Equals', 'Greater Than']
     } else {
       filterOptions.value = ['Is', 'Is Not', 'Is Not Empty']
+    }
+    if (props.type === 'sort') {
+      let trySort = localValue.value.name !== '' && localValue.value.mode !== ''
+      if (trySort) {
+        valid.value = true
+      } else {
+        valid.value = false
+      }
+    } else {
+      let tryFilter =
+        localValue.value.name !== '' &&
+        localValue.value.operation !== '' &&
+        localValue.value.value !== ''
+
+      if (tryFilter) {
+        valid.value = true
+      } else {
+        valid.value = false
+      }
     }
   },
   { deep: true }
@@ -146,10 +173,21 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.filter-input * {
+  width: 100%;
+}
+
 .filter-settings .horizontal,
 .sort-settings .horizontal {
   display: flex;
+  gap: 2rem;
 }
+
+.sort-settings .horizontal * {
+  grid-template-columns: 1fr;
+  margin: 0;
+}
+
 .filter-overlay {
   position: absolute;
   display: flex;
