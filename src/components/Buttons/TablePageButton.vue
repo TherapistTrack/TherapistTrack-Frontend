@@ -22,7 +22,7 @@
       />
     </div>
     <span class="rows">
-      <p>Rows per page</p>
+      <p>No. Filas</p>
       <span class="limiter">
         <InputFieldSimple :type="'number'" v-model:model-value="localMaxPage" />
       </span>
