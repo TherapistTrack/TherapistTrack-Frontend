@@ -51,6 +51,15 @@ const fetchedData = ref({})
 const processedData = ref({})
 const loading = ref(true)
 const selected = ref(0)
+
+// TOAST EMITS
+//-------------------------------------------
+// const emit = defineEmits(['addToast'])
+// const addToast = (toast) => {
+//   emit('addToast', toast)
+// }
+//-------------------------------------------
+
 // refining Data, (sort and filters)
 const updateSorts = async (sorts) => {
   await refineComposable.updateSorts(sorts)
@@ -72,7 +81,7 @@ const updateData = () => {
 const handleOpenEdit = () => {
   router.push(`/record/main/edit/${selected.value}`)
 }
-const templateFields = ref([])
+const templateFields = ref({})
 const shownHeaders = ref([])
 const allHeaders = ref([])
 
@@ -90,8 +99,11 @@ const getHeaders = (json) => {
     for (let field in record) {
       if (!headers.includes(record[field].name)) {
         headers.push(record[field].name)
-        tem = { name: record[field].name, type: record[field].type }
-        templateFields.value.push(tem)
+        tem = { type: record[field].type }
+        if (record[field].type === 'choice') {
+          tem['options'] = record[field].options
+        }
+        templateFields.value[record[field].name] = tem
       }
       tem = {}
     }

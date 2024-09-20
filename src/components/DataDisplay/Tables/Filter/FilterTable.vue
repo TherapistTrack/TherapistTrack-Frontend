@@ -4,6 +4,7 @@
       <AddFilter
         :fields="fields"
         :type="sortOrFilter"
+        :sortFields="sortFields"
         @closeAdd="handleCloseAdd"
         @addComponent="addComponent"
       />
@@ -72,11 +73,11 @@ import { ref } from 'vue'
 import { RiDeleteBin7Fill } from '@remixicon/vue'
 const showAdd = ref(false)
 const sortOrFilter = ref('')
-const emit = defineEmits(['updateFilter'], ['updateSorts'])
+const sortFields = ref([])
+const emit = defineEmits(['updateFilter', 'updateSorts'])
 defineProps({
-  fields: Array
+  fields: Object
 })
-
 const handleCloseAdd = () => {
   showAdd.value = false
 }
@@ -97,6 +98,7 @@ const addComponent = (comp) => {
       name: comp.name,
       mode: comp.mode
     })
+    sortFields.value.push(comp.name)
     emit('updateSorts', sorts.value)
   } else {
     filters.value.push({
@@ -110,6 +112,7 @@ const addComponent = (comp) => {
 
 const removeComponent = (type, index) => {
   if (type == 'sort') {
+    sortFields.value.splice(sortFields.value.indexOf(sorts.value[index].name), 1)
     sorts.value.splice(index, 1)
     emit('updateSorts', sorts.value)
   } else {

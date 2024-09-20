@@ -6,7 +6,7 @@
           <span class="horizontal">
             <SelectDropDown
               :id="'field'"
-              :options="fieldArray"
+              :options="validSortFields"
               :disabled-value="'Escoga un campo'"
               v-model:model-value="localValue.name"
             />
@@ -35,13 +35,27 @@
           </span>
           <span class="filter-input">
             <InputFieldSimple
+              v-if="lastType != 'choice'"
               :id="'value'"
               :placeholder="'Escriba el valor a comparar'"
+              :type="lastType"
               v-model:model-value="localValue.value"
             />
+            <span v-else class="filter-input-choice">
+              <SelectDropDown
+                :id="'value'"
+                :disabled-value="'Escoga un valor'"
+                :options="choiceFieldArray"
+                v-model:model-value="localValue.value"
+              />
+            </span>
           </span>
         </div>
       </div>
+      <span v-if="!valid">
+        <p v-for="error in errors" :key="error.slice(0, 1)" class="error-mssg">{{ error }}</p>
+      </span>
+
       <div class="filter-bottom">
         <ButtonSimple :msg="'CREAR'" :color="'white'" :onClick="handleSave" :disabled="!valid" />
       </div>
@@ -54,24 +68,21 @@ import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import SelectDropDown from '@/components/Forms/SelectDropDown/SelectDropDown.vue'
 import InputFieldSimple from '@/components/Forms/InputField/InputFieldSimple.vue'
+import { filterSchema, sortSchema } from '@/schemas/filterAndSortSchema'
+
 const emit = defineEmits(['addComponent', 'closeAdd'])
 const myDiv = ref(null)
-const filterOptions = ref(['Is', 'Is Not', 'Is Not Empty'])
+const filterOptions = ref([])
+const choiceFieldArray = ref([])
 const valid = ref(false)
 const lastType = ref('')
+const validSortFields = ref([])
+const errors = ref([])
 const props = defineProps({
-  fields: Array,
-  type: String
+  fields: Object,
+  type: String,
+  sortFields: Array
 })
-const getType = (name) => {
-  let tem = ''
-  Object.keys(props.fields).map((item) => {
-    if (name === props.fields[item].name) {
-      tem = props.fields[item].type
-    }
-  })
-  return tem
-}
 
 const localValue = ref({
   type: props.type,
@@ -80,43 +91,65 @@ const localValue = ref({
   operation: '',
   value: ''
 })
+const updateFilterOptions = (type) => {
+  if (['short_text', 'text'].includes(type)) {
+    filterOptions.value = ['Contains', 'Starts with', 'Ends with']
+  } else if (type === 'date') {
+    filterOptions.value = ['Before', 'Between', 'After']
+  } else if (['number', 'float'].includes(type)) {
+    filterOptions.value = ['Less Than', 'Equals', 'Greater Than']
+  } else if (type === 'choice') {
+    filterOptions.value = ['Is', 'Is Not', 'Is Not Empty']
+    let temOptions = props.fields[localValue.value.name].options
+    choiceFieldArray.value = temOptions
+  }
+}
+
+const checkIfValid = () => {
+  if (props.type === 'sort') {
+    sortSchema
+      .validate({
+        name: localValue.value.name,
+        mode: localValue.value.mode
+      })
+      .then(() => {
+        valid.value = true
+      })
+      .catch((error) => {
+        errors.value = error.errors
+        valid.value = false
+      })
+  } else {
+    let filterSch = filterSchema(lastType.value, choiceFieldArray.value)
+    filterSch
+      .validate({
+        name: localValue.value.name,
+        operation: localValue.value.operation,
+        value: localValue.value.value
+      })
+      .then(() => {
+        valid.value = true
+      })
+      .catch((error) => {
+        errors.value = error.errors
+        valid.value = false
+      })
+  }
+}
 watch(
   localValue,
   () => {
-    let type = getType(localValue.value.name)
+    let type = ''
+    if (localValue.value.name !== undefined && localValue.value.name !== '') {
+      type = props.fields[localValue.value.name].type
+    }
     if (lastType.value !== type && lastType.value !== '') {
       localValue.value.operation = ''
     }
     lastType.value = type
 
-    if (['short_text', 'text'].includes(type)) {
-      filterOptions.value = ['Contains', 'Starts with', 'Ends with']
-    } else if (type === 'date') {
-      filterOptions.value = ['Before', 'Between', 'After']
-    } else if (['number', 'float'].includes(type)) {
-      filterOptions.value = ['Less Than', 'Equals', 'Greater Than']
-    } else {
-      filterOptions.value = ['Is', 'Is Not', 'Is Not Empty']
-    }
-    if (props.type === 'sort') {
-      let trySort = localValue.value.name !== '' && localValue.value.mode !== ''
-      if (trySort) {
-        valid.value = true
-      } else {
-        valid.value = false
-      }
-    } else {
-      let tryFilter =
-        localValue.value.name !== '' &&
-        localValue.value.operation !== '' &&
-        localValue.value.value !== ''
-
-      if (tryFilter) {
-        valid.value = true
-      } else {
-        valid.value = false
-      }
-    }
+    updateFilterOptions(type)
+    checkIfValid()
   },
   { deep: true }
 )
@@ -137,9 +170,14 @@ const translate = ref({
 })
 const fieldArray = ref([])
 const getNames = () => {
-  Object.keys(props.fields).map((item) => {
-    fieldArray.value.push(props.fields[item].name)
-  })
+  fieldArray.value = Object.keys(props.fields)
+}
+const getValidSortFields = () => {
+  for (let i in fieldArray.value) {
+    if (!props.sortFields.includes(fieldArray.value[i])) {
+      validSortFields.value.push(fieldArray.value[i])
+    }
+  }
 }
 
 const handleSave = () => {
@@ -154,7 +192,6 @@ const handleSave = () => {
   emit('addComponent', comp)
   emit('closeAdd')
 }
-getNames()
 
 const handleClickOutside = (event) => {
   if (myDiv.value && !myDiv.value.contains(event.target)) {
@@ -164,6 +201,8 @@ const handleClickOutside = (event) => {
 onMounted(() => {
   setTimeout(() => {
     document.addEventListener('click', handleClickOutside)
+    getNames()
+    getValidSortFields()
   }, 1)
 })
 
@@ -173,10 +212,17 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.error-mssg {
+  color: var(--red-1);
+  padding-top: 1rem;
+  text-align: center;
+}
 .filter-input * {
   width: 100%;
 }
-
+.filter-input-choice * {
+  width: 410px;
+}
 .filter-settings .horizontal,
 .sort-settings .horizontal {
   display: flex;
