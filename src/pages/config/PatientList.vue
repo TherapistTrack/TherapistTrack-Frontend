@@ -25,13 +25,14 @@
       </div>
 
       <!-- Tabla para mostrar la lista de pacientes -->
-      <DisplayTable
+      <SetDisplayTable
         :loading="loading"
         :data="filteredPatients"
         :headers="tableHeaders"
+        :success="true"
         @rowClick="handlePatientClick"
         @contextmenu.prevent="showContextMenu($event, patient)"
-      ></DisplayTable>
+      ></SetDisplayTable>
 
       <!-- Context Menu -->
       <ContextMenu
@@ -72,12 +73,12 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import SearchBar from '@/components/Forms/InputField/SearchBar.vue'
-import DisplayTable from '@/components/DataDisplay/Tables/DisplayTable.vue'
 import ContextMenu from '@/components/Feedback/Modals/ContextMenu.vue'
 import CreateTemplate from '@/components/Feedback/Modals/CreateTemplate.vue'
 import RenameTemplate from '@/components/Feedback/Modals/RenameTemplate.vue'
 import RemoveTemplate from '@/components/Feedback/Modals/RemoveTemplate.vue'
 import { useContextMenu } from '@/components/DataDisplay/Composables/useContextMenu.js'
+import SetDisplayTable from '@/components/DataDisplay/Tables/SetDisplayTable.vue'
 
 // Usa useRouter para definir router
 const router = useRouter()
