@@ -41,6 +41,7 @@ const localMaxPage = ref(props.maxPage)
 watch(localMaxPage, () => {
   try {
     if (parseInt(localMaxPage.value) > 0) {
+      emit('updateCurrentPage', 1)
       emit('updateMax', localMaxPage.value)
     }
   } catch {
