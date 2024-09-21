@@ -61,6 +61,9 @@ defineProps({
   gap: 0.5rem;
 }
 
+.toast .toast-body p {
+  font-size: 0.8rem;
+}
 .toast#error {
   border-left: 0.5rem solid var(--red-1);
 }

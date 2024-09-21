@@ -43,7 +43,9 @@
     <TablePageButton
       :page-count="pageCount"
       v-model:current-page="currentPage"
+      :max-page="maxPage"
       @updateCurrentPage="handleNewPage"
+      @updateMax="handleNewMax"
     />
   </div>
 </template>
@@ -73,11 +75,10 @@ props.headers.map((value) => {
 })
 onMounted(() => {
   aspectRatio.value = window.innerWidth / window.innerHeight
-  console.log(aspectRatio.value)
   if (aspectRatio.value < 1) {
     maxPage.value = 9
   } else {
-    maxPage.value = 5
+    maxPage.value = 6
   }
 })
 watch(() => {
@@ -86,6 +87,10 @@ watch(() => {
     pageCount.value = Math.ceil(props.data.length / maxPage.value)
   }
 })
+
+const handleNewMax = (max) => {
+  maxPage.value = max
+}
 function handleClick(key) {
   const calcPage = key + (currentPage.value - 1) * maxPage.value
   props.onClick(calcPage)
