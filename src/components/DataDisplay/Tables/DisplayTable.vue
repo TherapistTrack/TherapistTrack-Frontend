@@ -54,7 +54,7 @@
 import DataLoader from '@/components/Feedback/Spinner/DataLoader.vue'
 import { RiAlertFill } from '@remixicon/vue'
 import HideButton from '@/components/Buttons/HideButton.vue'
-import { ref, watch, onMounted } from 'vue'
+import { ref, watchEffect, onMounted } from 'vue'
 import TablePageButton from '@/components/Buttons/TablePageButton.vue'
 const emit = defineEmits(['hideHeader'])
 const props = defineProps({
@@ -81,7 +81,7 @@ onMounted(() => {
     maxPage.value = 6
   }
 })
-watch(() => {
+watchEffect(() => {
   if (!props.loading) {
     localData.value = props.data.slice(0, maxPage.value)
     pageCount.value = Math.ceil(props.data.length / maxPage.value)
