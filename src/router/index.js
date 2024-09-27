@@ -132,15 +132,23 @@ const router = createRouter({
     // UPLOAD VIEW
     {
       path: '/upload',
-      component: () => import('@/pages/notfound/NotFoundView.vue')
+      component: () => import('@/pages/upload/UploadFiles.vue')
     },
     {
-      path: '/upload/prepare',
-      component: () => import('@/pages/notfound/NotFoundView.vue')
+      path: '/upload/select',
+      component: () => import('@/pages/upload/UploadSelect.vue')
     },
     {
-      path: '/upload/waiting',
-      component: () => import('@/pages/notfound/NotFoundView.vue')
+      path: '/upload/form',
+      component: () => import('@/pages/upload/UploadForm.vue')
+    },
+    {
+      path: '/upload/doing',
+      component: () => import('@/pages/upload/UploadDoing.vue')
+    },
+    {
+      path: '/upload/finish',
+      component: () => import('@/pages/upload/UploadFinish.vue')
     },
 
     // NOT FOUND PAGE
