@@ -43,8 +43,6 @@ import { useRouter } from 'vue-router'
 import ConfigButton from '@/components/Buttons/ConfigButton.vue'
 import FilterTable from '@/components/DataDisplay/Tables/Filter/FilterTable.vue'
 import records from './records.json'
-import { filterAndSort } from './filterAndSort'
-const refineComposable = filterAndSort()
 // Constants
 const router = useRouter()
 const fetchedData = ref({})
@@ -54,22 +52,20 @@ const selected = ref(0)
 
 // TOAST EMITS
 //-------------------------------------------
-// const emit = defineEmits(['addToast'])
-// const addToast = (toast) => {
-//   emit('addToast', toast)
-// }
+const emit = defineEmits(['addToast'])
+const addToast = (toast) => {
+  emit('addToast', toast)
+}
 //-------------------------------------------
 
 // refining Data, (sort and filters)
 const updateSorts = async (sorts) => {
-  await refineComposable.updateSorts(sorts)
-  refineComposable.refineData(processedData.value)
+  console.log('API CALL!!', sorts)
   updateData()
 }
 
 const updateFilters = async (filters) => {
-  await refineComposable.updateFilters(filters)
-  refineComposable.refineData(processedData.value)
+  console.log('API CALL!!', filters)
   updateData()
 }
 
@@ -129,6 +125,8 @@ onMounted(async () => {
   loading.value = true
   // simulation time
   await new Promise((resolve) => setTimeout(resolve, 500))
+  let successToast = { type: 1, content: 'Toast messages implemented in record view' }
+  addToast(successToast)
   // Initial data fetch
   fetchedData.value = records
   // Obtaining headers from data fetch
