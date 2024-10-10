@@ -63,6 +63,8 @@
                   :field="filter.name"
                   :operation="filter.operation"
                   :value="filter.value"
+                  :start-date="filter.startDate"
+                  :end-date="filter.endDate"
                   :type="true"
                   :onClose="() => removeComponent('', key)"
                   :onClick="() => openEdit('filter')"
@@ -150,7 +152,9 @@ const addFilter = (filter) => {
     name: filter.name,
     operation: filter.operation,
     value: filter.value,
-    logic: 'Y'
+    logic: 'Y',
+    startDate: filter.startDate,
+    endDate: filter.endDate
   })
   emit('updateFilters', filters.value)
 }

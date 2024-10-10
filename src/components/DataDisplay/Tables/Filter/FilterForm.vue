@@ -16,20 +16,37 @@
         />
       </span>
       <div class="ff-input">
-        <InputFieldSimple
-          v-if="lastType != 'choice'"
-          :id="'value'"
-          :placeholder="'Escriba el valor a comparar'"
-          :type="lastType"
-          v-model:model-value="localFilter.value"
-        />
-        <span v-else class="ff-input-choice">
-          <SelectDropDown
+        <div v-if="localFilter.operation == 'Entre'" class="between">
+          <InputFieldSimple
             :id="'value'"
-            :disabled-value="'Escoga un valor'"
-            :options="choiceFieldArray"
+            :placeholder="'Escriba el valor a comparar'"
+            :type="'date'"
+            v-model:model-value="localFilter.startDate"
+          />
+          Y
+          <InputFieldSimple
+            :id="'value'"
+            :placeholder="'Escriba el valor a comparar'"
+            :type="'date'"
+            v-model:model-value="localFilter.endDate"
+          />
+        </div>
+        <span v-else>
+          <InputFieldSimple
+            v-if="lastType != 'choice'"
+            :id="'value'"
+            :placeholder="'Escriba el valor a comparar'"
+            :type="lastType"
             v-model:model-value="localFilter.value"
           />
+          <span v-else-if="localFilter.operation != 'No es vacío'" class="ff-input-choice">
+            <SelectDropDown
+              :id="'value'"
+              :disabled-value="'Escoga un valor'"
+              :options="choiceFieldArray"
+              v-model:model-value="localFilter.value"
+            />
+          </span>
         </span>
       </div>
       <span v-if="!valid">
@@ -53,7 +70,7 @@ import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import SelectDropDown from '@/components/Forms/SelectDropDown/SelectDropDown.vue'
 import InputFieldSimple from '@/components/Forms/InputField/InputFieldSimple.vue'
 import { ref, watch, onMounted } from 'vue'
-import { filterSchema } from '@/schemas/filterAndSortSchema'
+import { filterSchema, betweenSchema } from '@/schemas/filterAndSortSchema'
 
 // Emits
 const emit = defineEmits(['updateFilter', 'closeForm'])
@@ -108,20 +125,39 @@ const filterRefresh = () => {
 
 // Validation with custom yup schema
 const checkIfValid = () => {
-  let filterSch = filterSchema(lastType.value, choiceFieldArray.value)
-  filterSch
-    .validate({
-      name: localFilter.value.name,
-      operation: localFilter.value.operation,
-      value: localFilter.value.value
-    })
-    .then(() => {
-      valid.value = true
-    })
-    .catch((error) => {
-      errors.value = error.errors
-      valid.value = false
-    })
+  if (localFilter.value.operation == 'Entre') {
+    betweenSchema
+      .validate({
+        dateBefore: localFilter.value.startDate,
+        dateAfter: localFilter.value.endDate
+      })
+      .then(() => {
+        valid.value = true
+      })
+      .catch((error) => {
+        errors.value = error.errors
+        valid.value = false
+      })
+  } else {
+    let filterSch = filterSchema(
+      lastType.value,
+      choiceFieldArray.value,
+      localFilter.value.operation
+    )
+    filterSch
+      .validate({
+        name: localFilter.value.name,
+        operation: localFilter.value.operation,
+        value: localFilter.value.value
+      })
+      .then(() => {
+        valid.value = true
+      })
+      .catch((error) => {
+        errors.value = error.errors
+        valid.value = false
+      })
+  }
 }
 // This updates the operation options of the filter based on the type of its content
 const updateFilterOptions = (type) => {
@@ -143,6 +179,12 @@ const updateFilterOptions = (type) => {
 .ff-container .horizontal {
   display: flex;
   gap: 2rem;
+}
+
+.between {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .ff-container .horizontal * {

@@ -3,7 +3,12 @@
     <span v-if="type">
       <div class="text">
         <p>
-          <b>{{ field }}</b> {{ operation }} <b>{{ value }}</b>
+          <span v-if="operation != 'Entre'">
+            <b>{{ field }}</b> {{ operation }} <b>{{ value }}</b>
+          </span>
+          <span v-else>
+            <b>{{ field }}</b> {{ operation }} <b>{{ startDate }} Y {{ endDate }}</b>
+          </span>
         </p>
       </div>
     </span>
@@ -29,6 +34,8 @@ const props = defineProps({
   onClose: Function,
   onClick: Function,
   mode: Boolean,
+  startDate: String,
+  endDate: String,
   type: {
     type: Boolean,
     default: false
@@ -49,6 +56,7 @@ const handleClick = () => {
   justify-content: space-between;
   width: fit-content;
   transition: all 0.2s;
+  cursor: pointer;
 }
 
 .filter-component:hover {

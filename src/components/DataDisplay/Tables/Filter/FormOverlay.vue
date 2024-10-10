@@ -67,7 +67,9 @@ onMounted(() => {
     localFilter.value = {
       name: '',
       operation: '',
-      value: ''
+      value: '',
+      startDate: '',
+      endDate: ''
     }
   }
   setTimeout(() => {

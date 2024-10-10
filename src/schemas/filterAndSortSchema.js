@@ -8,7 +8,18 @@ export const sortSchema = yup.object({
     .required('Modo de ordenamiento no puede ser vacío')
 })
 
-export const filterSchema = (type, options) => {
+export const betweenSchema = yup.object({
+  dateBefore: yup
+    .date()
+    .required('Fecha de inicio es obligatoria')
+    .typeError('Ingrese una fecha válida'),
+  dateAfter: yup
+    .date()
+    .required('Fecha final es obligatoria')
+    .typeError('Ingrese una fecha válida')
+    .min(yup.ref('dateBefore'), 'Fecha final debe ser después de la fecha inicial')
+})
+export const filterSchema = (type, options, operation) => {
   let valueSchema = null
   if (['short_text', 'text'].includes(type)) {
     valueSchema = yup.string().required('Valor es obligatorio')
@@ -20,10 +31,14 @@ export const filterSchema = (type, options) => {
       .typeError('Valor debe ser un número')
       .required('Valor es obligatorio')
   } else if (type === 'choice') {
-    valueSchema = yup
-      .string()
-      .oneOf(options, 'Valor debe ser una de las opciones')
-      .required('Valor es obligatorio')
+    if (operation == 'No es vacío') {
+      valueSchema = yup.string()
+    } else {
+      valueSchema = yup
+        .string()
+        .oneOf(options, 'Valor debe ser una de las opciones')
+        .required('Valor es obligatorio')
+    }
   }
   let filterSchema = yup.object({
     name: yup.string().required('Campo a ordenar no puede ser vacío'),
