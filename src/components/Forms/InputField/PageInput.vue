@@ -10,7 +10,9 @@
 <script setup>
 const emit = defineEmits(['update:modelValue'])
 const updateValue = (event) => {
-  emit('update:modelValue', event.target.value)
+  if (event.key == 'Enter') {
+    emit('update:modelValue', event.target.value)
+  }
 }
 defineProps({
   modelValue: Number
