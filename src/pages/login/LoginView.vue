@@ -1,9 +1,8 @@
 <template>
   <div class="login-container">
     <div class="login-form">
-      <button @click="login">Ingresar →</button>
-      <button @click="logout">Logout →</button>
-      <p v-if="mensajeError" class="error-message">{{ mensajeError }}</p>
+      <ButtonSimple :msg="'Iniciar Sesión ->'" :onClick="login" :color="''" />
+      <!-- <button @click="logout">Logout →</button> -->
     </div>
   </div>
 </template>
@@ -12,7 +11,9 @@
 import { useAuth0 } from '@auth0/auth0-vue'
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-
+import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
+import { useApi } from '@/oauth/useApi'
+const { postRequest } = useApi()
 const auth0 = useAuth0()
 const router = useRouter()
 
@@ -20,20 +21,28 @@ function login() {
   auth0.loginWithRedirect()
 }
 
-function logout() {
-  auth0.logout({
-    logoutParams: {
-      returnTo: import.meta.env.VITE_OAUTH_LOGOUT_URI
-    }
-  })
+// TODO : Redirect to Admin or Doctor UI depending on the user info.
+const getCurrentUser = async (_id) => {
+  let rol = ''
+  try {
+    const response = await postRequest(`/users/@me`, { id: _id })
+    rol = response.data.rol
+  } catch {
+    console.error('Error verifying role')
+  }
+  return rol
 }
 
-// TODO : Redirect to Admin or Doctor UI depending on the user info.
-onMounted(() => {
+onMounted(async () => {
   const freeNavigation = import.meta.env.VITE_FREE_NAVIGATION || 'FALSE'
   if (auth0.isAuthenticated.value && freeNavigation === 'FALSE') {
     auth0.getAccessTokenSilently().then((a) => console.log(a))
-    router.replace({ path: '/admin/user' })
+    let rol = await getCurrentUser(auth0.user.value.sub.split('|')[1])
+    if (rol == 'Admin') {
+      router.replace({ path: '/admin/user' })
+    } else if ((rol == 'Doctor') | (rol == 'Assistant')) {
+      router.replace({ path: '/record/main' })
+    }
   }
 })
 </script>
@@ -92,23 +101,6 @@ onMounted(() => {
   right: 1rem;
   top: 1rem;
 }
-
-button {
-  background: #f9bb42;
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
-  align-self: flex-end;
-  transition: background-color 0.2s;
-}
-
-button:hover {
-  background: #ffcd6c;
-}
-
 .error-message {
   color: red;
   text-align: center;
