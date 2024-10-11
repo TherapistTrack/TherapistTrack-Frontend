@@ -50,7 +50,6 @@ import { useAuth0 } from '@auth0/auth0-vue'
 const auth0 = useAuth0()
 const localMin = ref(true)
 const logoutAttempt = ref(false)
-
 defineProps({
   minim: {
     type: Boolean,

@@ -36,12 +36,11 @@
           </p>
           <p>Administrador</p>
         </div>
-
         <div class="settings-menu">
           <SettingsMenu
             v-if="trySetting"
             v-on:logout="handleLogout"
-            :on-profile="handleProfile"
+            :on-secondary="handleProfile"
             :onClickOutside="undoSetting"
           />
           <RiSettings3Fill

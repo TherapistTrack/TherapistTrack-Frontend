@@ -6,7 +6,7 @@
       backgroundColor="#1f3a93"
       arrowColor="#ffffff"
       iconColor="#ffffff"
-      userName="Jose Marchena"
+      :userName="auth0.user.value.name"
       userRole="Usuario"
     />
 
@@ -21,7 +21,9 @@
 import SideBarConfig from '@/components/Navigation/SideBar/SideBarConfig.vue'
 import { useRoute } from 'vue-router'
 import { ref, watch } from 'vue'
+import { useAuth0 } from '@auth0/auth0-vue'
 
+const auth0 = useAuth0()
 const route = useRoute()
 const currentOption = ref('Mi Cuenta')
 
