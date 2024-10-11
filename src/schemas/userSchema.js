@@ -1,21 +1,25 @@
 import * as yup from 'yup'
 
 export const userSchema = yup.object().shape({
-  names: yup.string().required('Names are required').trim().min(1, 'Names cannot be empty'),
+  names: yup
+    .string()
+    .required('Nombre es obligatorio')
+    .trim()
+    .min(1, 'Nombre no puede estar vacío'),
   lastNames: yup
     .string()
-    .required('Last names are required')
+    .required('Apellidos es obligatorio')
     .trim()
-    .min(1, 'Last names cannot be empty'),
+    .min(1, 'Apellidos no puede ser vacío'),
   phones: yup
     .array()
-    .of(yup.string().matches(/^[0-9]+$/, 'Phone numbers must contain only numbers'))
-    .required('At least one phone number is required')
-    .min(1, 'At least one phone number is required'),
+    .of(yup.string().matches(/^[0-9]+$/, 'Números de teléfono solo pueden incluir números'))
+    .required('Debe haber al menos un numero de teléfono')
+    .min(1, 'Debe haber al menos un numero de teléfono'),
   rol: yup
     .string()
-    .oneOf(['Assistant', 'Doctor'], 'Role must be either "Assistant" or "Doctor"')
-    .required('Role is required'),
+    .oneOf(['Assistant', 'Doctor', 'Admin'], 'El rol debe ser Assistant, Doctor o Admin')
+    .required('Rol es obligatorio'),
   mails: yup
     .array()
     .of(
@@ -23,27 +27,27 @@ export const userSchema = yup.object().shape({
         .string()
         .matches(
           /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/,
-          'Each email must be a valid email address'
+          'Todos los emails deben ser válidos'
         )
-        .required('There cannot be empty emails')
+        .required('No pueden haber emails vacíos')
     )
-    .required('At least one email is required')
-    .min(1, 'At least one email is required'),
+    .required('Debe haber al menos un email')
+    .min(1, 'Debe haber al menos un email'),
 
   startDate: yup
     .date()
     .nullable()
     .test(
       'is-valid-date',
-      'Start date must be a valid date',
+      'Fecha de inicio debe ser una fecha válida',
       (value) => value === null || value === '' || !isNaN(new Date(value).getTime())
     )
     .when('rol', (rol) =>
       rol == 'Assistant'
         ? yup
             .date()
-            .required('Start date is required for Assistants')
-            .typeError('Select a start date')
+            .required('Fecha de inicio es obligatoria para asistentes')
+            .typeError('Fecha inválida')
         : yup.string().nullable()
     ),
 
@@ -52,7 +56,7 @@ export const userSchema = yup.object().shape({
     .nullable()
     .test(
       'is-valid-date',
-      'End date must be a valid date',
+      'Fecha de fin debe ser una fecha válida',
       (value) => value === null || value === '' || !isNaN(new Date(value).getTime())
     )
 
@@ -60,9 +64,9 @@ export const userSchema = yup.object().shape({
       rol == 'Assistant'
         ? yup
             .date()
-            .required('End date is required for Assistants')
-            .typeError('Select an end date')
-            .min(yup.ref('startDate'), 'End date must be after start date')
+            .required('Fecha de fin es obligatoria para asistentes')
+            .typeError('Fecha inválida')
+            .min(yup.ref('startDate'), 'Fecha de fin debe ser previa a la fecha de inicio')
         : yup.string().nullable()
     ),
 
@@ -73,8 +77,8 @@ export const userSchema = yup.object().shape({
       rol == 'Assistant'
         ? yup
             .string()
-            .matches(/^[0-9]+$/, 'DPI must contain only numbers')
-            .required('DPI is required for Assistants')
+            .matches(/^[0-9]+$/, 'DPI debe contener solo números')
+            .required('DPI es obligatorio para asistentes')
         : yup.string().nullable()
     ),
   collegiateNumber: yup
@@ -82,7 +86,7 @@ export const userSchema = yup.object().shape({
     .nullable()
     .when('rol', (rol) =>
       rol == 'Doctor'
-        ? yup.string().trim().required('Collegiate number is required for Doctors')
+        ? yup.string().trim().required('Numero de colegiado es obligatorio para doctores')
         : yup.string().nullable()
     ),
   specialty: yup
@@ -90,7 +94,7 @@ export const userSchema = yup.object().shape({
     .nullable()
     .when('rol', (rol) =>
       rol == 'Doctor'
-        ? yup.string().trim().required('Specialty is required for Doctors')
+        ? yup.string().trim().required('Especialidad es obligatoria para doctores')
         : yup.string().nullable()
     )
 })
