@@ -38,7 +38,7 @@
             :label="'Rol'"
             :id="'role'"
             v-model="user.rol"
-            :options="['Doctor', 'Assistant']"
+            :options="['Doctor', 'Assistant', 'Admin']"
           />
           <!-- Campos condicionales para "Doctor" -->
           <span v-if="user.rol === 'Doctor'">
