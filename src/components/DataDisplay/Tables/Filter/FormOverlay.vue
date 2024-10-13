@@ -64,12 +64,12 @@ onMounted(() => {
   if (props.sortOrFilter === 'filter-specific') {
     localFilter.value = props.filters[props.index]
   } else {
+    let val1 = ''
+    let val2 = ''
     localFilter.value = {
       name: '',
       operation: '',
-      value: '',
-      startDate: '',
-      endDate: ''
+      values: [val1, val2]
     }
   }
   setTimeout(() => {

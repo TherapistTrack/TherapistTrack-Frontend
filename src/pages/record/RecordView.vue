@@ -26,9 +26,13 @@
         :data="processedData"
         :headers="shownHeaders"
         v-model:loading="loading"
+        v-model:page-limit="pageLimit"
+        v-model:current-page="currentPage"
         :onClick="handleOpenPreview"
         @hideHeader="onHideField"
         :success="true"
+        @updateLimit="updateLimit"
+        @updatePage="updatePage"
       />
       <ConfigButton :onClick="handleTableSettings" />
     </div>
@@ -38,18 +42,24 @@
 <script setup>
 import DisplayTable from '@/components/DataDisplay/Tables/DisplayTable.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import ConfigButton from '@/components/Buttons/ConfigButton.vue'
 import FilterTable from '@/components/DataDisplay/Tables/Filter/FilterTable.vue'
 import records from './records.json'
+import { useAuth0 } from '@auth0/auth0-vue'
 // Constants
+const auth0 = useAuth0()
 const router = useRouter()
 const fetchedData = ref({})
 const processedData = ref({})
 const loading = ref(true)
 const selected = ref(0)
+const localSorts = ref([])
+const localFitlers = ref([])
 
+const currentPage = ref(1)
+const pageLimit = ref(6)
 // TOAST EMITS
 //-------------------------------------------
 const emit = defineEmits(['addToast'])
@@ -60,18 +70,44 @@ const addToast = (toast) => {
 
 // refining Data, (sort and filters)
 const updateSorts = async (sorts) => {
-  console.log('API CALL!!', sorts)
+  localSorts.value = sorts
   updateData()
 }
 
 const updateFilters = async (filters) => {
-  console.log('API CALL!!', filters)
+  localFitlers.value = filters
+  updateData()
+}
+// Display table navigation
+const updatePage = (page) => {
+  currentPage.value = page
   updateData()
 }
 
+const updateLimit = (limit) => {
+  pageLimit.value = limit
+  updateData()
+}
 // Emissions from children
-const updateData = () => {
-  // Make get request again
+const updateData = async () => {
+  let fields = shownHeaders.value.map((val) => ({
+    name: val,
+    type: templateFields.value[val].type
+  }))
+  let body = {
+    doctorId: auth0.user.value.sub.split('|')[1],
+    limit: pageLimit.value,
+    page: currentPage.value,
+    fields: fields,
+    filters: localFitlers.value || [],
+    sorts: localSorts.value || []
+  }
+  loading.value = true
+  setTimeout(() => {
+    console.log('API CALL!!!')
+    console.log(JSON.stringify(body))
+    loading.value = false
+  }, 250)
 }
 
 const handleOpenEdit = () => {
@@ -80,6 +116,14 @@ const handleOpenEdit = () => {
 const templateFields = ref({})
 const shownHeaders = ref([])
 const allHeaders = ref([])
+
+watch(
+  shownHeaders,
+  () => {
+    updateData()
+  },
+  { deep: true }
+)
 
 // Table field logic
 const onHideField = (header) => {

@@ -62,9 +62,7 @@
                 <FilterComponent
                   :field="filter.name"
                   :operation="filter.operation"
-                  :value="filter.value"
-                  :start-date="filter.startDate"
-                  :end-date="filter.endDate"
+                  :values="filter.values"
                   :type="true"
                   :onClose="() => removeComponent('', key)"
                   :onClick="() => openEdit('filter')"
@@ -148,13 +146,14 @@ const addSort = (sort) => {
 }
 
 const addFilter = (filter) => {
+  if (filter.values[1] == '') {
+    filter.values.splice(1, 1)
+  }
   filters.value.push({
     name: filter.name,
     operation: filter.operation,
-    value: filter.value,
-    logic: 'Y',
-    startDate: filter.startDate,
-    endDate: filter.endDate
+    values: [...filter.values],
+    logic: 'Y'
   })
   emit('updateFilters', filters.value)
 }

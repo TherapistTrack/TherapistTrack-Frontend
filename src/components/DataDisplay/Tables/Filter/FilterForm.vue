@@ -21,14 +21,14 @@
             :id="'value'"
             :placeholder="'Escriba el valor a comparar'"
             :type="'date'"
-            v-model:model-value="localFilter.startDate"
+            v-model:model-value="localFilter.values[0]"
           />
           Y
           <InputFieldSimple
             :id="'value'"
             :placeholder="'Escriba el valor a comparar'"
             :type="'date'"
-            v-model:model-value="localFilter.endDate"
+            v-model:model-value="localFilter.values[1]"
           />
         </div>
         <span v-else>
@@ -37,14 +37,14 @@
             :id="'value'"
             :placeholder="'Escriba el valor a comparar'"
             :type="lastType"
-            v-model:model-value="localFilter.value"
+            v-model:model-value="localFilter.values[0]"
           />
           <span v-else-if="localFilter.operation != 'No es vacío'" class="ff-input-choice">
             <SelectDropDown
               :id="'value'"
               :disabled-value="'Escoga un valor'"
               :options="choiceFieldArray"
-              v-model:model-value="localFilter.value"
+              v-model:model-value="localFilter.values[0]"
             />
           </span>
         </span>
@@ -128,8 +128,8 @@ const checkIfValid = () => {
   if (localFilter.value.operation == 'Entre') {
     betweenSchema
       .validate({
-        dateBefore: localFilter.value.startDate,
-        dateAfter: localFilter.value.endDate
+        dateBefore: localFilter.value.values[0],
+        dateAfter: localFilter.value.values[1]
       })
       .then(() => {
         valid.value = true
@@ -148,7 +148,7 @@ const checkIfValid = () => {
       .validate({
         name: localFilter.value.name,
         operation: localFilter.value.operation,
-        value: localFilter.value.value
+        value: localFilter.value.values[0]
       })
       .then(() => {
         valid.value = true

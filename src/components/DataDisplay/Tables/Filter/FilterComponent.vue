@@ -4,10 +4,10 @@
       <div class="text">
         <p>
           <span v-if="operation != 'Entre'">
-            <b>{{ field }}</b> {{ operation }} <b>{{ value }}</b>
+            <b>{{ field }}</b> {{ operation }} <b>{{ values[0] }}</b>
           </span>
           <span v-else>
-            <b>{{ field }}</b> {{ operation }} <b>{{ startDate }} Y {{ endDate }}</b>
+            <b>{{ field }}</b> {{ operation }} <b>{{ values[0] }} Y {{ values[1] }}</b>
           </span>
         </p>
       </div>
@@ -30,12 +30,10 @@ import { RiCloseLine, RiSortAsc, RiSortDesc } from '@remixicon/vue'
 const props = defineProps({
   field: String,
   operation: String,
-  value: String,
+  values: Array,
   onClose: Function,
   onClick: Function,
   mode: Boolean,
-  startDate: String,
-  endDate: String,
   type: {
     type: Boolean,
     default: false
