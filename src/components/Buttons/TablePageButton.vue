@@ -21,18 +21,13 @@
         :id="currentPage === pageCount ? 'disabled' : ''"
       />
     </div>
-    <span class="rows">
-      <p>No. Filas</p>
-      <span class="limiter">
-        <InputFieldSimple :id="'numer-page'" :type="'number'" v-model:model-value="localMaxPage" />
-      </span>
-    </span>
+    <PageInput v-model:model-value="localMaxPage" />
   </div>
 </template>
 
 <script setup>
 import { RiArrowLeftSLine, RiArrowRightSLine } from '@remixicon/vue'
-import InputFieldSimple from '../Forms/InputField/InputFieldSimple.vue'
+import PageInput from '../Forms/InputField/PageInput.vue'
 import { ref, watch } from 'vue'
 const emit = defineEmits(['updateCurrentPage', 'updateMax'])
 
@@ -46,6 +41,7 @@ const localMaxPage = ref(props.maxPage + '')
 watch(localMaxPage, () => {
   try {
     if (parseInt(localMaxPage.value) > 0) {
+      emit('updateCurrentPage', 1)
       emit('updateMax', localMaxPage.value)
     }
   } catch {
@@ -81,19 +77,7 @@ const handleDown = () => {
   flex-direction: row;
   gap: 5rem;
 }
-.rows {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
-.limiter * {
-  max-width: 4rem;
-  padding: 0.5rem;
-}
-.rows p {
-  display: inline-block;
-  font-size: 0.8rem;
-}
+
 .table-nav {
   display: flex;
   padding: 0.3rem;
