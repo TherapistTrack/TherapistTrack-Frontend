@@ -4,7 +4,7 @@
     :sortOrFilter="'filter-specific'"
     :index="filterIndex"
     :fields="fields"
-    :filters="filters"
+    :filters="localFilters"
     @closeForm="handleCloseForm"
     @addFilter="updateLocalFilters"
   />
@@ -12,18 +12,23 @@
     <div class="edit-container">
       <EditSort
         v-if="sortOrFilter === 'sort'"
-        :sorts="sorts"
-        :filters="filters"
+        :sorts="localSorts"
+        :filters="localFilters"
         :fields="fields"
         @updateSorts="updateLocalSorts"
       />
-      <EditFilter v-else :filters="filters" :fields="fields" @onEditSingle="handleEditSingle" />
+      <EditFilter
+        v-else
+        :filters="localFilters"
+        :fields="fields"
+        @onEditSingle="handleEditSingle"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch, toRaw } from 'vue'
 import FormOverlay from './FormOverlay.vue'
 import EditFilter from './EditFilter.vue'
 import EditSort from './EditSort.vue'
@@ -41,9 +46,11 @@ const props = defineProps({
 // Variables
 const myDiv = ref(null)
 const editException = ref(true)
-const localSorts = ref(props.sorts)
+const startingSorts = ref(JSON.stringify(props.sorts.map((item) => toRaw(item))))
+const localSorts = ref([...props.sorts])
 const filterIndex = ref(null)
-const localFilters = ref(props.filters)
+const startingFilters = ref(JSON.stringify(props.filters.map((item) => toRaw(item))))
+const localFilters = ref([...props.filters])
 const editFilterData = ref(false)
 
 // Functions
@@ -57,16 +64,24 @@ const handleEditSingle = (index) => {
 }
 
 const handleCloseForm = () => {
-  emit('updateFilters', localFilters.value)
+  if (props.filters !== localFilters.value) {
+    emit('updateFilters', localFilters.value)
+  }
   emit('closeEdit')
 }
 
 const handleClickOutside = (event) => {
   if (myDiv.value && !myDiv.value.contains(event.target) && editException.value) {
     if (props.sortOrFilter === 'sort') {
-      emit('updateSorts', localSorts.value)
+      let final = localSorts.value.map((item) => toRaw(item))
+      if (startingSorts.value != JSON.stringify(final)) {
+        emit('updateSorts', localSorts.value)
+      }
     } else {
-      emit('updateFilters', localFilters.value)
+      let final = localFilters.value.map((item) => toRaw(item))
+      if (startingFilters.value !== JSON.stringify(final)) {
+        emit('updateFilters', localFilters.value)
+      }
     }
     emit('closeEdit')
   }
