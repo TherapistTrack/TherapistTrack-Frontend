@@ -63,81 +63,126 @@
           </p>
           <p>{{ userRole }}</p>
         </div>
-        <RiLogoutBoxRLine class="icon" size="1.5rem" :color="iconColor" />
+        <div class="settings-menu">
+          <SettingsTooltip
+            v-if="trySetting"
+            v-on:logout="onLogout"
+            :on-secondary="handleRecords"
+            :onClickOutside="undoSetting"
+            settings-case="config"
+          />
+          <RiSettings3Fill
+            class="icon"
+            size="1.4rem"
+            color="var(--light-blue-1)"
+            @click="doSetting"
+          />
+        </div>
       </div>
     </div>
   </div>
   <div class="sideSpace" :id="minim ? 'minimized' : 'maximized'"></div>
+  <AlertOptionSimple
+    v-if="tryLogout"
+    msg="¿Estas seguro que deseas cerrar sesión?"
+    :on-no="cancelLogout"
+    :on-yes="logout"
+  />
 </template>
 
 <script setup>
-import { RiArrowLeftDoubleFill, RiLogoutBoxRLine } from '@remixicon/vue'
+import { RiArrowLeftDoubleFill, RiSettings3Fill } from '@remixicon/vue'
+import SettingsTooltip from '@/components/DataDisplay/Tooltip/SettingsTooltip.vue'
+import AlertOptionSimple from '@/components/Feedback/Alerts/AlertOptionSimple.vue'
 import { ref, defineProps } from 'vue'
+import { useAuth0 } from '@auth0/auth0-vue'
+import { useRouter } from 'vue-router'
 
-const {
-  backgroundColor,
-  arrowColor,
-  iconColor,
-  logoSrc,
-  logoGraySrc,
-  userName,
-  userRole,
-  selectedOption
-} = defineProps({
-  backgroundColor: {
-    type: String,
-    default: '#e3f2fd'
-  },
-  arrowColor: {
-    type: String,
-    default: '#ffffff'
-  },
-  iconColor: {
-    type: String,
-    default: '#ffffff'
-  },
-  logoSrc: {
-    type: String,
-    default: new URL('@/assets/Logo/LogoSoloMono.png', import.meta.url).href
-  },
-  logoGraySrc: {
-    type: String,
-    default: new URL('@/assets/Logo/LogoWhite.png', import.meta.url).href
-  },
-  userName: {
-    type: String,
-    default: 'Jose Marchena'
-  },
-  userRole: {
-    type: String,
-    default: 'Usuario'
-  },
-  selectedOption: {
-    type: String,
-    default: 'Mi Cuenta'
-  }
-})
-
+const auth0 = useAuth0()
 const minim = ref(true)
+const trySetting = ref(false)
+const tryLogout = ref(false)
+const router = useRouter()
 
+const { backgroundColor, arrowColor, logoSrc, logoGraySrc, userName, userRole, selectedOption } =
+  defineProps({
+    backgroundColor: {
+      type: String,
+      default: '#e3f2fd'
+    },
+    arrowColor: {
+      type: String,
+      default: '#ffffff'
+    },
+    iconColor: {
+      type: String,
+      default: '#ffffff'
+    },
+    logoSrc: {
+      type: String,
+      default: new URL('@/assets/Logo/LogoSoloMono.png', import.meta.url).href
+    },
+    logoGraySrc: {
+      type: String,
+      default: new URL('@/assets/Logo/LogoWhite.png', import.meta.url).href
+    },
+    userName: {
+      type: String,
+      default: 'Jose Marchena'
+    },
+    userRole: {
+      type: String,
+      default: 'Usuario'
+    },
+    selectedOption: {
+      type: String,
+      default: 'Mi Cuenta'
+    }
+  })
+
+const handleRecords = () => {
+  router.push('/record/main')
+}
+const onLogout = () => {
+  tryLogout.value = true
+}
+const cancelLogout = () => {
+  tryLogout.value = false
+}
+
+const logout = () => {
+  auth0.logout({
+    logoutParams: {
+      returnTo: import.meta.env.VITE_OAUTH_LOGOUT_URI
+    }
+  })
+}
+const doSetting = () => {
+  trySetting.value = true
+}
+const undoSetting = () => {
+  trySetting.value = false
+}
 const setMin = (val) => {
   minim.value = val
 }
 </script>
 
 <style scoped>
+.icon {
+  transition:
+    fill 0.2s,
+    transform 0.5s;
+  cursor: pointer;
+}
+.icon:hover {
+  fill: var(--white);
+  transform: rotate(45deg);
+}
+
 .sideSpace {
   width: 0vw;
   transition: Width 0.5s;
-}
-
-.icon {
-  transition: fill 0.2s;
-  cursor: pointer;
-}
-
-.icon:hover {
-  fill: var(--gray-1);
 }
 
 .sideBtn {

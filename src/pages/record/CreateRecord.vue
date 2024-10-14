@@ -55,7 +55,7 @@
         </div>
       </div>
       <div class="button-space">
-        <ButtonSimple :msg="'Crear'" :disabled="!canCreate" />
+        <ButtonSimple :msg="'Crear'" :disabled="!canCreate" :onClick="createRecord" />
       </div>
     </span>
   </div>
@@ -70,8 +70,9 @@ import SelectDropDownRequired from '@/components/Forms/SelectDropDown/SelectDrop
 import DataLoader from '@/components/Feedback/Spinner/DataLoader.vue'
 import plantillasJson from '@/pages/record/plantillas.json'
 import { ref, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 // Constants
-
+const router = useRouter()
 const plantillasData = ref({})
 const plantillasOptions = ref({})
 const requiredFields = ref([])
@@ -103,7 +104,6 @@ watch(
 )
 
 // On Mounted
-
 onMounted(async () => {
   loading.value = true
   // simulation time
@@ -138,6 +138,10 @@ const setRequiredFields = (selectedPlantilla) => {
       requiredFields.value.push(key)
     }
   })
+}
+
+const createRecord = () => {
+  router.push('/record/main')
 }
 </script>
 

@@ -19,9 +19,11 @@
 import { useAuth0 } from '@auth0/auth0-vue'
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import logo from '@/assets/Logo/LogoColorVertical.png'
-import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 
+import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
+import { useApi } from '@/oauth/useApi'
+const { postRequest } = useApi()
+import logo from '@/assets/Logo/LogoColorVertical.png'
 const auth0 = useAuth0()
 const router = useRouter()
 
@@ -29,28 +31,28 @@ function login() {
   auth0.loginWithRedirect()
 }
 
-/*function logout() {
-  auth0.logout({
-    logoutParams: {
-      returnTo: import.meta.env.VITE_OAUTH_LOGOUT_URI
-    }
-  })
-}*/
-
 // TODO : Redirect to Admin or Doctor UI depending on the user info.
-onMounted(() => {
-  const freeNavigation = import.meta.env.VITE_FREE_NAVIGATION || 'FALSE'
+const getCurrentUser = async (_id) => {
+  let rol = ''
+  try {
+    const response = await postRequest(`/users/@me`, { id: _id })
+    rol = response.data.rol
+  } catch {
+    console.error('Error verifying role')
+  }
+  return rol
+}
 
-  // Solo redirige si el usuario está autenticado
-  if (auth0.isAuthenticated.value) {
-    if (freeNavigation === 'FALSE') {
-      auth0.getAccessTokenSilently().then((token) => {
-        console.log(token)
-        router.replace({ path: '/admin/user' })
-      })
+onMounted(async () => {
+  const freeNavigation = import.meta.env.VITE_FREE_NAVIGATION || 'FALSE'
+  if (auth0.isAuthenticated.value && freeNavigation === 'FALSE') {
+    auth0.getAccessTokenSilently().then((a) => console.log(a))
+    let rol = await getCurrentUser(auth0.user.value.sub.split('|')[1])
+    if (rol == 'Admin') {
+      router.replace({ path: '/admin/user' })
+    } else if ((rol == 'Doctor') | (rol == 'Assistant')) {
+      router.replace({ path: '/record/main' })
     }
-  } else {
-    console.log('No autenticado, permanece en la página de login.')
   }
 })
 </script>

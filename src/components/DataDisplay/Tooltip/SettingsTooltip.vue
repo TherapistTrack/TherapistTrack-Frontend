@@ -6,7 +6,11 @@
           <p>Cerrar Sesión</p>
           <RiLogoutBoxRLine color="var(--red-1)" size="1.2rem" />
         </div>
-        <div class="setting-option" @click="handleProfile">
+        <div v-if="settingsCase == 'config'" class="setting-option" @click="handleProfile">
+          <p>Expedientes</p>
+          <RiFileTextLine color="var(--blue-1)" size="1.2rem" />
+        </div>
+        <div v-else class="setting-option" @click="handleProfile">
           <p>Perfil</p>
           <RiUserFill color="var(--blue-1)" size="1.2rem" />
         </div>
@@ -17,14 +21,15 @@
 </template>
 
 <script setup>
-import { RiUserFill, RiLogoutBoxRLine } from '@remixicon/vue'
+import { RiUserFill, RiLogoutBoxRLine, RiFileTextLine } from '@remixicon/vue'
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 const myDiv = ref(null)
 const ready = ref(0)
 const props = defineProps({
   onLogout: Function,
-  onProfile: Function,
-  onClickOutside: Function
+  onSecondary: Function,
+  onClickOutside: Function,
+  settingsCase: String
 })
 
 const handleClickOutside = (event) => {
@@ -40,7 +45,7 @@ const handleLogout = () => {
   props.onLogout()
 }
 const handleProfile = () => {
-  props.onProfile()
+  props.onSecondary()
 }
 
 onMounted(() => {
