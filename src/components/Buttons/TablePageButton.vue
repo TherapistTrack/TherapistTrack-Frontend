@@ -24,7 +24,7 @@
     <span class="rows">
       <p>No. Filas</p>
       <span class="limiter">
-        <InputFieldSimple :type="'number'" v-model:model-value="localMaxPage" />
+        <InputFieldSimple :id="'numer-page'" :type="'number'" v-model:model-value="localMaxPage" />
       </span>
     </span>
   </div>
@@ -41,7 +41,7 @@ const props = defineProps({
   currentPage: Number,
   maxPage: Number
 })
-const localMaxPage = ref(props.maxPage)
+const localMaxPage = ref(props.maxPage + '')
 
 watch(localMaxPage, () => {
   try {

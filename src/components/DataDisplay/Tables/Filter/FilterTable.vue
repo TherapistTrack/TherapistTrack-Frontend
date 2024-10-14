@@ -1,18 +1,33 @@
 <template>
   <div class="field-table">
-    <div v-if="showAdd" class="add-overlay">
-      <AddFilter
+    <div class="add-overlay" v-if="showEditSpecific"></div>
+    <div v-if="showForm" class="add-overlay">
+      <FormOverlay
+        :sortOrFilter="sortOrFilter"
         :fields="fields"
-        :type="sortOrFilter"
-        :sortFields="sortFields"
-        @closeAdd="handleCloseAdd"
-        @addComponent="addComponent"
+        :sorts="sorts"
+        :filters="filters"
+        @closeForm="handleCloseForm"
+        @addSort="addSort"
+        @addFilter="addFilter"
+      />
+    </div>
+    <div v-if="showEdit">
+      <EditOverlay
+        :sort-or-filter="editType"
+        :sorts="sorts"
+        :filters="filters"
+        :fields="fields"
+        @closeEdit="closeEdit"
+        @updateSorts="updateSortsFromChilden"
+        @updateFilters="updateFiltersFromChilden"
+        @openEditSpecific="openEditSpecific"
       />
     </div>
     <div class="fns-grid">
       <div class="s-table">
         <div class="header">
-          <IconButton :type="'sort'" :onClick="addSort" />
+          <IconButton :type="'sort'" :onClick="handleOpenSortForm" />
         </div>
 
         <div class="field-body">
@@ -21,8 +36,9 @@
               <span v-for="(sort, key) in sorts" :key="key">
                 <FilterComponent
                   :field="sort.name"
-                  :mode="sort.mode === 'desc' ? false : true"
+                  :mode="sort.mode === 'Descendiente' ? false : true"
                   :onClose="() => removeComponent('sort', key)"
+                  :onClick="() => openEdit('sort')"
                 />
               </span>
             </div>
@@ -37,7 +53,7 @@
       </div>
       <div clas="f-table">
         <div class="header">
-          <IconButton :type="'filtro'" :onClick="addFilter" />
+          <IconButton :type="'filtro'" :onClick="handleOpenFilterForm" />
         </div>
         <div class="field-body">
           <div class="filter-grid">
@@ -46,9 +62,10 @@
                 <FilterComponent
                   :field="filter.name"
                   :operation="filter.operation"
-                  :value="filter.value"
+                  :values="filter.values"
                   :type="true"
                   :onClose="() => removeComponent('', key)"
+                  :onClick="() => openEdit('filter')"
                 />
               </div>
             </div>
@@ -66,48 +83,79 @@
 </template>
 
 <script setup>
+import FormOverlay from './FormOverlay.vue'
 import IconButton from '@/components/Buttons/IconButton.vue'
 import FilterComponent from './FilterComponent.vue'
-import AddFilter from './AddFilter.vue'
 import { ref } from 'vue'
 import { RiDeleteBin7Fill } from '@remixicon/vue'
-const showAdd = ref(false)
-const sortOrFilter = ref('')
-const sortFields = ref([])
-const emit = defineEmits(['updateFilter', 'updateSorts'])
+import EditOverlay from './EditOverlay.vue'
+
+const emit = defineEmits(['updateFilters', 'updateSorts'])
 defineProps({
   fields: Object
 })
-const handleCloseAdd = () => {
-  showAdd.value = false
-}
-const addSort = () => {
-  sortOrFilter.value = 'sort'
-  showAdd.value = true
-}
-const addFilter = () => {
-  sortOrFilter.value = ''
-  showAdd.value = true
-}
+
+const showForm = ref(false)
+const sortOrFilter = ref('')
+const sortFields = ref([])
+const showEdit = ref(false)
+const editType = ref('')
+const showEditSpecific = ref(false)
 const sorts = ref([])
 const filters = ref([])
 
-const addComponent = (comp) => {
-  if (comp.type == 'sort') {
-    sorts.value.push({
-      name: comp.name,
-      mode: comp.mode
-    })
-    sortFields.value.push(comp.name)
-    emit('updateSorts', sorts.value)
-  } else {
-    filters.value.push({
-      name: comp.name,
-      operation: comp.operation,
-      value: comp.value
-    })
-    emit('updateFilters', filters.value)
+const updateFiltersFromChilden = (tem_filters) => {
+  filters.value = tem_filters
+  emit('updateFilters', filters.value)
+}
+
+const updateSortsFromChilden = (tem_sorts) => {
+  sorts.value = tem_sorts
+  emit('updateSorts', sorts.value)
+}
+const openEditSpecific = () => {
+  showEditSpecific.value = true
+}
+
+const openEdit = (type) => {
+  editType.value = type
+  showEdit.value = true
+}
+
+const closeEdit = () => {
+  showEdit.value = false
+}
+const handleCloseForm = () => {
+  showForm.value = false
+}
+const handleOpenSortForm = () => {
+  sortOrFilter.value = 'sort'
+  showForm.value = true
+}
+const handleOpenFilterForm = () => {
+  sortOrFilter.value = 'filter'
+  showForm.value = true
+}
+
+const addSort = (sort) => {
+  sorts.value.push({
+    name: sort.name,
+    mode: sort.mode
+  })
+  emit('updateSorts', sorts.value)
+}
+
+const addFilter = (filter) => {
+  if (filter.values[1] == '') {
+    filter.values.splice(1, 1)
   }
+  filters.value.push({
+    name: filter.name,
+    operation: filter.operation,
+    values: [...filter.values],
+    logic: 'Y'
+  })
+  emit('updateFilters', filters.value)
 }
 
 const removeComponent = (type, index) => {
@@ -157,8 +205,7 @@ const cleanFilter = () => {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 0.5rem;
-  min-width: 90%;
-  max-width: 90%;
+  max-width: 570px;
 }
 
 .field-body .filter-grid {
