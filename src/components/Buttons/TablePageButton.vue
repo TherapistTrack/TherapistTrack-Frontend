@@ -36,7 +36,7 @@ const props = defineProps({
   currentPage: Number,
   maxPage: Number
 })
-const localMaxPage = ref(props.maxPage)
+const localMaxPage = ref(props.maxPage + '')
 
 watch(localMaxPage, () => {
   try {

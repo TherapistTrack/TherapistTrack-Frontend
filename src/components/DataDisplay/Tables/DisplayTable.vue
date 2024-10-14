@@ -54,35 +54,30 @@
 import DataLoader from '@/components/Feedback/Spinner/DataLoader.vue'
 import { RiAlertFill } from '@remixicon/vue'
 import HideButton from '@/components/Buttons/HideButton.vue'
-import { ref, watch, onMounted } from 'vue'
+import { ref, watchEffect } from 'vue'
 import TablePageButton from '@/components/Buttons/TablePageButton.vue'
-const emit = defineEmits(['hideHeader'])
+const emit = defineEmits(['hideHeader', 'updateLimit', 'updatePage'])
 const props = defineProps({
   loading: Boolean,
   onClick: Function,
   data: Object,
   headers: Array,
-  success: Boolean
+  success: Boolean,
+  currentPage: Number,
+  pageLimit: Number
 })
+
 const localData = ref(null)
 const headerHide = ref({})
 const pageCount = ref(1)
-const currentPage = ref(1)
-const maxPage = ref(6)
-const aspectRatio = ref(null)
+const currentPage = ref(props.currentPage)
+const maxPage = ref(props.pageLimit)
+
 props.headers.map((value) => {
   headerHide.value[value] = false
 })
-onMounted(() => {
-  aspectRatio.value = window.innerWidth / window.innerHeight
-  console.log(aspectRatio.value)
-  if (aspectRatio.value < 1) {
-    maxPage.value = 9
-  } else {
-    maxPage.value = 5
-  }
-})
-watch(() => {
+
+watchEffect(() => {
   if (!props.loading) {
     localData.value = props.data.slice(0, maxPage.value)
     pageCount.value = Math.ceil(props.data.length / maxPage.value)
@@ -91,7 +86,9 @@ watch(() => {
 
 const handleNewMax = (max) => {
   maxPage.value = max
+  emit('updateLimit', maxPage.value)
 }
+
 function handleClick(key) {
   const calcPage = key + (currentPage.value - 1) * maxPage.value
   props.onClick(calcPage)
@@ -99,6 +96,7 @@ function handleClick(key) {
 const handleNewPage = (newPage) => {
   localData.value = props.data.slice(maxPage.value * (newPage - 1), maxPage.value * newPage)
   currentPage.value = newPage
+  emit('updatePage', currentPage.value)
 }
 
 const handleHide = (key) => {
