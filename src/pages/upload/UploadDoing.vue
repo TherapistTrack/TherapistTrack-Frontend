@@ -14,11 +14,13 @@
               @lottie="handleAnimation"
             />
           </div>
-          <div class="line-container">
-            <DotLottieVue :src="animationPathLine" :autoplay="true" :loop="false" />
+          <div class="line-container" v-if="showLoader">
+            <div class="loader-wrapper">
+              <InfiniteLoading />
+            </div>
           </div>
           <div class="upload-text">
-            <p>Subiendo Archivos...</p>
+            <p>{{ uploadStatusText }}</p>
             <p>No cierres la App</p>
           </div>
         </div>
@@ -27,7 +29,7 @@
       <!-- Botón de acción -->
       <div class="actions">
         <ButtonSimple
-          msg="Finalizar"
+          msg="Continuar"
           color="blue"
           @click="goToFinish"
           :disabled="isButtonDisabled"
@@ -42,16 +44,18 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import { DotLottieVue } from '@lottiefiles/dotlottie-vue'
+import InfiniteLoading from '@/components/Feedback/InfiniteLoading/InfiniteLoading.vue'
 
 const router = useRouter()
 const animationInstance = ref(null)
 
 // Rutas a los archivos JSON
 const animationPathPlane = new URL('@/assets/animations/paper-airplane.json', import.meta.url).href
-const animationPathLine = new URL('@/assets/animations/loading-line.json', import.meta.url).href
 
 // Propiedad reactiva para controlar el estado del botón
 const isButtonDisabled = ref(true)
+const uploadStatusText = ref('Subiendo Archivos...')
+const showLoader = ref(true)
 
 function goToFinish() {
   router.push('/upload/finish')
@@ -61,17 +65,14 @@ function handleAnimation(anim) {
   animationInstance.value = anim
 }
 
-// Habilitar el botón después de la duración de la animación
+// Habilitar el botón después de 3 segundos
 onMounted(() => {
-  const totalFrames = 360
-  const frameRate = 30
-  const durationInSeconds = totalFrames / frameRate
-  const durationInMilliseconds = durationInSeconds * 1000
-
   setTimeout(() => {
     isButtonDisabled.value = false
-    console.log('El botón se ha habilitado después de la duración de la animación.')
-  }, durationInMilliseconds)
+    uploadStatusText.value = 'Archivos Subidos' // Actualizar el texto
+    showLoader.value = true // Ocultar el loader (opcional)
+    console.log('El botón se ha habilitado y el texto ha cambiado después de 3 segundos.')
+  }, 3000) // 3000 milisegundos = 3 segundos
 })
 </script>
 
@@ -122,10 +123,19 @@ onMounted(() => {
 }
 
 .line-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   width: 100%;
-  max-width: 150px;
-  margin: -40px 0 0 0;
+  margin: 0;
   padding: 0;
+  margin-bottom: 20px;
+}
+
+.loader-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .airplane-container .dotlottie-player,
