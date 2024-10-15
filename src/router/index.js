@@ -91,19 +91,20 @@ const router = createRouter({
           component: () => import('@/pages/record/RecordView.vue'),
           children: [
             {
-              path: 'edit/:id',
+              path: 'edit/:recordId',
               component: () => import('@/pages/record/EditRecord.vue'),
               props: (route) => ({
-                userId: route.params.id, // Pass id from route parameters
-                data: Object
+                recordId: route.params.id, // Pass id from route parameters
+                viewData: Object,
+                allData: Object
               })
             },
             {
-              path: 'view/:id',
+              path: 'view/:recordId',
               component: () => import('@/pages/record/ViewRecord.vue'),
               props: (route) => ({
-                userId: route.params.id, // Pass id from route parameters
-                data: Object
+                recordId: route.params.id, // Pass id from route parameters
+                viewData: Object
               })
             },
             {
@@ -132,23 +133,15 @@ const router = createRouter({
     // UPLOAD VIEW
     {
       path: '/upload',
-      component: () => import('@/pages/upload/UploadFiles.vue')
+      component: () => import('@/pages/notfound/NotFoundView.vue')
     },
     {
-      path: '/upload/select',
-      component: () => import('@/pages/upload/UploadSelect.vue')
+      path: '/upload/prepare',
+      component: () => import('@/pages/notfound/NotFoundView.vue')
     },
     {
-      path: '/upload/form',
-      component: () => import('@/pages/upload/UploadForm.vue')
-    },
-    {
-      path: '/upload/doing',
-      component: () => import('@/pages/upload/UploadDoing.vue')
-    },
-    {
-      path: '/upload/finish',
-      component: () => import('@/pages/upload/UploadFinish.vue')
+      path: '/upload/waiting',
+      component: () => import('@/pages/notfound/NotFoundView.vue')
     },
 
     // NOT FOUND PAGE

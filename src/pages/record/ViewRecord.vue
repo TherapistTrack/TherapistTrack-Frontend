@@ -1,9 +1,9 @@
 <template>
-  <div class="overlayContainer" @click="goBack()" :id="start ? 'init' : 'end'">
+  <div v-if="ready" class="overlayContainer" @click="goBack()" :id="start ? 'init' : 'end'">
     <div class="view-record" @click.stop="" :id="start ? 'init' : 'end'">
       <div class="top">
         <h1>
-          <b>{{ localData[props.id].nombre }}<br />{{ localData[props.id].apellido }}</b>
+          <b>{{ userData['Nombre'] }}<br />{{ userData['Apellido'] }}</b>
         </h1>
         <RiCloseLine
           class-name="icon"
@@ -19,18 +19,18 @@
           size="1.5rem"
           color="var(--gray-1)"
           alt="edit"
-          @click="handleOpenEdit(props.id)"
+          @click="handleOpenEdit()"
         />
         <RiDeleteBin7Fill
           class-name="act-delete"
           size="1.5rem"
           color="var(--gray-1)"
           alt="delete"
-          @click="handleDelete(props.id)"
+          @click="handleDelete(props.userId)"
         />
       </div>
       <div class="mid">
-        <SimpleTable :data="localData[props.id]" :headers="headers" />
+        <SimpleTable :data="userData" :headers="userHeaders" :isSet="true" />
       </div>
 
       <div class="bottom">
@@ -38,10 +38,13 @@
       </div>
     </div>
   </div>
+  <div v-else>asdasdasd</div>
   <AlertDelete
     v-if="tryDelete"
-    :name="`${props.data[props.id].nombre} ${props.data[props.id].apellido}`"
+    :name="`${userData['Nombre']} ${userData['Apellidos']}`"
     :on-no="abortDelete"
+    :on-yes="onDelete"
+    :type="'record'"
   />
 </template>
 
@@ -53,29 +56,27 @@ import SimpleTable from '@/components/DataDisplay/Tables/SimpleTable.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import AlertDelete from '@/components/Feedback/Alerts/AlertDelete.vue'
 
+const ready = ref(false)
 const start = ref(false)
 const router = useRouter()
-const localData = ref(null)
+const userData = ref(null)
+const userHeaders = ref([])
 const tryDelete = ref(false)
 const props = defineProps({
-  id: String,
-  data: Object
+  recordId: String,
+  viewData: Object
 })
-localData.value = props.data
+
+const emit = defineEmits(['updateData', 'openEdit'])
 
 onMounted(() => {
+  userData.value = props.viewData.filter((item) => item['Record ID'] === props.recordId)[0]
+  userHeaders.value = Object.keys(userData.value)
+
+  ready.value = true
   setTimeout(() => {
     start.value = true
   }, 2) // You can adjust the delay if needed
-})
-
-const headers = ref({
-  nombre: 'Nombre',
-  apellido: 'Apellidos',
-  ultimaAct: 'Ultima Actualización',
-  nacimiento: 'Nacimiento',
-  estadoCivil: 'Estado Civil',
-  nombrePareja: 'Nombre de Pareja'
 })
 
 const goBack = () => {
@@ -88,15 +89,22 @@ const goBack = () => {
 const handleDelete = (id) => {
   // Deleting based on the id
   console.log(id)
-  tryDelete.value = !tryDelete.value
+  tryDelete.value = true
 }
 const abortDelete = () => {
   tryDelete.value = false
 }
+
+const onDelete = () => {
+  console.log('SE ELIMINA')
+  tryDelete.value = false
+  goBack()
+}
+
 const handleOpenEdit = () => {
   start.value = false
   setTimeout(() => {
-    router.push(`/record/main/edit/${props.id}`)
+    emit('openEdit')
   }, 250) // You can adjust the delay if needed
 }
 </script>
@@ -168,8 +176,11 @@ const handleOpenEdit = () => {
 }
 .view-record .mid {
   padding: 1rem;
-  height: 360px;
+  height: 385px;
   overflow-y: auto;
+}
+.view-record .mid * {
+  font-size: 0.8rem;
 }
 
 .view-record .bottom {
@@ -178,5 +189,14 @@ const handleOpenEdit = () => {
   width: 100%;
   display: flex;
   justify-content: end;
+}
+
+@media (max-aspect-ratio: 1/1) {
+  .view-record {
+    width: 280px;
+  }
+  .view-record .mid {
+    height: 65vh;
+  }
 }
 </style>

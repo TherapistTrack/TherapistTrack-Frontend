@@ -1,6 +1,6 @@
 <template>
   <div class="select-group">
-    <label :for="id">{{ label }}</label>
+    <label :for="id" v-if="label !== ''">{{ label }}</label>
     <select :id="id" :value="modelValue" @change="updateValue">
       <option disabled value="">{{ disabledValue }}</option>
       <option v-for="(item, index) in options" :key="index" :value="item">{{ item }}</option>
@@ -26,7 +26,7 @@ defineProps({
   },
   label: {
     type: String,
-    required: true
+    default: ''
   },
   disabledValue: {
     type: String,

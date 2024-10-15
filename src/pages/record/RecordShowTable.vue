@@ -2,28 +2,47 @@
   <div class="table-overlayContainer" @click="goBack()" :id="start ? 'init' : 'end'">
     <div class="table-settings" @click.stop="" :id="start ? 'init' : 'end'">
       <div class="top">
-        <SearchBar :pholder="'Buscar por Nombre'" />
+        <SearchBar :pholder="'Buscar por Nombre'" v-model:search-value="search" />
       </div>
+      <p class="title">Mostrar en la tabla</p>
       <div class="do-show">
-        <p class="title">Mostrar en la tabla</p>
-        <div v-for="(item, key) in localShownHeaders" :key="key" class="active-field">
+        <div
+          v-for="(item, key) in localShownHeaders"
+          :key="key"
+          class="active-field"
+          :draggable="false"
+          @dragstart="handleDragStart(key)"
+          @dragover.prevent=""
+          @drop="handleDrop(key)"
+          @dragend="handleDragEnd"
+        >
           <span>
-            <RiDraggable color="var(--gray-1)" size="1.3rem" />
+            <RiDraggable
+              class="drag-icon"
+              @mousedown="enableDrag"
+              @mouseleave="disableDrag"
+              color="var(--gray-1)"
+              size="1.3rem"
+            />
             <p>{{ item }}</p>
           </span>
-          <RiEyeFill color="var(--gray-1)" size="1.1rem" @click="deactivateField(key)" />
+          <RiEyeFill
+            class="see-icon"
+            color="var(--gray-1)"
+            size="1.1rem"
+            @click="deactivateField(item)"
+          />
         </div>
       </div>
-
+      <p class="title">Ocultar en la Tabla</p>
       <div class="no-show">
-        <p class="title">Ocultar en la Tabla</p>
         <template v-for="(item, key) in props.allHeaders" :key="key">
-          <div v-if="!Object.keys(localShownHeaders).includes(key)" class="inactive-field">
+          <div v-if="!Object.values(localShownHeaders).includes(item)" class="inactive-field">
             <span>
               <RiDraggable color="var(--gray-1)" size="1.3rem" />
               <p>{{ item }}</p>
             </span>
-            <RiEyeOffFill color="var(--gray-2)" size="1.1rem" @click="activateField(key)" />
+            <RiEyeOffFill color="var(--gray-2)" size="1.1rem" @click="activateField(item)" />
           </div>
         </template>
       </div>
@@ -41,10 +60,33 @@ const props = defineProps({
   shownHeaders: Object
 })
 
-const start = ref(false)
-const router = useRouter()
-const localShownHeaders = ref({ ...props.shownHeaders })
+const emit = defineEmits(['update:shownHeaders'])
 
+const start = ref(false)
+const search = ref('')
+const router = useRouter()
+const localShownHeaders = ref(props.shownHeaders)
+const draggedItem = ref(null)
+
+const handleDragStart = (key) => {
+  draggedItem.value = key
+}
+
+const handleDrop = (key) => {
+  const droppedItem = localShownHeaders.value.splice(draggedItem.value, 1)[0]
+  localShownHeaders.value.splice(key, 0, droppedItem)
+}
+
+const handleDragEnd = () => {
+  draggedItem.value = null
+}
+const enableDrag = (event) => {
+  event.target.closest('.active-field').setAttribute('draggable', 'true')
+}
+
+const disableDrag = (event) => {
+  event.target.closest('.active-field').setAttribute('draggable', 'false')
+}
 onMounted(() => {
   setTimeout(() => {
     start.value = true
@@ -58,19 +100,18 @@ const goBack = () => {
   }, 250) // You can adjust the delay if needed
 }
 
-const deactivateField = (key) => {
-  delete localShownHeaders.value[key]
+const deactivateField = (field) => {
+  localShownHeaders.value.splice(localShownHeaders.value.indexOf(field), 1)
   updateShownHeaders()
 }
 
-const activateField = (key) => {
-  if (!localShownHeaders.value[key]) {
-    localShownHeaders.value[key] = props.allHeaders[key]
+const activateField = (field) => {
+  if (!localShownHeaders.value.includes(field)) {
+    localShownHeaders.value.push(field)
+    updateShownHeaders()
   }
-  updateShownHeaders()
 }
 // Emiting change for shown headers:
-const emit = defineEmits(['update:shownHeaders'])
 const updateShownHeaders = () => {
   emit('update:shownHeaders', localShownHeaders.value)
 }
@@ -104,6 +145,7 @@ const updateShownHeaders = () => {
 }
 .table-overlayContainer .title {
   color: var(--gray-1);
+  margin-top: 1rem;
 }
 
 .table-settings {
@@ -114,7 +156,7 @@ const updateShownHeaders = () => {
   overflow-y: auto;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   border-radius: 2vh 0 0 0;
-  width: 220px;
+  width: 270px;
   height: 80vh;
   padding: 1.5rem;
   transition: right 0.3s;
@@ -135,10 +177,10 @@ const updateShownHeaders = () => {
 /* Areas */
 .table-settings .do-show,
 .table-settings .no-show {
-  padding-top: 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
+  overflow-y: scroll;
 }
 
 /* Draggable Fields */
@@ -152,6 +194,13 @@ const updateShownHeaders = () => {
   transition: height 1s;
   padding: 0.1rem;
   padding-right: 0.4rem;
+}
+
+.table-settings .active-field .drag-icon {
+  cursor: grab;
+}
+.table-settings .active-field .see-icon {
+  cursor: pointer;
 }
 
 .table-settings .active-field:hover,

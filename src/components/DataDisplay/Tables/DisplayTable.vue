@@ -1,87 +1,153 @@
 <template>
-  <div class="table-container">
-    <div class="header-row">
-      <span
-        class="header-item"
-        :class="item === '...' ? 'special-header' : 'header-item'"
-        v-for="(item, key) in headers"
-        :key="key"
-      >
-        <p v-if="item == '...'" @click="handleClick()">
-          {{ item }}
-        </p>
-        <p v-else>
-          {{ item }}
-        </p>
-      </span>
-    </div>
-    <div class="table-scrollable">
-      <div v-if="loading">
-        <DataLoader />
-      </div>
-      <div v-else-if="!success" class="failed">
-        <RiAlertFill color="var(--gray-2)" size="1.5rem" />
-        <p>Oops... algo salio mal</p>
-      </div>
-
-      <div
-        v-else
-        class="table-row"
-        v-for="(item, key) in data"
-        :key="key"
-        @click="handleClick(key)"
-      >
-        <p
-          :class="elem === 'moreSettings' ? 'special' : 'table-item'"
-          v-for="(elem, key) in Object.keys(headers)"
+  <div class="table-component">
+    <div class="table-container">
+      <div class="header-row">
+        <span
+          class="header-item"
+          @contextmenu.prevent="handleRightClick(item)"
+          v-for="(item, key) in headers"
           :key="key"
         >
-          {{ item[elem] }}
-        </p>
+          <HideButton
+            v-if="headerHide[item]"
+            :on-click-outside="hideAll"
+            :on-click="() => handleHide(item)"
+          />
+          <p>
+            {{ item }}
+          </p>
+        </span>
+      </div>
+      <div class="table-scrollable">
+        <div v-if="loading">
+          <DataLoader />
+        </div>
+        <div v-else-if="!success" class="failed">
+          <RiAlertFill color="var(--gray-2)" size="1.5rem" />
+          <p>Oops... algo salio mal</p>
+        </div>
+
+        <div
+          v-else
+          class="table-row"
+          v-for="(item, key) in localData"
+          :key="key"
+          @click="handleClick(key)"
+        >
+          <p class="table-item" v-for="(elem, key) in headers" :key="key">
+            {{ item[elem] }}
+          </p>
+        </div>
       </div>
     </div>
+    <TablePageButton
+      :page-count="pageCount"
+      v-model:current-page="currentPage"
+      :max-page="maxPage"
+      @updateCurrentPage="handleNewPage"
+      @updateMax="handleNewMax"
+    />
   </div>
 </template>
 
 <script setup>
 import DataLoader from '@/components/Feedback/Spinner/DataLoader.vue'
 import { RiAlertFill } from '@remixicon/vue'
+import HideButton from '@/components/Buttons/HideButton.vue'
+import { ref, watchEffect } from 'vue'
+import TablePageButton from '@/components/Buttons/TablePageButton.vue'
+const emit = defineEmits(['hideHeader', 'updateLimit', 'updatePage'])
 const props = defineProps({
   loading: Boolean,
   onClick: Function,
   data: Object,
-  headers: Object,
-  success: Boolean
+  headers: Array,
+  success: Boolean,
+  currentPage: Number,
+  pageLimit: Number
 })
+
+const localData = ref(null)
+const headerHide = ref({})
+const pageCount = ref(1)
+const currentPage = ref(props.currentPage)
+const maxPage = ref(props.pageLimit)
+
+props.headers.map((value) => {
+  headerHide.value[value] = false
+})
+
+watchEffect(() => {
+  if (!props.loading) {
+    localData.value = props.data.slice(0, maxPage.value)
+    pageCount.value = Math.ceil(props.data.length / maxPage.value)
+  }
+})
+
+const handleNewMax = (max) => {
+  maxPage.value = max
+  emit('updateLimit', maxPage.value)
+}
+
 function handleClick(key) {
-  props.onClick(key)
+  const calcPage = key + (currentPage.value - 1) * maxPage.value
+  props.onClick(calcPage)
+}
+const handleNewPage = (newPage) => {
+  localData.value = props.data.slice(maxPage.value * (newPage - 1), maxPage.value * newPage)
+  currentPage.value = newPage
+  emit('updatePage', currentPage.value)
+}
+
+const handleHide = (key) => {
+  hideAll()
+  emit('hideHeader', key)
+}
+
+const hideAll = () => {
+  for (let head in headerHide.value) {
+    headerHide.value[head] = false
+  }
+}
+
+const handleRightClick = (key) => {
+  if (Object.values(headerHide.value).includes(true)) {
+    hideAll()
+    headerHide.value[key] = !headerHide.value[key]
+  } else {
+    headerHide.value[key] = !headerHide.value[key]
+  }
 }
 </script>
 
-<style>
+<style scoped>
+.table-component {
+  display: grid;
+}
 .table-container {
   display: flex;
   flex-direction: column;
   font-family: 'MotivaSansLighter';
   /* Two columns */
   font-size: 2vh;
+  overflow-x: scroll;
 }
 
 .table-container .header-row,
 .table-container .table-row {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-auto-flow: column;
 }
 
 .table-container .header-row {
-  border-top: 0.2vh solid #ccc;
+  /* border-top: 0.2vh solid #ccc; */
   color: var(--gray-1);
 }
 
 .table-container .table-scrollable {
   max-height: 50vh;
-  overflow: auto;
 }
 .table-container .table-row {
   color: var(--black);
@@ -90,27 +156,30 @@ function handleClick(key) {
 
 .table-container .header-item,
 .table-container .table-item {
+  min-width: 120px;
   padding: 0.5rem;
   border-bottom: 0.2vh solid #ccc;
 }
 
 .table-container .header-item {
   color: var(--gray-1);
+  position: relative;
 }
 
 .table-container .table-item {
   color: var(--black);
   font-weight: bold;
   transition: background-color 0.1s;
+  overflow-x: hidden;
+  overflow-y: initial;
+  text-overflow: ellipsis;
+  max-height: 40px;
 }
 
 .table-item + .table-item {
   border-left: 1px solid #ccc;
 }
 
-.table-container .special {
-  border-left: 1px solid #ccc;
-}
 .table-container .failed {
   display: flex;
   gap: 1rem;
@@ -121,16 +190,6 @@ function handleClick(key) {
 
 .table-container .table-row:hover .table-item {
   background-color: var(--yellow-2);
-  cursor: pointer;
-}
-
-.special-header {
-  transition: background-color 0.1s;
-}
-
-.special:hover,
-.special-header:hover {
-  background-color: var(--light-blue-1);
   cursor: pointer;
 }
 </style>

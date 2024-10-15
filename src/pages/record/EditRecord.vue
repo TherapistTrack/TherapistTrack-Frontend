@@ -1,9 +1,9 @@
 <template>
-  <div class="overlayContainer" @click="goBack()" :id="start ? 'init' : 'end'">
+  <div v-if="ready" class="overlayContainer" @click="goBack()" :id="start ? 'init' : 'end'">
     <div class="view-record" @click.stop="" :id="start ? 'init' : 'end'">
       <div class="top">
         <h1>
-          <b>{{ localData[props.id].nombre }}<br />{{ localData[props.id].apellido }}</b>
+          <b>{{ userData['Nombre'] }} </b>
         </h1>
         <RiCloseLine
           class-name="icon"
@@ -13,43 +13,43 @@
           @click="goBack()"
         />
       </div>
-      <div class="actions">
-        <RiDeleteBin7Fill
-          class-name="act-delete"
-          size="1.5rem"
-          color="var(--gray-1)"
-          alt="delete"
-          @click="handleDelete(props.id)"
-        />
-      </div>
       <div class="mid">
-        <InputField
-          :label="'Nombres'"
-          :id="'nombres'"
-          v-model:model-value="localData[props.id].nombre"
-        />
-        <InputField
-          :label="'Apellidos'"
-          :id="'apellidos'"
-          v-model:model-value="localData[props.id].apellido"
-        />
-        <InputField
-          :label="'Ultima Actualización'"
-          :id="'ultimaAct'"
-          v-model:model-value="localData[props.id].ultimaAct"
-          :type="'date'"
-        />
-        <InputField
-          :label="'Fecha de Nacimiento'"
-          :id="'nacimiento'"
-          v-model:model-value="localData[props.id].nacimiento"
-          :type="'date'"
-        />
-        <InputField
-          :label="'Estado Civil'"
-          :id="'estadoCivil'"
-          v-model:model-value="localData[props.id].estadoCivil"
-        />
+        <span v-for="header in userHeaders" :key="header">
+          <span v-if="fieldInfo[header].options !== null">
+            <span v-if="fieldInfo[header].required">
+              <SelectDropDownRequired
+                :label="header"
+                :disabled-value="'Escoga una opción'"
+                :model-value="userData[header]"
+                :options="fieldInfo[header].options"
+              />
+            </span>
+            <span v-else>
+              <SelectDropDown
+                :label="header"
+                :disabled-value="'Escoga una opción'"
+                :model-value="userData[header]"
+                :options="fieldInfo[header].options"
+              />
+            </span>
+          </span>
+          <span v-else>
+            <span v-if="fieldInfo[header].required">
+              <InputFieldRequired
+                :label="header"
+                :model-value="userData[header]"
+                :type="fieldInfo[header].type"
+              />
+            </span>
+            <span v-else>
+              <InputField
+                :label="header"
+                :model-value="userData[header]"
+                :type="fieldInfo[header].type"
+              />
+            </span>
+          </span>
+        </span>
       </div>
 
       <div class="bottom">
@@ -57,32 +57,59 @@
       </div>
     </div>
   </div>
-  <AlertDelete
-    v-if="tryDelete"
-    :name="`${props.data[props.id].nombre} ${props.data[props.id].apellido}`"
-    :on-no="abortDelete"
-  />
 </template>
 
 <script setup>
-import { RiCloseLine, RiDeleteBin7Fill } from '@remixicon/vue'
+import { RiCloseLine } from '@remixicon/vue'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import InputField from '@/components/Forms/InputField/InputField.vue'
+import InputFieldRequired from '@/components/Forms/InputField/InputFieldRequired.vue'
+import SelectDropDown from '@/components/Forms/SelectDropDown/SelectDropDown.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
-import AlertDelete from '@/components/Feedback/Alerts/AlertDelete.vue'
 
-const tryDelete = ref(false)
+import SelectDropDownRequired from '@/components/Forms/SelectDropDown/SelectDropDownRequired.vue'
+
 const start = ref(false)
 const router = useRouter()
-const localData = ref(null)
 const props = defineProps({
-  id: String,
-  data: Object
+  recordId: String,
+  viewData: Object,
+  allData: Object
 })
-localData.value = props.data
+const ready = ref(false)
 
+const userData = ref(null)
+const userHeaders = ref([])
+
+const fieldInfo = ref({})
+
+const getFieldInfo = () => {
+  const temInfo = ref({})
+
+  const tem = ref(null)
+  for (let record in props.allData) {
+    let recordFields = props.allData[record].fields
+    if (recordFields[0].value === props.recordId) {
+      tem.value = props.allData[record].fields
+      break
+    }
+  }
+  for (let field in tem.value) {
+    temInfo.value[tem.value[field].name] = {
+      type: tem.value[field].type,
+      value: tem.value[field].value,
+      required: tem.value[field].required,
+      options: tem.value[field].options || null
+    }
+  }
+  return temInfo.value
+}
 onMounted(() => {
+  userData.value = props.viewData.filter((item) => item['Record ID'] === props.recordId)[0]
+  userHeaders.value = Object.keys(userData.value)
+  ready.value = true
+  fieldInfo.value = getFieldInfo()
   setTimeout(() => {
     start.value = true
   }, 2) // You can adjust the delay if needed
@@ -94,14 +121,6 @@ const goBack = () => {
     router.back()
     router.back()
   }, 250) // You can adjust the delay if needed
-}
-const handleDelete = (id) => {
-  // Deleting based on the id
-  console.log(id)
-  tryDelete.value = !tryDelete.value
-}
-const abortDelete = () => {
-  tryDelete.value = false
 }
 </script>
 
@@ -165,11 +184,6 @@ const abortDelete = () => {
   justify-content: space-between;
   padding-bottom: 1rem;
 }
-.view-record .actions {
-  display: flex;
-  gap: 1.5rem;
-  padding-bottom: 1rem;
-}
 .view-record .mid {
   padding: 1rem;
   height: 360px;
@@ -182,5 +196,14 @@ const abortDelete = () => {
   width: 100%;
   display: flex;
   justify-content: end;
+}
+
+@media (max-aspect-ratio: 1/1) {
+  .view-record {
+    width: 280px;
+  }
+  .view-record .mid {
+    height: 65vh;
+  }
 }
 </style>

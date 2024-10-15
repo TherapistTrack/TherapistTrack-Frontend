@@ -18,12 +18,13 @@
         <ButtonSimple msg="Nuevo" @click="showCreateModal" />
       </div>
 
-      <DisplayTable
+      <SetDisplayTable
         :loading="loading"
         :data="filteredFiles"
         :headers="tableHeaders"
+        :success="true"
         @rowClick="handleFileClick"
-      ></DisplayTable>
+      ></SetDisplayTable>
 
       <!-- Modal para crear un nuevo archivo -->
       <CreateTemplate
@@ -41,8 +42,8 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import SearchBar from '@/components/Forms/InputField/SearchBar.vue'
-import DisplayTable from '@/components/DataDisplay/Tables/DisplayTable.vue'
 import CreateTemplate from '@/components/Feedback/Modals/CreateTemplate.vue'
+import SetDisplayTable from '@/components/DataDisplay/Tables/SetDisplayTable.vue'
 
 const router = useRouter()
 
