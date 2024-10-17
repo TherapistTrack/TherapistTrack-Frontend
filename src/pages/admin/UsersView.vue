@@ -71,8 +71,7 @@ watch(search, () => {
 })
 headers.value = {
   names: 'Nombre',
-  lastNames: 'Apellidos',
-  rol: 'Rol'
+  role: 'Rol'
 }
 
 const getCurrentUser = async () => {
