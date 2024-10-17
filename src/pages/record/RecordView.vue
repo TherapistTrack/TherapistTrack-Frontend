@@ -25,6 +25,7 @@
       <DisplayTable
         :data="processedData"
         :headers="shownHeaders"
+        :fields="templateFields"
         v-model:loading="loading"
         v-model:page-limit="pageLimit"
         v-model:current-page="currentPage"
@@ -37,6 +38,7 @@
       <ConfigButton :onClick="handleTableSettings" />
     </div>
   </div>
+  <object :data="shortText" class="icon" />
 </template>
 
 <script setup>
@@ -48,6 +50,7 @@ import ConfigButton from '@/components/Buttons/ConfigButton.vue'
 import FilterTable from '@/components/DataDisplay/Tables/Filter/FilterTable.vue'
 import records from './records.json'
 import { useAuth0 } from '@auth0/auth0-vue'
+
 // Constants
 const auth0 = useAuth0()
 const router = useRouter()
@@ -179,7 +182,7 @@ onMounted(async () => {
   // Convert fetched data into working object
   processedData.value = convertToObject(records)
   loading.value = false
-
+  console.log(templateFields.value)
   return fetchedData
 })
 
@@ -231,6 +234,11 @@ const handleNewRecord = () => {
 
 .sideSpace#max {
   width: 200px;
+}
+
+.icon {
+  height: 1rem;
+  width: 1rem;
 }
 
 /* Media tags */

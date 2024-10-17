@@ -38,7 +38,7 @@
       </div>
     </div>
   </div>
-  <div v-else>asdasdasd</div>
+
   <AlertDelete
     v-if="tryDelete"
     :name="`${userData['Nombre']} ${userData['Apellidos']}`"
