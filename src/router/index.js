@@ -130,6 +130,18 @@ const router = createRouter({
       component: () => import('@/pages/notfound/NotFoundView.vue')
     },
 
+    // FILE VIEW
+    {
+      path: '/file',
+      component: () => import('@/pages/file/FileIndex.vue'),
+      children: [
+        {
+          path: 'view/:id',
+          component: () => import('@/pages/file/ViewFile.vue')
+        }
+      ]
+    },
+
     // UPLOAD VIEW
     {
       path: '/upload',
