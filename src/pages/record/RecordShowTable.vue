@@ -26,25 +26,49 @@
             />
             <p>{{ item }}</p>
           </span>
-          <RiEyeFill
-            class="see-icon"
-            color="var(--gray-1)"
-            size="1.1rem"
-            @click="deactivateField(item)"
-          />
+          <span>
+            <TypeIconLoader :iconType="fields[item].type" />
+            <!-- <object class="icon" :data="typeIconTranslate[fields[item].type]" /> -->
+            <RiEyeFill
+              class="see-icon"
+              color="var(--gray-1)"
+              size="1.1rem"
+              @click="deactivateField(item)"
+            />
+          </span>
         </div>
       </div>
-      <p class="title">Ocultar en la Tabla</p>
       <div class="no-show">
-        <template v-for="(item, key) in props.allHeaders" :key="key">
+        <span
+          v-for="type in ['SHORT_TEXT', 'TEXT', 'CHOICE', 'DATE', 'NUMBER', 'FLOAT']"
+          :key="type"
+        >
+          <div class="type-title">
+            <p>{{ titleTranslate[type] }}</p>
+            <TypeIconLoader :icon-type="type" />
+          </div>
+          <span
+            v-for="(item, key) in allHeaders.filter(
+              (item) =>
+                fields[item].type == type && !Object.values(localShownHeaders).includes(item)
+            )"
+            :key="key"
+          >
+            <div class="inactive-field">
+              <p>{{ item }}</p>
+              <RiEyeOffFill color="var(--gray-2)" size="1.1rem" @click="activateField(item)" />
+            </div>
+          </span>
+        </span>
+
+        <!-- <template v-for="(item, key) in props.allHeaders" :key="key">
           <div v-if="!Object.values(localShownHeaders).includes(item)" class="inactive-field">
             <span>
-              <RiDraggable color="var(--gray-1)" size="1.3rem" />
               <p>{{ item }}</p>
             </span>
             <RiEyeOffFill color="var(--gray-2)" size="1.1rem" @click="activateField(item)" />
           </div>
-        </template>
+        </template> -->
       </div>
     </div>
   </div>
@@ -55,9 +79,11 @@ import { RiEyeFill, RiEyeOffFill, RiDraggable } from '@remixicon/vue'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import SearchBar from '@/components/Forms/InputField/SearchBar.vue'
+import TypeIconLoader from '@/assets/TypeIcons/TypeIconLoader.vue'
 const props = defineProps({
   allHeaders: Object,
-  shownHeaders: Object
+  shownHeaders: Object,
+  fields: Object
 })
 
 const emit = defineEmits(['update:shownHeaders'])
@@ -67,6 +93,14 @@ const search = ref('')
 const router = useRouter()
 const localShownHeaders = ref(props.shownHeaders)
 const draggedItem = ref(null)
+const titleTranslate = ref({
+  TEXT: 'Texto',
+  SHORT_TEXT: 'Texto Corto',
+  DATE: 'Fecha',
+  CHOICE: 'Selección',
+  NUMBER: 'Numero',
+  FLOAT: 'Decimal'
+})
 
 const handleDragStart = (key) => {
   draggedItem.value = key
@@ -118,6 +152,17 @@ const updateShownHeaders = () => {
 </script>
 
 <style>
+.type-title {
+  margin-top: 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  border-bottom: 1px solid var(--gray-3);
+  margin-bottom: 0.5rem;
+}
+.type-title p {
+  color: var(--gray-1);
+}
 .table-overlayContainer {
   height: 100%;
   width: 100%;
@@ -156,8 +201,8 @@ const updateShownHeaders = () => {
   overflow-y: auto;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   border-radius: 2vh 0 0 0;
-  width: 270px;
-  height: 80vh;
+  width: 290px;
+  height: 85vh;
   padding: 1.5rem;
   transition: right 0.3s;
 }
@@ -181,6 +226,9 @@ const updateShownHeaders = () => {
   flex-direction: column;
   gap: 0.3rem;
   overflow-y: scroll;
+}
+.no-show {
+  margin-top: 1rem;
 }
 
 /* Draggable Fields */
@@ -212,5 +260,13 @@ const updateShownHeaders = () => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.inactive-field {
+  margin-left: 1rem;
+}
+.icon {
+  height: 0.9rem;
+  width: 0.9rem;
 }
 </style>

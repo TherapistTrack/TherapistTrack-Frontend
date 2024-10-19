@@ -2,6 +2,7 @@
   <router-view
     :recordId="selected"
     :viewData="processedData"
+    :fields="templateFields"
     v-model:shownHeaders="shownHeaders"
     :allHeaders="allHeaders"
     :allData="fetchedData"
@@ -38,7 +39,6 @@
       <ConfigButton :onClick="handleTableSettings" />
     </div>
   </div>
-  <object :data="shortText" class="icon" />
 </template>
 
 <script setup>
@@ -237,8 +237,8 @@ const handleNewRecord = () => {
 }
 
 .icon {
-  height: 1rem;
-  width: 1rem;
+  height: 5rem;
+  width: 5rem;
 }
 
 /* Media tags */

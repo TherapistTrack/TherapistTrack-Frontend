@@ -13,7 +13,7 @@
             :on-click-outside="hideAll"
             :on-click="() => handleHide(item)"
           />
-          <object class="icon" :data="typeIconTranslate[fields[item].type]" />
+          <TypeIconLoader :icon-type="fields[item].type" />
           <p>
             {{ item }}
           </p>
@@ -57,13 +57,7 @@ import { RiAlertFill } from '@remixicon/vue'
 import HideButton from '@/components/Buttons/HideButton.vue'
 import { ref, watchEffect } from 'vue'
 import TablePageButton from '@/components/Buttons/TablePageButton.vue'
-import shortTextIcon from '@/assets/TypeIcons/SHORT_TEXT.svg'
-import textIcon from '@/assets/TypeIcons/TEXT.svg'
-import choiceIcon from '@/assets/TypeIcons/CHOICE.svg'
-import dateIcon from '@/assets/TypeIcons/DATE.svg'
-import numberIcon from '@/assets/TypeIcons/NUMBER.svg'
-import floatIcon from '@/assets/TypeIcons/FLOAT.svg'
-
+import TypeIconLoader from '@/assets/TypeIcons/TypeIconLoader.vue'
 const emit = defineEmits(['hideHeader', 'updateLimit', 'updatePage'])
 const props = defineProps({
   loading: Boolean,
@@ -83,14 +77,6 @@ const currentPage = ref(props.currentPage)
 const maxPage = ref(props.pageLimit)
 props.headers.map((value) => {
   headerHide.value[value] = false
-})
-const typeIconTranslate = ref({
-  SHORT_TEXT: shortTextIcon,
-  TEXT: textIcon,
-  CHOICE: choiceIcon,
-  NUMBER: numberIcon,
-  DATE: dateIcon,
-  FLOAT: floatIcon
 })
 
 watchEffect(() => {
@@ -181,8 +167,7 @@ const handleRightClick = (key) => {
   color: var(--gray-1);
   position: relative;
   display: flex;
-  align-items: center;
-  gap: 0.3rem;
+  gap: 0.5rem;
 }
 
 .table-container .table-item {
@@ -210,9 +195,5 @@ const handleRightClick = (key) => {
 .table-container .table-row:hover .table-item {
   background-color: var(--yellow-2);
   cursor: pointer;
-}
-.icon {
-  height: 0.9rem;
-  width: 0.9rem;
 }
 </style>
