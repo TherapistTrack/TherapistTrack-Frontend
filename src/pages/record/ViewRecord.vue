@@ -30,7 +30,13 @@
         />
       </div>
       <div class="mid">
-        <SimpleTable :data="userData" :headers="userHeaders" :isSet="true" />
+        <SimpleTable
+          :data="userData"
+          :headers="userHeaders"
+          :isSet="true"
+          :has-type="true"
+          :fields="fields"
+        />
       </div>
 
       <div class="bottom">
@@ -64,7 +70,8 @@ const userHeaders = ref([])
 const tryDelete = ref(false)
 const props = defineProps({
   recordId: String,
-  viewData: Object
+  viewData: Object,
+  fields: Object
 })
 
 const emit = defineEmits(['updateData', 'openEdit'])
@@ -82,7 +89,7 @@ onMounted(() => {
 const goBack = () => {
   start.value = false
   setTimeout(() => {
-    router.back()
+    router.push('/record/main')
   }, 250) // You can adjust the delay if needed
 }
 
@@ -141,6 +148,9 @@ const handleOpenEdit = () => {
   height: 100vh;
   padding: 2rem;
   transition: right 0.3s;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 .view-record#init {
   right: 0;
@@ -167,7 +177,7 @@ const handleOpenEdit = () => {
 .view-record .top {
   display: flex;
   justify-content: space-between;
-  padding-bottom: 1rem;
+  padding-bottom: 0.3rem;
 }
 .view-record .actions {
   display: flex;

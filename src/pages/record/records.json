@@ -77,7 +77,7 @@
         "type": "CHOICE",
         "options": ["Soltero", "Casado", "Separado"],
         "value": "Casado",
-        "required": false
+        "required": true
       },
       {
         "name": "Fecha de Nacimiento",

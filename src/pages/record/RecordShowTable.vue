@@ -130,7 +130,7 @@ onMounted(() => {
 const goBack = () => {
   start.value = false
   setTimeout(() => {
-    router.back()
+    router.push('/record/main')
   }, 250) // You can adjust the delay if needed
 }
 

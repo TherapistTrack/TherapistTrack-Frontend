@@ -1,6 +1,9 @@
 <template>
   <div class="select-group">
-    <label :for="id" v-if="label !== ''">{{ label }}</label>
+    <label :for="id" v-if="label !== ''">
+      <TypeIconLoader :icon-type="'CHOICE'" />
+      <p>{{ label }}</p>
+    </label>
     <select :id="id" :value="modelValue" @change="updateValue">
       <option disabled value="">{{ disabledValue }}</option>
       <option v-for="(item, index) in options" :key="index" :value="item">{{ item }}</option>
@@ -9,6 +12,7 @@
 </template>
 
 <script setup>
+import TypeIconLoader from '@/assets/TypeIcons/TypeIconLoader.vue'
 const emit = defineEmits(['update:modelValue'])
 
 const updateValue = (event) => {
@@ -35,27 +39,35 @@ defineProps({
   options: {
     type: Array,
     default: () => []
+  },
+  showTypeIcon: {
+    type: Boolean,
+    default: false
   }
 })
 </script>
 
-<style>
+<style scoped>
 .select-group {
   font-family: 'MotivaSansMedium';
   margin-bottom: 1rem;
   display: grid;
-  grid-template-columns: 1fr 3fr;
+  grid-template-columns: 1fr 1fr;
   gap: 1rem;
 }
 
 .select-group label {
   padding-bottom: 1vh;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 .select-group select,
 .select-group select option {
   font-family: 'MotivaSansMedium';
   font-weight: normal;
   font-style: normal;
+  width: 170px;
 }
 .select-group select {
   padding: 0.75rem;
