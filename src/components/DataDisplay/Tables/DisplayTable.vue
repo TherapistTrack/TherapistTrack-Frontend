@@ -13,6 +13,7 @@
             :on-click-outside="hideAll"
             :on-click="() => handleHide(item)"
           />
+          <TypeIconLoader :icon-type="fields[item].type" />
           <p>
             {{ item }}
           </p>
@@ -56,6 +57,7 @@ import { RiAlertFill } from '@remixicon/vue'
 import HideButton from '@/components/Buttons/HideButton.vue'
 import { ref, watchEffect } from 'vue'
 import TablePageButton from '@/components/Buttons/TablePageButton.vue'
+import TypeIconLoader from '@/assets/TypeIcons/TypeIconLoader.vue'
 const emit = defineEmits(['hideHeader', 'updateLimit', 'updatePage'])
 const props = defineProps({
   loading: Boolean,
@@ -64,7 +66,8 @@ const props = defineProps({
   headers: Array,
   success: Boolean,
   currentPage: Number,
-  pageLimit: Number
+  pageLimit: Number,
+  fields: Object
 })
 
 const localData = ref(null)
@@ -72,7 +75,6 @@ const headerHide = ref({})
 const pageCount = ref(1)
 const currentPage = ref(props.currentPage)
 const maxPage = ref(props.pageLimit)
-
 props.headers.map((value) => {
   headerHide.value[value] = false
 })
@@ -164,6 +166,8 @@ const handleRightClick = (key) => {
 .table-container .header-item {
   color: var(--gray-1);
   position: relative;
+  display: flex;
+  gap: 0.5rem;
 }
 
 .table-container .table-item {

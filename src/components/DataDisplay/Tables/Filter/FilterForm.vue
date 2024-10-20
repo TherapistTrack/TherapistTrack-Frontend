@@ -2,7 +2,8 @@
   <div class="filter-form">
     <div class="ff-container">
       <span class="horizontal">
-        <SelectDropDown
+        <IconedDropDown
+          :fields="fields"
           :id="'field'"
           :options="Object.keys(fields)"
           :disabled-value="'Escoga un campo'"
@@ -33,7 +34,7 @@
         </div>
         <span v-else>
           <InputFieldSimple
-            v-if="lastType != 'choice'"
+            v-if="lastType != 'CHOICE'"
             :id="'value'"
             :placeholder="'Escriba el valor a comparar'"
             :type="lastType"
@@ -67,6 +68,7 @@
 
 <script setup>
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
+import IconedDropDown from '@/components/Forms/SelectDropDown/IconedDropDown.vue'
 import SelectDropDown from '@/components/Forms/SelectDropDown/SelectDropDown.vue'
 import InputFieldSimple from '@/components/Forms/InputField/InputFieldSimple.vue'
 import { ref, watch, onMounted } from 'vue'
@@ -87,7 +89,7 @@ const valid = ref(false)
 const lastType = ref('')
 const errors = ref([])
 const localFilter = ref(props.filter)
-
+console.log(props.fields)
 // Functions
 // Saving the form
 const handleSave = () => {
@@ -161,13 +163,13 @@ const checkIfValid = () => {
 }
 // This updates the operation options of the filter based on the type of its content
 const updateFilterOptions = (type) => {
-  if (['short_text', 'text'].includes(type)) {
+  if (['SHORT_TEXT', 'TEXT'].includes(type)) {
     filterOptions.value = ['Contiene', 'Comienza con', 'Termina con']
-  } else if (type === 'date') {
+  } else if (type === 'DATE') {
     filterOptions.value = ['Antes de', 'Entre', 'Despues de']
-  } else if (['number', 'float'].includes(type)) {
+  } else if (['NUMBER', 'FLOAT'].includes(type)) {
     filterOptions.value = ['Menor que', 'Igual a', 'Mayor que']
-  } else if (type === 'choice') {
+  } else if (type === 'CHOICE') {
     filterOptions.value = ['Es', 'No es', 'No es vacío']
     let temOptions = props.fields[localFilter.value.name].options
     choiceFieldArray.value = temOptions
