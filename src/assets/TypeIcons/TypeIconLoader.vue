@@ -1,5 +1,5 @@
 <template>
-  <div v-if="iconType == 'SHORT_TEXT'" class="container">
+  <div v-if="iconType == 'SHORT_TEXT'" class="container" :id="small ? 'small' : ''">
     <svg
       width="100%"
       height="100%"
@@ -23,7 +23,7 @@
       </g>
     </svg>
   </div>
-  <div v-else-if="iconType == 'TEXT'" class="container">
+  <div v-else-if="iconType == 'TEXT'" class="container" :id="small ? 'small' : ''">
     <svg
       class="text"
       width="100%"
@@ -42,7 +42,7 @@
       />
     </svg>
   </div>
-  <div v-else-if="iconType == 'CHOICE'" class="container">
+  <div v-else-if="iconType == 'CHOICE'" class="container" :id="small ? 'small' : ''">
     <svg
       width="100%"
       height="100%"
@@ -66,7 +66,7 @@
       </g>
     </svg>
   </div>
-  <div v-else-if="iconType == 'DATE'" class="container">
+  <div v-else-if="iconType == 'DATE'" class="container" :id="small ? 'small' : ''">
     <svg
       width="100%"
       height="100%"
@@ -84,7 +84,7 @@
       />
     </svg>
   </div>
-  <div v-else-if="iconType == 'NUMBER'" class="container">
+  <div v-else-if="iconType == 'NUMBER'" class="container" :id="small ? 'small' : ''">
     <svg
       width="100%"
       height="100%"
@@ -102,7 +102,7 @@
       />
     </svg>
   </div>
-  <div v-else class="container">
+  <div v-else class="container" :id="small ? 'small' : ''">
     <!-- FLOAT -->
     <svg
       width="100%"
@@ -129,8 +129,7 @@
         "
       >
         .
-        <tspan x="5.876px " y="18.878px "></tspan>
-        00
+        <tspan x="5.876px " y="18.878px ">00</tspan>
       </text>
     </svg>
   </div>
@@ -138,7 +137,11 @@
 
 <script setup>
 defineProps({
-  iconType: String
+  iconType: String,
+  small: {
+    type: Boolean,
+    default: false
+  }
 })
 </script>
 
@@ -154,6 +157,14 @@ defineProps({
 svg {
   height: 1rem;
   width: 1rem;
+}
+.container#small svg {
+  height: 0.8rem;
+  width: 0.8rem;
+}
+.container#small .text {
+  height: 0.7rem;
+  width: 0.7rem;
 }
 .text {
   height: 0.8rem;

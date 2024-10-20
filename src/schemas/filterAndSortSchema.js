@@ -21,16 +21,16 @@ export const betweenSchema = yup.object({
 })
 export const filterSchema = (type, options, operation) => {
   let valueSchema = null
-  if (['short_text', 'text'].includes(type)) {
+  if (['SHORT_TEXT', 'TEXT'].includes(type)) {
     valueSchema = yup.string().required('Valor es obligatorio')
-  } else if (type === 'date') {
+  } else if (type === 'DATE') {
     valueSchema = yup.date().required('Fecha es obligatoria').typeError('Ingrese una fecha válida')
-  } else if (['number', 'float'].includes(type)) {
+  } else if (['NUMBER', 'FLOAT'].includes(type)) {
     valueSchema = yup
       .number('Valor debe ser un número')
       .typeError('Valor debe ser un número')
       .required('Valor es obligatorio')
-  } else if (type === 'choice') {
+  } else if (type === 'CHOICE') {
     if (operation == 'No es vacío') {
       valueSchema = yup.string()
     } else {

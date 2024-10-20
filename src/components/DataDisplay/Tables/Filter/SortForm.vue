@@ -2,7 +2,8 @@
   <div class="sort-form">
     <div class="sf-container">
       <span class="horizontal">
-        <SelectDropDown
+        <IconedDropDown
+          :fields="fields"
           :id="'form-name'"
           v-model:model-value="localSort.name"
           :disabled-value="'Escoga un campo'"
@@ -27,6 +28,7 @@
 
 <script setup>
 import SelectDropDown from '@/components/Forms/SelectDropDown/SelectDropDown.vue'
+import IconedDropDown from '@/components/Forms/SelectDropDown/IconedDropDown.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import { ref, watch } from 'vue'
 import { sortSchema } from '@/schemas/filterAndSortSchema'
@@ -43,7 +45,6 @@ const props = defineProps({
 // Variables
 // Local value for the form
 const localSort = ref(props.sort)
-
 // Defensive programing
 const errors = ref([])
 const valid = ref(false)

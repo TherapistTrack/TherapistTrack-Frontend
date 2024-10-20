@@ -143,7 +143,7 @@ const getHeaders = (json) => {
       if (!headers.includes(record[field].name)) {
         headers.push(record[field].name)
         tem = { type: record[field].type }
-        if (record[field].type === 'choice') {
+        if (record[field].type === 'CHOICE') {
           tem['options'] = record[field].options
         }
         templateFields.value[record[field].name] = tem
