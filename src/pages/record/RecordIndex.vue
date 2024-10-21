@@ -19,6 +19,7 @@ import { ref } from 'vue'
 import ToastLoader from '@/components/Feedback/Toast/ToastLoader.vue'
 const minim = ref(true)
 const toastList = ref([])
+
 const addToast = (toast) => {
   toastList.value.push(toast)
 }
