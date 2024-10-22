@@ -1,6 +1,11 @@
 <template>
   <div class="input-group">
-    <label :for="id">{{ label }}</label>
+    <label :for="id">
+      <span v-if="type !== ''">
+        <TypeIconLoader :icon-type="type" />
+      </span>
+      {{ label }}
+    </label>
     <input
       :type="type"
       :id="id"
@@ -14,6 +19,7 @@
 </template>
 
 <script setup>
+import TypeIconLoader from '@/assets/TypeIcons/TypeIconLoader.vue'
 const emit = defineEmits(['update:modelValue'])
 
 const updateValue = (event) => {
@@ -35,7 +41,7 @@ defineProps({
   },
   type: {
     type: String,
-    default: 'text'
+    default: ''
   },
   placeholder: {
     type: String,
@@ -52,24 +58,26 @@ defineProps({
 })
 </script>
 
-<style>
+<style scoped>
 .input-group {
-  display: grid;
-  grid-template-columns: 1fr 3fr;
-  gap: 1rem;
-  align-items: center;
   margin-bottom: 1rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
 }
 
 .input-group label {
   color: black;
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
 }
 
 .input-group input {
   padding: 0.75rem;
   border: 1px solid var(--gray-3);
   border-radius: 0.5rem;
-  box-sizing: border-box;
+  width: 170px;
 }
 
 .input-group .icon-eye {
@@ -82,6 +90,7 @@ defineProps({
 @media (max-aspect-ratio: 6/9) {
   .input-group {
     display: flex;
+    align-items: start;
     flex-direction: column;
   }
 }

@@ -2,6 +2,7 @@
   <router-view
     :recordId="selected"
     :viewData="processedData"
+    :fields="templateFields"
     v-model:shownHeaders="shownHeaders"
     :allHeaders="allHeaders"
     :allData="fetchedData"
@@ -25,6 +26,7 @@
       <DisplayTable
         :data="processedData"
         :headers="shownHeaders"
+        :fields="templateFields"
         v-model:loading="loading"
         v-model:page-limit="pageLimit"
         v-model:current-page="currentPage"
@@ -48,6 +50,7 @@ import ConfigButton from '@/components/Buttons/ConfigButton.vue'
 import FilterTable from '@/components/DataDisplay/Tables/Filter/FilterTable.vue'
 import records from './records.json'
 import { useAuth0 } from '@auth0/auth0-vue'
+
 // Constants
 const auth0 = useAuth0()
 const router = useRouter()
@@ -80,12 +83,12 @@ const updateFilters = async (filters) => {
 }
 // Display table navigation
 const updatePage = (page) => {
-  currentPage.value = page
+  currentPage.value = Number(page)
   updateData()
 }
 
 const updateLimit = (limit) => {
-  pageLimit.value = limit
+  pageLimit.value = Number(limit)
   updateData()
 }
 // Emissions from children
@@ -140,7 +143,7 @@ const getHeaders = (json) => {
       if (!headers.includes(record[field].name)) {
         headers.push(record[field].name)
         tem = { type: record[field].type }
-        if (record[field].type === 'choice') {
+        if (record[field].type === 'CHOICE') {
           tem['options'] = record[field].options
         }
         templateFields.value[record[field].name] = tem
@@ -179,7 +182,6 @@ onMounted(async () => {
   // Convert fetched data into working object
   processedData.value = convertToObject(records)
   loading.value = false
-
   return fetchedData
 })
 
@@ -231,6 +233,11 @@ const handleNewRecord = () => {
 
 .sideSpace#max {
   width: 200px;
+}
+
+.icon {
+  height: 5rem;
+  width: 5rem;
 }
 
 /* Media tags */

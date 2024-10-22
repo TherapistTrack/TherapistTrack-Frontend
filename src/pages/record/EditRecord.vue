@@ -51,7 +51,6 @@
           </span>
         </span>
       </div>
-
       <div class="bottom">
         <ButtonSimple :msg="'Guardar'" :color="'yellow'" />
       </div>
@@ -103,6 +102,7 @@ const getFieldInfo = () => {
       options: tem.value[field].options || null
     }
   }
+  console.log(temInfo.value)
   return temInfo.value
 }
 onMounted(() => {

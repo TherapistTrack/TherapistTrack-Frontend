@@ -2,6 +2,9 @@
   <div class="simple-table-container">
     <div class="simple-row" v-for="(item, key) in headers" :key="key">
       <div class="simple-item-first">
+        <span v-if="hasType">
+          <TypeIconLoader :icon-type="fields[item].type" />
+        </span>
         <p>{{ item }}</p>
       </div>
       <span v-if="isSet">
@@ -22,12 +25,21 @@
 </template>
 
 <script setup>
+import TypeIconLoader from '@/assets/TypeIcons/TypeIconLoader.vue'
 defineProps({
   data: Object,
   headers: Object,
   isSet: {
     type: Boolean,
     default: false
+  },
+  hasType: {
+    type: Boolean,
+    default: false
+  },
+  fields: {
+    type: Object,
+    required: false
   }
 })
 </script>
@@ -42,12 +54,15 @@ defineProps({
   width: 100%;
   display: grid;
   gap: 1rem;
-  grid-template-columns: 1fr 2fr;
+  grid-template-columns: 1.2fr 2fr;
   padding-bottom: 4vh;
 }
 
 .simple-item-first {
   color: var(--gray-1);
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
 }
 
 .simple-item {

@@ -1,7 +1,10 @@
 <template>
   <div class="input-group">
-    <label @mouseover="onMouseOver" @mouseleave="onMouseLeave" :for="id"
-      >{{ label }}<b class="red">*</b>
+    <label @mouseover="onMouseOver" @mouseleave="onMouseLeave" :for="id">
+      <span v-if="type !== ''">
+        <TypeIconLoader :icon-type="type" />
+      </span>
+      <p>{{ label }}<b class="red">*</b></p>
       <div v-if="isHovered" class="descriptor">{{ description }}</div>
     </label>
     <input
@@ -18,6 +21,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import TypeIconLoader from '@/assets/TypeIcons/TypeIconLoader.vue'
 const props = defineProps({
   modelValue: {
     type: String,
@@ -33,7 +37,7 @@ const props = defineProps({
   },
   type: {
     type: String,
-    default: 'text'
+    default: ''
   },
   placeholder: {
     type: String,
@@ -70,11 +74,11 @@ const onMouseLeave = () => {
 }
 </script>
 
-<style>
+<style scoped>
 .input-group {
   margin-bottom: 1rem;
   display: grid;
-  grid-template-columns: 1fr 3fr;
+  grid-template-columns: 1fr 1fr;
   gap: 1rem;
 }
 
@@ -97,13 +101,15 @@ const onMouseLeave = () => {
   margin-bottom: 0.5rem;
   color: black;
   position: relative;
+  display: flex;
+  gap: 0.6rem;
 }
 
 .input-group input {
   padding: 0.75rem;
   border: 1px solid var(--gray-3);
   border-radius: 0.5rem;
-  box-sizing: border-box;
+  width: 170px;
 }
 
 .input-group .alert {

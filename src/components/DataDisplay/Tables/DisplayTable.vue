@@ -13,6 +13,7 @@
             :on-click-outside="hideAll"
             :on-click="() => handleHide(item)"
           />
+          <TypeIconLoader :icon-type="fields[item].type" />
           <p>
             {{ item }}
           </p>
@@ -43,7 +44,7 @@
     <TablePageButton
       :page-count="pageCount"
       v-model:current-page="currentPage"
-      :max-page="maxPage"
+      v-model:max-page="maxPage"
       @updateCurrentPage="handleNewPage"
       @updateMax="handleNewMax"
     />
@@ -56,6 +57,7 @@ import { RiAlertFill } from '@remixicon/vue'
 import HideButton from '@/components/Buttons/HideButton.vue'
 import { ref, watchEffect } from 'vue'
 import TablePageButton from '@/components/Buttons/TablePageButton.vue'
+import TypeIconLoader from '@/assets/TypeIcons/TypeIconLoader.vue'
 const emit = defineEmits(['hideHeader', 'updateLimit', 'updatePage'])
 const props = defineProps({
   loading: Boolean,
@@ -64,7 +66,8 @@ const props = defineProps({
   headers: Array,
   success: Boolean,
   currentPage: Number,
-  pageLimit: Number
+  pageLimit: Number,
+  fields: Object
 })
 
 const localData = ref(null)
@@ -72,11 +75,9 @@ const headerHide = ref({})
 const pageCount = ref(1)
 const currentPage = ref(props.currentPage)
 const maxPage = ref(props.pageLimit)
-
 props.headers.map((value) => {
   headerHide.value[value] = false
 })
-
 watchEffect(() => {
   if (!props.loading) {
     localData.value = props.data.slice(0, maxPage.value)
@@ -85,7 +86,7 @@ watchEffect(() => {
 })
 
 const handleNewMax = (max) => {
-  maxPage.value = max
+  maxPage.value = Number(max)
   emit('updateLimit', maxPage.value)
 }
 
@@ -95,7 +96,7 @@ function handleClick(key) {
 }
 const handleNewPage = (newPage) => {
   localData.value = props.data.slice(maxPage.value * (newPage - 1), maxPage.value * newPage)
-  currentPage.value = newPage
+  currentPage.value = Number(newPage)
   emit('updatePage', currentPage.value)
 }
 
@@ -131,6 +132,7 @@ const handleRightClick = (key) => {
   /* Two columns */
   font-size: 2vh;
   overflow-x: scroll;
+  max-height: 315px;
 }
 
 .table-container .header-row,
@@ -164,6 +166,8 @@ const handleRightClick = (key) => {
 .table-container .header-item {
   color: var(--gray-1);
   position: relative;
+  display: flex;
+  gap: 0.5rem;
 }
 
 .table-container .table-item {

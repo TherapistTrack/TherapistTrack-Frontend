@@ -36,13 +36,13 @@ const props = defineProps({
   currentPage: Number,
   maxPage: Number
 })
-const localMaxPage = ref(props.maxPage + '')
+const localMaxPage = ref(Number(props.maxPage))
 
 watch(localMaxPage, () => {
   try {
-    if (parseInt(localMaxPage.value) > 0) {
+    if (parseInt(localMaxPage.value) > 0 && !isNaN(Number(localMaxPage.value))) {
       emit('updateCurrentPage', 1)
-      emit('updateMax', localMaxPage.value)
+      emit('updateMax', Number(parseInt(localMaxPage.value)))
     }
   } catch {
     ;() => {}
@@ -88,6 +88,11 @@ const handleDown = () => {
 .table-nav .icon {
   background-color: var(--white);
   border-radius: 0.2rem;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.table-nav .icon:hover {
+  background-color: var(--gray-4);
 }
 
 .table-nav .page-num {
@@ -102,10 +107,14 @@ const handleDown = () => {
   color: var(--blue-1);
   align-items: center;
   font-size: small;
+  cursor: pointer;
 }
 .table-nav .page-num#selected {
   background-color: var(--blue-1);
   color: white;
+}
+.table-nav .page-num#selected:hover {
+  background-color: var(--dark-blue-1);
 }
 
 .table-nav .page-num:hover {
