@@ -149,8 +149,10 @@ const updateLocalFields = () => {
 }
 
 const deactivateField = (field) => {
-  realShownHeaders.value.splice(realShownHeaders.value.indexOf(field), 1)
-  updateLocalFields()
+  if (toRaw(realShownHeaders.value).length > 1) {
+    realShownHeaders.value.splice(realShownHeaders.value.indexOf(field), 1)
+    updateLocalFields()
+  }
 }
 
 const activateField = (field) => {
