@@ -83,12 +83,12 @@ const updateFilters = async (filters) => {
 }
 // Display table navigation
 const updatePage = (page) => {
-  currentPage.value = page
+  currentPage.value = Number(page)
   updateData()
 }
 
 const updateLimit = (limit) => {
-  pageLimit.value = limit
+  pageLimit.value = Number(limit)
   updateData()
 }
 // Emissions from children

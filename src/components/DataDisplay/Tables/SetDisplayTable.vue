@@ -38,7 +38,7 @@ const props = defineProps({
   loading: Boolean,
   onClick: Function,
   data: Object,
-  headers: Array,
+  headers: Object,
   success: Boolean
 })
 function handleClick(key) {

@@ -44,7 +44,7 @@
     <TablePageButton
       :page-count="pageCount"
       v-model:current-page="currentPage"
-      :max-page="maxPage"
+      v-model:max-page="maxPage"
       @updateCurrentPage="handleNewPage"
       @updateMax="handleNewMax"
     />
@@ -78,7 +78,6 @@ const maxPage = ref(props.pageLimit)
 props.headers.map((value) => {
   headerHide.value[value] = false
 })
-
 watchEffect(() => {
   if (!props.loading) {
     localData.value = props.data.slice(0, maxPage.value)
@@ -87,7 +86,7 @@ watchEffect(() => {
 })
 
 const handleNewMax = (max) => {
-  maxPage.value = max
+  maxPage.value = Number(max)
   emit('updateLimit', maxPage.value)
 }
 
@@ -97,7 +96,7 @@ function handleClick(key) {
 }
 const handleNewPage = (newPage) => {
   localData.value = props.data.slice(maxPage.value * (newPage - 1), maxPage.value * newPage)
-  currentPage.value = newPage
+  currentPage.value = Number(newPage)
   emit('updatePage', currentPage.value)
 }
 
@@ -133,6 +132,7 @@ const handleRightClick = (key) => {
   /* Two columns */
   font-size: 2vh;
   overflow-x: scroll;
+  max-height: 315px;
 }
 
 .table-container .header-row,

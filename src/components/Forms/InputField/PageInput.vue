@@ -2,7 +2,13 @@
   <span class="rows">
     <p>No. Filas</p>
     <span class="limiter">
-      <input class="simple-input" :value="modelValue" @blur="updateValue" @keypress="updateValue" />
+      <input
+        type="number"
+        class="simple-input"
+        :value="modelValue"
+        @blur="updateValue"
+        @keypress="updateValue"
+      />
     </span>
   </span>
 </template>
@@ -15,7 +21,7 @@ const updateValue = (event) => {
   }
 }
 defineProps({
-  modelValue: Number
+  modelValue: String
 })
 </script>
 
