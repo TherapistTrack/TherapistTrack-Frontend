@@ -155,12 +155,12 @@ const createUser = async () => {
       mails: [...user.value.mails]
     }
     if (user.value.rol == 'Doctor') {
-      formatedUser.value['rolDependentInfo'] = {
+      formatedUser.value['roleDependentInfo'] = {
         collegiateNumber: user.value.collegiateNumber,
         specialty: user.value.specialty
       }
     } else {
-      formatedUser.value['rolDependentInfo'] = {
+      formatedUser.value['roleDependentInfo'] = {
         startDate: user.value.startDate,
         endDate: user.value.endDate,
         DPI: user.value.DPI

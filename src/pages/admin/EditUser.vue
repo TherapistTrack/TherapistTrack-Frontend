@@ -151,17 +151,17 @@ onMounted(async () => {
     mails: localData.value.mails || []
   }
   if (localData.value.rol == 'Doctor') {
-    user.value['collegiateNumber'] = localData.value.rolDependentInfo.collegiateNumber || ''
-    user.value['specialty'] = localData.value.rolDependentInfo.specialty || ''
-    startData.value['collegiateNumber'] = localData.value.rolDependentInfo.collegiateNumber || ''
-    startData.value['specialty'] = localData.value.rolDependentInfo.specialty || ''
+    user.value['collegiateNumber'] = localData.value.roleDependentInfo.collegiateNumber || ''
+    user.value['specialty'] = localData.value.roleDependentInfo.specialty || ''
+    startData.value['collegiateNumber'] = localData.value.roleDependentInfo.collegiateNumber || ''
+    startData.value['specialty'] = localData.value.roleDependentInfo.specialty || ''
   } else if (localData.value.rol == 'Assistant') {
-    user.value['DPI'] = localData.value.rolDependentInfo.DPI || ''
+    user.value['DPI'] = localData.value.roleDependentInfo.DPI || ''
     try {
-      user.value['startDate'] = localData.value.rolDependentInfo.startDate.slice(0, 10)
-      user.value['endDate'] = localData.value.rolDependentInfo.endDate.slice(0, 10)
-      startData.value['startDate'] = localData.value.rolDependentInfo.startDate.slice(0, 10)
-      startData.value['endDate'] = localData.value.rolDependentInfo.endDate.slice(0, 10)
+      user.value['startDate'] = localData.value.roleDependentInfo.startDate.slice(0, 10)
+      user.value['endDate'] = localData.value.roleDependentInfo.endDate.slice(0, 10)
+      startData.value['startDate'] = localData.value.roleDependentInfo.startDate.slice(0, 10)
+      startData.value['endDate'] = localData.value.roleDependentInfo.endDate.slice(0, 10)
     } catch {
       user.value.startDate = ''
       user.value.endDate = ''
@@ -215,12 +215,12 @@ const updateUser = async () => {
         mails: [...user.value.mails]
       }
       if (user.value.rol == 'Doctor') {
-        formatedUser.value['rolDependentInfo'] = {
+        formatedUser.value['roleDependentInfo'] = {
           collegiateNumber: user.value.collegiateNumber,
           specialty: user.value.specialty
         }
       } else {
-        formatedUser.value['rolDependentInfo'] = {
+        formatedUser.value['roleDependentInfo'] = {
           startDate: user.value.startDate,
           endDate: user.value.endDate,
           DPI: user.value.DPI
