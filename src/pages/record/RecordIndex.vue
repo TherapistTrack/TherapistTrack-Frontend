@@ -9,7 +9,9 @@
   </div>
   <div class="toast-loader">
     <div class="sideSpace" :id="minim ? '' : 'max'"></div>
-    <ToastLoader v-model:toastList="toastList" />
+    <span>
+      <ToastLoader v-model:toastList="toastList" />
+    </span>
   </div>
 </template>
 
@@ -21,8 +23,13 @@ const minim = ref(true)
 const toastList = ref([])
 
 const addToast = (toast) => {
-  toastList.value.push(toast)
+  let newToast = {
+    ...toast,
+    id: [Math.floor(Math.random() * 100) + 1]
+  }
+  toastList.value.push(newToast)
 }
+
 const updateMinim = () => {
   minim.value = !minim.value
 }
@@ -58,7 +65,7 @@ const updateMinim = () => {
   transition: Width 0.5s;
 }
 .sideSpace#max {
-  width: 250px;
+  width: 200px;
 }
 
 /* Media tags */

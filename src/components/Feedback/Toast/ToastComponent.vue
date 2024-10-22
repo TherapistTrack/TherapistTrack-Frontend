@@ -54,7 +54,7 @@ const doClose = () => {
   closeAnim.value = true
   setTimeout(() => {
     props.onClose()
-  }, 10000)
+  }, 1200)
 }
 </script>
 
@@ -104,23 +104,27 @@ const doClose = () => {
 .close-icon:hover {
   fill: var(--gray-1);
 }
-
+.isActive {
+  margin-bottom: 15px;
+}
 .close {
-  animation: moveLeft 1s forwards;
+  animation: moveLeft 1.3s forwards;
 }
 
 @keyframes moveLeft {
   0% {
     transform: translateX(0);
-    height: 60px;
+    height: 75px;
   }
   50% {
-    transform: translateX(-600px);
-    height: 60px;
+    /* transform: translateX(-600px); */
+    transform: translateX(-800px);
+    height: 75px;
   }
   100% {
+    /* transform: translateX(-600px); */
     transform: translateX(-800px);
-    height: 0px;
+    height: 0;
   }
 }
 </style>
