@@ -19,9 +19,13 @@
             accept="application/pdf"
           />
         </div>
+        <!-- Mensaje de confirmación de archivos seleccionados -->
+        <div class="message-container">
+          <div v-if="uploadStore.files.length > 0" class="selected-files-message">
+            {{ uploadStore.files.length }} archivo(s) seleccionado(s).
+          </div>
+        </div>
       </div>
-
-      <!-- Usando el componente de botón ya creado -->
       <div class="actions">
         <ButtonSimple msg="Cancelar" color="white" @click="handleCancel" />
         <ButtonSimple
@@ -52,7 +56,8 @@ function triggerFileInput() {
 
 function handleFileChange(event) {
   const selectedFiles = Array.from(event.target.files).map((file) => ({
-    name: file.name
+    name: file.name,
+    file: file
   }))
   console.log('Archivos seleccionados:', selectedFiles)
   uploadStore.setFiles(selectedFiles) // Almacena los archivos con su ruta
@@ -101,7 +106,7 @@ function goToSelect() {
 .content-container {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  align-items: center;
   flex-grow: 1;
 }
 
@@ -109,7 +114,20 @@ function goToSelect() {
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-top: 125px;
   margin-bottom: 20px;
+}
+
+.message-container {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 60px;
+}
+
+.selected-files-message {
+  font-size: 14px;
 }
 
 .select-files-btn {

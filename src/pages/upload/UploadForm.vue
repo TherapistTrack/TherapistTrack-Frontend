@@ -4,7 +4,7 @@
     <div :class="['fixed-left-sidebar', sidebarOpen ? 'open' : 'closed']">
       <div class="top">
         <h1>
-          <b>{{ fileData.name }}</b>
+          <b>{{ currentFileName }}</b>
         </h1>
         <!-- Show arrow left when sidebar is open -->
         <RiArrowLeftSLine
@@ -34,7 +34,7 @@
           disabledValue="Seleccione una plantilla"
           :options="plantillaOptions"
         />
-        <InputField :label="'Nombres'" v-model:model-value="fileData.name" />
+        <InputField :label="'Nombres'" v-model:modelValue="fileData.name" />
         <InputField :label="'Páginas'" v-model:model-value="fileData.pages" />
         <SelectDropDown
           label="Categoría"
@@ -50,140 +50,266 @@
         />
       </div>
       <div class="bottom">
-        <IconButton msg="Anterior" :firstIcon="arrowUp" />
+        <IconButton
+          msg="Anterior"
+          :firstIcon="arrowUp"
+          :onClick="goToPreviousFile"
+          :disabled="currentFileIndex.value === 0"
+        />
         <div class="divider"></div>
-        <IconButton msg="Siguiente" :secondIcon="arrowDown" />
+        <IconButton
+          msg="Siguiente"
+          :secondIcon="arrowDown"
+          :onClick="goToNextFile"
+          :disabled="currentFileIndex.value >= totalFiles - 1"
+        />
       </div>
     </div>
 
     <!-- Show arrow right to open sidebar when it's closed -->
-    <RiArrowRightSLine
-      v-if="!sidebarOpen"
-      class="open-sidebar-btn"
-      size="2rem"
-      color="var(--gray-2)"
-      alt="arrow-right"
-      @click="toggleSidebar"
-    />
+    <div v-if="!sidebarOpen" class="open-sidebar-line" @click="toggleSidebar">
+      <RiArrowRightSLine class="open-sidebar-icon" size="2rem" color="var(--gray-2)" />
+    </div>
 
     <!-- Right Content: Preview -->
     <div :class="['content-preview', sidebarOpen ? '' : 'full-width']">
       <!-- Barra superior -->
       <div class="top-bar">
         <div class="textContainer">
-          <h1>20/30 Completados</h1>
+          <h1>{{ currentFileIndexDisplay }}/{{ totalFiles }}</h1>
         </div>
         <div class="button-container2">
-          <button class="select-files-btn">
-            <RiUploadCloudLine class="icon-upload" @click="goToDoing" />
+          <button class="select-files-btn" @click="goToDoing">
+            <RiUploadCloudFill class="icon-upload" />
             Subir
-          </button>
-        </div>
-      </div>
-
-      <!-- Barra inferior -->
-      <div class="bottom-bar">
-        <div class="button-container">
-          <button class="zoom-button">
-            <RiAddFill class="icon-add" />
-          </button>
-          <span class="zoom-percentage">120%</span>
-          <button class="zoom-button">
-            <RiSubtractFill class="icon-subtract" />
-          </button>
-          <button class="zoom-button">
-            <RiExpandDiagonalLine class="icon-expand" />
           </button>
         </div>
       </div>
 
       <!-- File Preview goes here (pdf/image or other format viewer) -->
       <div class="file-preview">
-        <iframe v-if="fileUrl" :src="fileUrl" width="100%" height="500px"></iframe>
+        <iframe
+          v-if="fileUrl"
+          :src="fileUrl"
+          style="width: 100%; height: 100%; border: none; flex-grow: 1"
+        ></iframe>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import IconButton from '@/components/Buttons/IconButton.vue'
 import InputField from '@/components/Forms/InputField/InputField.vue'
 import SelectDropDown from '@/components/Forms/SelectDropDown/SelectDropDown.vue'
 import {
-  RiUploadCloudLine,
   RiDeleteBinFill,
   RiArrowDownSLine,
   RiArrowUpSLine,
   RiArrowLeftSLine,
   RiArrowRightSLine,
-  RiSubtractFill,
-  RiAddFill,
-  RiExpandDiagonalLine
+  RiUploadCloudFill
 } from '@remixicon/vue'
+import { useUploadStore } from '@/stores/uploadStore'
+// Importar PDF.js y el worker
+import * as pdfjsLib from 'pdfjs-dist/build/pdf'
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.js?url'
 
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker
+
+const uploadStore = useUploadStore()
+const router = useRouter()
+const route = useRoute()
+const currentFileIndex = ref(0)
+const sidebarOpen = ref(true)
+const fileUrl = ref('')
+
+// Opciones para los select
 const plantillaOptions = ['Normal', 'Especial', 'Personalizada']
 const categoriaOptions = ['Consultas', 'Análisis', 'Reportes']
 
-// File data for the form
+// Datos del archivo actual
 const fileData = ref({
   template: '',
-  name: 'Consulta 1',
-  pages: '12',
+  name: '',
+  pages: '',
   category: '',
-  creation: '03/03/2003'
+  creation: ''
 })
 
-// Icons
+// Íconos
 const trashIcon = RiDeleteBinFill
 const arrowDown = RiArrowDownSLine
 const arrowUp = RiArrowUpSLine
 
-// File preview URL
-const fileUrl = ref('/path/to/your/uploaded/file.pdf')
+// Computed properties
+const totalFiles = computed(() => uploadStore.files.length)
 
-const router = useRouter()
+const currentFile = computed(() => {
+  if (uploadStore.files.length > 0) {
+    return uploadStore.files[currentFileIndex.value]
+  }
+  return null
+})
 
-// Reactive state to control sidebar visibility
-const sidebarOpen = ref(true)
+const currentFileName = computed(() => {
+  if (currentFile.value && currentFile.value.name) {
+    return currentFile.value.name.replace('.pdf', '')
+  }
+  return ''
+})
 
-// Handlers
+const currentFileIndexDisplay = computed(() => currentFileIndex.value + 1)
+
+// Funciones
 function handleDiscard() {
-  console.log('Archivo descartado')
+  if (currentFile.value) {
+    // Eliminar el archivo actual del store
+    uploadStore.files.splice(currentFileIndex.value, 1)
+
+    // Ajustar currentFileIndex si es necesario
+    if (currentFileIndex.value >= uploadStore.files.length && currentFileIndex.value > 0) {
+      currentFileIndex.value--
+    }
+
+    // Si no quedan archivos, redirigir o manejar el caso
+    if (uploadStore.files.length === 0) {
+      router.push('/upload/')
+    } else {
+      // Actualizar los datos del archivo actual
+      updateFileData()
+    }
+  }
 }
 
 function toggleSidebar() {
   sidebarOpen.value = !sidebarOpen.value
 }
 
-// Functions for file input
-//const fileInput = ref(null)
-
-/*function triggerFileInput() {
-  fileInput.value.click()
+function goToPreviousFile() {
+  if (currentFileIndex.value > 0) {
+    currentFileIndex.value--
+    updateFileData()
+  }
 }
 
-function handleFileChange(event) {
-  const selectedFiles = Array.from(event.target.files)
-  console.log('Archivos seleccionados:', selectedFiles)
+function goToNextFile() {
+  if (currentFileIndex.value < totalFiles.value - 1) {
+    currentFileIndex.value++
+    updateFileData()
+  }
 }
 
-function triggerZoomIn() {
-  console.log('Zoom In')
+function getLocalDateString() {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
-function triggerZoomOut() {
-  console.log('Zoom Out')
-}
+async function updateFileData() {
+  console.log('updateFileData called')
+  if (fileUrl.value) {
+    URL.revokeObjectURL(fileUrl.value)
+  }
+  if (currentFile.value) {
+    console.log('currentFile.value:', currentFile.value)
+    console.log('currentFile.value.file:', currentFile.value.file)
+    if (!currentFile.value.data) {
+      currentFile.value.data = {
+        template: '',
+        name: currentFile.value.name.replace('.pdf', ''),
+        pages: '',
+        category: '',
+        creation: ''
+      }
+    }
 
-function triggerExpand() {
-  console.log('Expandir')
-}*/
+    // Obtener el número de páginas del PDF
+    try {
+      const typedarray = await currentFile.value.file.arrayBuffer()
+      const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise
+      const numPages = pdf.numPages
+      currentFile.value.data.pages = numPages.toString() // Convertimos a string
+    } catch (error) {
+      console.error('Error al obtener el número de páginas:', error)
+    }
+
+    // Establecer la fecha actual si no está establecida
+    if (!currentFile.value.data.creation) {
+      const today = getLocalDateString()
+      currentFile.value.data.creation = today
+    }
+
+    fileData.value = { ...currentFile.value.data }
+    if (currentFile.value.file instanceof Blob || currentFile.value.file instanceof File) {
+      fileUrl.value = URL.createObjectURL(currentFile.value.file)
+    } else {
+      console.error('currentFile.value.file no es un Blob o File válido')
+      fileUrl.value = ''
+    }
+  } else {
+    fileData.value = {
+      template: '',
+      name: '',
+      pages: '',
+      category: '',
+      creation: ''
+    }
+    fileUrl.value = ''
+  }
+}
 
 function goToDoing() {
+  if (uploadStore.files.length > 0) {
+    // Recorrer todos los archivos en `uploadStore`
+    uploadStore.files.forEach((file) => {
+      console.log('Subiendo:', file.data)
+    })
+  }
   router.push('/upload/doing')
 }
+
+// Watchers
+watch(
+  fileData,
+  (newData) => {
+    if (currentFile.value) {
+      currentFile.value.data = { ...newData }
+    }
+  },
+  { deep: true }
+)
+
+onMounted(() => {
+  updateFileData()
+
+  history.pushState(null, null, document.URL)
+
+  const handlePopState = () => {
+    if (route.name !== 'uploadFiles') {
+      // Bloquear el retroceso si no es la página UploadFiles
+      console.log('Intento de retroceder detectado, redirigiendo a la página actual.')
+      history.pushState(null, null, document.URL)
+    }
+  }
+
+  // Añadir el listener para el evento 'popstate'
+  window.addEventListener('popstate', handlePopState)
+
+  // Limpiar el listener cuando el componente sea desmontado
+  onBeforeUnmount(() => {
+    window.removeEventListener('popstate', handlePopState)
+  })
+})
+
+watch(currentFileIndex, () => {
+  updateFileData()
+})
 </script>
 
 <style scoped>
@@ -233,6 +359,27 @@ function goToDoing() {
   border-top: 1px solid var(--gray-3);
 }
 
+/* Línea vertical con icono para reabrir la sidebar */
+.open-sidebar-line {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: 4rem;
+  background-color: white;
+  display: flex;
+  align-items: start;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 500;
+}
+
+.open-sidebar-icon {
+  fill: var(--gray-2);
+  padding: 1px;
+  margin-top: 30px;
+}
+
 .descartar-container {
   display: flex;
   align-items: flex-start;
@@ -255,30 +402,17 @@ function goToDoing() {
   background-color: var(--gray-3);
 }
 
-/* Button to reopen the sidebar */
-.open-sidebar-btn {
-  position: fixed;
-  left: 0;
-  top: 50%;
-  z-index: 500;
-  background-color: white;
-  padding: 0.5rem;
-  border-radius: 0 2vh 2vh 0;
-  cursor: pointer;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease-in-out;
-}
-
 /* Adjust content width when sidebar is closed */
 .content-preview {
   margin-left: 400px;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
+  height: 100vh;
 }
 
 .content-preview.full-width {
-  margin-left: 0;
+  margin-left: 4rem;
 }
 /* Top and bottom bars */
 .top-bar {
@@ -289,10 +423,20 @@ function goToDoing() {
   transition: margin-left 0.3s ease-in-out;
 }
 
+/* Cuando la sidebar está abierta */
+.content-preview.sidebar-open .top-bar {
+  margin-left: 500px; /* Ajusta este valor según el ancho de la línea vertical */
+}
+
+/* Cuando la sidebar está cerrada */
+.content-preview.full-width .top-bar {
+  margin-left: 0; /* Igual que arriba */
+}
+
 .textContainer {
   display: flex;
   align-items: center;
-  padding-left: 1rem;
+  padding-left: 1rem; /* Consistent padding */
 }
 
 .textContainer h1 {
@@ -323,32 +467,6 @@ function goToDoing() {
   gap: 1rem;
 }
 
-.zoom-button {
-  background-color: var(--gray-1);
-  border: none;
-  color: white;
-  padding: 0.5rem;
-  border-radius: 0.25rem;
-  cursor: pointer;
-}
-
-.zoom-button:hover {
-  background-color: var(--gray-2);
-}
-
-.zoom-percentage {
-  color: white;
-  font-size: 1rem;
-}
-
-.icon-add,
-.icon-subtract,
-.icon-expand {
-  fill: white;
-  width: 24px;
-  height: 24px;
-}
-
 .button-container2 {
   display: flex;
   justify-content: flex-end;
@@ -362,8 +480,8 @@ function goToDoing() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--blue-1);
-  color: white;
+  background-color: var(--light-blue-2);
+  color: var(--blue-1);
   border: none;
   border-radius: 5px;
   padding: 10px 20px;
@@ -372,11 +490,11 @@ function goToDoing() {
 }
 
 .select-files-btn:hover {
-  background-color: var(--dark-blue-1);
+  background-color: var(--light-blue-1);
 }
 
 .icon-upload {
-  fill: white;
+  fill: var(--blue-1);
   width: 24px;
   height: 24px;
   margin-right: 8px;
@@ -384,6 +502,7 @@ function goToDoing() {
 
 .file-preview {
   flex-grow: 1;
-  padding: 1rem;
+  display: flex;
+  flex-direction: column;
 }
 </style>

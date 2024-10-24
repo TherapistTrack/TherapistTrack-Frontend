@@ -25,29 +25,20 @@
           </div>
         </div>
       </div>
-
-      <!-- Botón de acción -->
-      <div class="actions">
-        <ButtonSimple
-          msg="Continuar"
-          color="blue"
-          @click="goToFinish"
-          :disabled="isButtonDisabled"
-        />
-      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { useUploadStore } from '@/stores/uploadStore'
+import { useRouter, useRoute } from 'vue-router'
 import { DotLottieVue } from '@lottiefiles/dotlottie-vue'
 import InfiniteLoading from '@/components/Feedback/InfiniteLoading/InfiniteLoading.vue'
 
 const router = useRouter()
 const animationInstance = ref(null)
+const route = useRoute()
 
 // Rutas a los archivos JSON
 const animationPathPlane = new URL('@/assets/animations/paper-airplane.json', import.meta.url).href
@@ -57,7 +48,11 @@ const isButtonDisabled = ref(true)
 const uploadStatusText = ref('Subiendo Archivos...')
 const showLoader = ref(true)
 
+const uploadStore = useUploadStore()
+const currentFile = ref(uploadStore.files[0]) // Suponemos que se sube un archivo a la vez
+
 function goToFinish() {
+  console.log('Archivos subidos:', currentFile.value) // Imprimir la información del archivo en la consola
   router.push('/upload/finish')
 }
 
@@ -65,14 +60,42 @@ function handleAnimation(anim) {
   animationInstance.value = anim
 }
 
-// Habilitar el botón después de 3 segundos
+// Habilitar el botón después de 3 segundos y luego redirigir automáticamente después de otros 2 segundos
 onMounted(() => {
+  uploadStore.files.forEach((file, index) => {
+    console.log(`Subiendo archivo ${index + 1}:`, file.data)
+  })
   setTimeout(() => {
     isButtonDisabled.value = false
     uploadStatusText.value = 'Archivos Subidos' // Actualizar el texto
     showLoader.value = true // Ocultar el loader (opcional)
+
     console.log('El botón se ha habilitado y el texto ha cambiado después de 3 segundos.')
+
+    // Esperar 2 segundos más y redirigir automáticamente
+    setTimeout(() => {
+      console.log('Redirigiendo a la página de finalización después de 2 segundos.')
+      goToFinish() // Navegar a la página final
+    }, 1000) // 2000 milisegundos = 1 segundos
   }, 3000) // 3000 milisegundos = 3 segundos
+
+  history.pushState(null, null, document.URL)
+
+  const handlePopState = () => {
+    if (route.name !== 'uploadFiles') {
+      // Bloquear el retroceso si no es la página UploadFiles
+      console.log('Intento de retroceder detectado, redirigiendo a la página actual.')
+      history.pushState(null, null, document.URL)
+    }
+  }
+
+  // Añadir el listener para el evento 'popstate'
+  window.addEventListener('popstate', handlePopState)
+
+  // Limpiar el listener cuando el componente sea desmontado
+  onBeforeUnmount(() => {
+    window.removeEventListener('popstate', handlePopState)
+  })
 })
 </script>
 

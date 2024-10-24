@@ -10,7 +10,7 @@
             <DotLottieVue
               :src="animationPathCheck"
               :autoplay="true"
-              :loop="true"
+              :loop="false"
               @lottie="handleAnimation"
               @complete="handleAnimationComplete"
             />
@@ -30,17 +30,24 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { useUploadStore } from '@/stores/uploadStore' // Adjust the path as necessary
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import { DotLottieVue } from '@lottiefiles/dotlottie-vue'
+import { useRoute } from 'vue-router'
 
 const animationInstance = ref(null)
+
+const uploadStore = useUploadStore()
+const route = useRoute()
 
 // Ruta al archivo JSON en la carpeta 'public'
 const animationPathCheck = new URL('@/assets/animations/check.json', import.meta.url).href
 
 function handleFinish() {
-  console.log('Archivos subidos!')
+  uploadStore.files.forEach((file, index) => {
+    console.log(`Archivos subidos ${index + 1}:`, file)
+  })
 }
 
 function handleAnimation(anim) {
@@ -57,6 +64,30 @@ function triggerFileInput() {
 function handleAnimationComplete() {
   animationInstance.value?.stop()
 }
+
+onMounted(() => {
+  uploadStore.files.forEach((file, index) => {
+    console.log(`Archivos subidos ${index + 1}:`, file)
+  })
+
+  history.pushState(null, null, document.URL)
+
+  const handlePopState = () => {
+    if (route.name !== 'uploadFiles') {
+      // Bloquear el retroceso si no es la página UploadFiles
+      console.log('Intento de retroceder detectado, redirigiendo a la página actual.')
+      history.pushState(null, null, document.URL)
+    }
+  }
+
+  // Añadir el listener para el evento 'popstate'
+  window.addEventListener('popstate', handlePopState)
+
+  // Limpiar el listener cuando el componente sea desmontado
+  onBeforeUnmount(() => {
+    window.removeEventListener('popstate', handlePopState)
+  })
+})
 </script>
 
 <style scoped>
