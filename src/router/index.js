@@ -126,8 +126,33 @@ const router = createRouter({
 
     // PATIENT VIEW
     {
-      path: '/patient/:id',
-      component: () => import('@/pages/notfound/NotFoundView.vue')
+      path: '/patient',
+      component: () => import('@/pages/patient/PatientIndex.vue'),
+      children: [
+        {
+          path: ':userId',
+          component: () => import('@/pages/patient/PatientView.vue'),
+          props: (route) => ({
+            userId: route.params.userId
+          }),
+          children: [
+            {
+              path: 'edit/:fileId',
+              component: () => import('@/pages/notfound/NotFoundView.vue'),
+              props: (route) => ({
+                fileId: route.params.fileId
+              })
+            },
+            {
+              path: 'view/:fileId',
+              component: () => import('@/pages/notfound/NotFoundView.vue'),
+              props: (route) => ({
+                fileId: route.params.fileId
+              })
+            }
+          ]
+        }
+      ]
     },
 
     // UPLOAD VIEW
