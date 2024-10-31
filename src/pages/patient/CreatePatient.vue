@@ -109,22 +109,15 @@ const getTemplateData = async () => {
   let templateId = templateInfo.value.filter((item) => item.name == selectedTemplate.value)[0].id
   try {
     const response = await getRequest(
-      `/doctor/PatientTemplate?doctorId=${doctorId}&templateId=${templateId}`
+      `/doctor/FileTemplate?doctorId=${doctorId}&templateId=${templateId}`
     )
     templateData.value = [
       {
-        name: 'Nombres',
+        name: 'Nombre',
         required: true,
         type: 'SHORT_TEXT',
         options: [],
-        description: 'Nombres del paciente'
-      },
-      {
-        name: 'Apellidos',
-        required: true,
-        type: 'SHORT_TEXT',
-        options: [],
-        description: 'Apellidos del paciente'
+        description: 'Nombre del archive'
       },
       ...response.data.fields
     ]
@@ -139,7 +132,7 @@ onMounted(async () => {
   loading.value = true
   let doctorId = auth0.user.value.sub.split('|')[1]
   try {
-    const response = await getRequest(`/doctor/PatientTemplate/list?doctorId=${doctorId}`)
+    const response = await getRequest(`/doctor/FileTemplate/list?doctorId=${doctorId}`)
     templateInfo.value = response.templates.map((item) => ({
       name: item.name,
       id: item.templateId
@@ -163,7 +156,7 @@ const resetLocalInfo = () => {
 }
 
 const createRecord = () => {
-  router.push('/record/main')
+  router.push('/patient/123')
 }
 </script>
 
