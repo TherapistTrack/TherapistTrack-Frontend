@@ -5,6 +5,7 @@
     v-model:shownHeaders="shownHeaders"
     :allHeaders="allHeaders"
     :allData="fetchedData"
+    :fields="templateFields"
     @updateData="updateData"
     @openEdit="handleOpenEdit"
   />
@@ -27,6 +28,7 @@
         :headers="shownHeaders"
         v-model:loading="loading"
         v-model:page-limit="pageLimit"
+        :fields="templateFields"
         v-model:current-page="currentPage"
         :onClick="handleOpenPreview"
         @hideHeader="onHideField"
@@ -47,6 +49,7 @@ import { useRouter } from 'vue-router'
 import ConfigButton from '@/components/Buttons/ConfigButton.vue'
 import FilterTable from '@/components/DataDisplay/Tables/Filter/FilterTable.vue'
 import files from './files.json'
+import files_template from './file_template.json'
 import { useAuth0 } from '@auth0/auth0-vue'
 
 // Constants
@@ -117,7 +120,7 @@ const updateData = async () => {
 }
 
 const handleOpenEdit = () => {
-  router.push(`/record/main/edit/${selected.value}`)
+  router.push(`/patient/123/edit/${selected.value}`)
 }
 const templateFields = ref({})
 const shownHeaders = ref([])
@@ -136,40 +139,67 @@ const onHideField = (header) => {
   shownHeaders.value.splice(shownHeaders.value.indexOf(header), 1)
 }
 // On Mounted
-const getHeaders = (json) => {
-  let fieldArray = Object.entries(json)
-  let headers = []
-  let tem = {}
-  for (let key in fieldArray) {
-    let record = fieldArray[key][1].fields
-    for (let field in record) {
-      if (!headers.includes(record[field].name)) {
-        headers.push(record[field].name)
-        tem = { type: record[field].type }
-        if (record[field].type === 'choice') {
-          tem['options'] = record[field].options
-        }
-        templateFields.value[record[field].name] = tem
+const getAllHeaders = (template) => {
+  let fields = template.reduce((acc, item) => {
+    acc = item.fields
+    return acc
+  }, {})
+
+  let temFields = fields.reduce((acc, item) => {
+    if (item.type == 'CHOICE') {
+      acc[item.name] = {
+        description: item.description,
+        required: item.required,
+        type: item.type,
+        options: item.options
       }
-      tem = {}
+    } else {
+      acc[item.name] = {
+        description: item.description,
+        required: item.required,
+        type: item.type
+      }
+    }
+    return acc
+  }, {})
+  temFields = {
+    ...temFields,
+    Nombre: {
+      description: 'Nombre del archivo',
+      required: true,
+      type: 'SHORT_TEXT'
+    },
+    fileId: {
+      description: 'Id del archivo',
+      required: true,
+      type: 'SHORT_TEXT'
     }
   }
+  let headers = fields.map((item) => item.name)
+  headers = [...headers, 'Nombre']
+  templateFields.value = temFields
+  allHeaders.value = headers
+  shownHeaders.value = allHeaders.value.slice(0, 4)
   return headers
 }
 
-const convertToObject = (json) => {
-  let fieldArray = Object.entries(json)
-  let object = []
-  let temElement = {}
-  for (let key in fieldArray) {
-    let record = fieldArray[key][1].fields
-    for (let field in record) {
-      temElement[record[field].name] = record[field].value
+const convertToObject = (files) => {
+  let step1 = files.map((item) => {
+    let file = {
+      fileId: item.fileId,
+      Nombre: item.data.name
     }
-    object.push(temElement)
-    temElement = {}
-  }
-  return object
+    let fields = item.data.fields.reduce((acc, item) => {
+      acc[item.name] = item.value
+      return acc
+    }, {})
+    file = {
+      ...file,
+      ...fields
+    }
+    return file
+  })
+  processedData.value = step1
 }
 
 onMounted(async () => {
@@ -180,29 +210,30 @@ onMounted(async () => {
   addToast(successToast)
   // Initial data fetch
   fetchedData.value = files
-  // Obtaining headers from data fetch
-  allHeaders.value = getHeaders(files)
-  shownHeaders.value = allHeaders.value.slice(0, 4)
-  // Convert fetched data into working object
-  processedData.value = convertToObject(files)
-  loading.value = false
+  console.log(files)
 
+  // Obtaining headers from data fetch
+  getAllHeaders(files_template.templates)
+  // Convert fetched data into working object
+  convertToObject(files)
+
+  loading.value = false
   return fetchedData
 })
 
 // Fucntions
 
 const handleOpenPreview = (key) => {
-  selected.value = processedData.value[key]['Record ID']
-  router.push(`/record/main/view/${selected.value}`)
+  selected.value = processedData.value[key].fileId
+  router.push(`/patient/123/view/${selected.value}`)
 }
 
 const handleTableSettings = () => {
-  router.push('/record/main/table-settings')
+  router.push('/patient/123/table-settings')
 }
 
 const handleNewRecord = () => {
-  router.push('/record/create')
+  router.push('/patient/create')
 }
 </script>
 

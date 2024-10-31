@@ -182,6 +182,7 @@ onMounted(async () => {
   // Convert fetched data into working object
   processedData.value = convertToObject(records)
   loading.value = false
+  console.log(templateFields.value)
   return fetchedData
 })
 

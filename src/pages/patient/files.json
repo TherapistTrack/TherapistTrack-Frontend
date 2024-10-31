@@ -3,7 +3,7 @@
         "fileId": "60d0fe4f5311236168a109cc",
         "data": {
             "name": "cita1_paciente",
-            "fiels":[
+            "fields":[
                 {
                     "name": "Fecha de Creación",
                     "options": [],
@@ -23,10 +23,10 @@
         }
     },
     {
-        "fileId": "60d0fe4f5311236168a109cc",
+        "fileId": "60d0fe4f5311236168a209cc",
         "data": {
             "name": "cita2_paciente",
-            "fiels":[
+            "fields":[
                 {
                     "name": "Fecha de Creación",
                     "options": [],
@@ -46,10 +46,10 @@
         }
     },
     {
-        "fileId": "60d0fe4f5311236168a109cc",
+        "fileId": "70d0fe4f5311236168a109cc",
         "data": {
             "name": "Prueba Wise",
-            "fiels":[
+            "fields":[
                 {
                     "name": "Fecha de Creación",
                     "options": [],
@@ -69,10 +69,10 @@
         }
     },
     {
-        "fileId": "60d0fe4f5311236168a109cc",
+        "fileId": "60d8fe4f5311236168a109cc",
         "data": {
             "name": "Dibujo_casa",
-            "fiels":[
+            "fields":[
                 {
                     "name": "Fecha de Creación",
                     "options": [],
