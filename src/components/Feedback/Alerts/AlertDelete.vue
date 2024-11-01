@@ -15,6 +15,17 @@
             Escribe <b>{{ name }}</b> para confirmar la eliminación.
           </p>
         </span>
+        <span v-else-if="type == 'file'">
+          <h3>
+            <b>¿Desea eliminar el archivo con nombre {{ name }}?</b>
+          </h3>
+          <br />
+          <p>Esta acción es irreversible.</p>
+          <br />
+          <p>
+            Escribe <b>{{ name }}</b> para confirmar la eliminación.
+          </p>
+        </span>
         <span v-else>
           <h3>
             <b>¿Desea eliminar el usuario con nombre {{ name }}?</b>
@@ -61,8 +72,6 @@ const props = defineProps({
 })
 
 watch(localName, () => {
-  console.log(localName.value)
-  console.log(props.name)
   if (localName.value == props.name) {
     confirmDelete.value = true
   } else {
