@@ -167,6 +167,32 @@ const router = createRouter({
       ]
     },
 
+    // FILE VIEW
+    {
+      path: '/file',
+      component: () => import('@/pages/file/FileIndex.vue'),
+      children: [
+        {
+          path: 'view/:id',
+          component: () => import('@/pages/file/FileView.vue'),
+          children: [
+            {
+              path: 'info',
+              component: () => import('@/pages/file/FileInfo.vue')
+            },
+            {
+              path: 'editInfo',
+              component: () => import('@/pages/file/EditFileInfo.vue')
+            },
+            {
+              path: 'comments',
+              component: () => import('@/pages/file/FileComments.vue')
+            }
+          ]
+        }
+      ]
+    },
+
     // UPLOAD VIEW
     {
       path: '/upload',
