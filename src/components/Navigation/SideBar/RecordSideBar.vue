@@ -243,7 +243,7 @@ const logout = () => {
 }
 
 .sideSpace#maximized {
-  width: 12vw;
+  width: 160px;
 }
 
 .R-sideBtn .option#selected {
