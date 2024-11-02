@@ -137,7 +137,21 @@ const router = createRouter({
       children: [
         {
           path: 'view/:id',
-          component: () => import('@/pages/file/ViewFile.vue')
+          component: () => import('@/pages/file/FileView.vue'),
+          children: [
+            {
+              path: 'info',
+              component: () => import('@/pages/file/FileInfo.vue')
+            },
+            {
+              path: 'editInfo',
+              component: () => import('@/pages/file/EditFileInfo.vue')
+            },
+            {
+              path: 'comments',
+              component: () => import('@/pages/file/FileComments.vue')
+            }
+          ]
         }
       ]
     },

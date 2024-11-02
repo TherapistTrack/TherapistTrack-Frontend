@@ -1,22 +1,21 @@
 <template>
   <div class="doc-view">
     <div class="doc-head" :id="idConfig.viewerHeader">
-      <RiAddLine class="icon" size="1.5rem" color="white" @click="zoomIn" :id="idConfig.zoomIn" />
+      <RiAddLine class="icon" size="1.5rem" color="white" :id="idConfig.zoomIn" />
       <p>{{ scale }}%</p>
-      <RiSubtractLine
+      <RiSubtractLine class="icon" size="1.5rem" color="white" :id="idConfig.zoomOut" />
+      <RiExpandDiagonalLine
         class="icon"
-        size="1.5rem"
+        size="1.2rem"
         color="white"
-        @click="zoomOut"
-        :id="idConfig.zoomOut"
+        :id="idConfig.presentationMode"
       />
-      <RiExpandDiagonalLine size="1.2rem" color="white" />
     </div>
     <div class="doc-body">
       <VuePdfApp
         :pdf="pdfSrc"
         :id-config="idConfig"
-        :config="{ toolbar: true }"
+        :config="{ toolbar: false }"
         :page-scale="page - width"
         :page-number="1"
       />
@@ -33,22 +32,16 @@ import VuePdfApp from 'vue3-pdf-app'
 const idConfig = {
   zoomIn: 'zoomInId',
   zoomOut: 'zoomOutId',
-  viewerHeader: 'vieweHeaderId'
+  viewerHeader: 'vieweHeaderId',
+  presentationMode: 'presentationModeId'
 }
 
-const scale = ref(100)
 const pdfSrc = ref(test)
-const zoomIn = () => {
-  scale.value += 5
-}
-const zoomOut = () => {
-  scale.value -= 5
-}
 </script>
 
 <style scoped>
 .doc-view {
-  width: 70%;
+  width: 80%;
   justify-content: center;
 }
 
@@ -68,7 +61,7 @@ const zoomOut = () => {
 .doc-body {
   background-color: var(--white);
   padding: 1rem;
-  height: 70vh;
+  height: 65vh;
   overflow-x: scroll;
 }
 
