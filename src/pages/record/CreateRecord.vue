@@ -163,7 +163,7 @@ const resetLocalInfo = () => {
 }
 
 const createRecord = () => {
-  router.push('/record/main')
+  router.push('/doctor/records/')
 }
 </script>
 

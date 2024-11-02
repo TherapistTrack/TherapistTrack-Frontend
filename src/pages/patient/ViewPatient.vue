@@ -89,7 +89,7 @@ onMounted(() => {
 const goBack = () => {
   start.value = false
   setTimeout(() => {
-    router.push('/patient/123')
+    router.push('/doctor/patient/123')
   }, 250) // You can adjust the delay if needed
 }
 

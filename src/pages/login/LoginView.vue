@@ -51,7 +51,7 @@ onMounted(async () => {
     if (rol == 'Admin') {
       router.replace({ path: '/admin/user' })
     } else if ((rol == 'Doctor') | (rol == 'Assistant')) {
-      router.replace({ path: '/record/main' })
+      router.replace({ path: '/doctor/records' })
     }
   }
 })

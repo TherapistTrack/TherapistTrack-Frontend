@@ -1,8 +1,7 @@
 <template>
-  <div class="tabs"></div>
-  <div class="view">
+  <div class="file-view">
     <router-view @enableSpace="onEnableSpace" @disableSpace="onDisnableSpace" />
-    <div class="side-space" :id="isSpaceEnabled ? 'en' : 'dis'"></div>
+    <div class="file-side-space" :id="isSpaceEnabled ? 'en' : 'dis'"></div>
   </div>
 </template>
 
@@ -19,13 +18,6 @@ const onDisnableSpace = () => {
 </script>
 
 <style scoped>
-#app {
-  display: flex;
-  flex-direction: column;
-  background-color: white;
-  font-family: 'MotivaSansMedium';
-}
-
 .side-space {
   transition: width 0.25s;
 }
@@ -41,7 +33,7 @@ const onDisnableSpace = () => {
   display: flex;
   height: 2.3rem;
 }
-.view {
+.file-view {
   display: flex;
   height: auto;
   background-color: white;
