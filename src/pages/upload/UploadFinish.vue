@@ -40,7 +40,6 @@ const animationInstance = ref(null)
 
 const uploadStore = useUploadStore()
 const route = useRoute()
-
 // Ruta al archivo JSON en la carpeta 'public'
 const animationPathCheck = new URL('@/assets/animations/check.json', import.meta.url).href
 

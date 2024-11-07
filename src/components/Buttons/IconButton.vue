@@ -7,7 +7,6 @@
 </template>
 
 <script setup>
-// import { RiArrowUpDownLine, RiFilterFill, RiAddLine } from '@remixicon/vue'
 const props = defineProps({
   msg: {
     type: String,
