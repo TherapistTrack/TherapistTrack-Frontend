@@ -2,30 +2,62 @@
   <div class="table-overlayContainer" @click="goBack()" :id="start ? 'init' : 'end'">
     <div class="table-settings" @click.stop="" :id="start ? 'init' : 'end'">
       <div class="top">
-        <SearchBar :pholder="'Buscar por Nombre'" />
+        <SearchBar :pholder="'Buscar por Nombre'" v-model:search-value="search" />
       </div>
+      <p class="title">Mostrar en la tabla</p>
       <div class="do-show">
-        <p class="title">Mostrar en la tabla</p>
-        <div v-for="(item, key) in localShownHeaders" :key="key" class="active-field">
+        <div
+          v-for="(item, key) in localShownHeaders"
+          :key="key"
+          class="active-field"
+          :draggable="false"
+          @dragstart="handleDragStart(item)"
+          @dragover.prevent=""
+          @drop="handleDrop(item)"
+          @dragend="handleDragEnd"
+        >
           <span>
-            <RiDraggable color="var(--gray-1)" size="1.3rem" />
+            <RiDraggable
+              class="drag-icon"
+              @mousedown="enableDrag"
+              @mouseleave="disableDrag"
+              color="var(--gray-1)"
+              size="1.3rem"
+            />
             <p>{{ item }}</p>
           </span>
-          <RiEyeFill color="var(--gray-1)" size="1.1rem" @click="deactivateField(key)" />
+          <span>
+            <TypeIconLoader :iconType="fields[item].type" />
+            <RiEyeFill
+              class="see-icon"
+              color="var(--gray-1)"
+              size="1.1rem"
+              @click="deactivateField(item)"
+            />
+          </span>
         </div>
       </div>
-
       <div class="no-show">
-        <p class="title">Ocultar en la Tabla</p>
-        <template v-for="(item, key) in props.allHeaders" :key="key">
-          <div v-if="!Object.keys(localShownHeaders).includes(key)" class="inactive-field">
-            <span>
-              <RiDraggable color="var(--gray-1)" size="1.3rem" />
-              <p>{{ item }}</p>
-            </span>
-            <RiEyeOffFill color="var(--gray-2)" size="1.1rem" @click="activateField(key)" />
+        <span
+          v-for="type in ['SHORT_TEXT', 'TEXT', 'CHOICE', 'DATE', 'NUMBER', 'FLOAT']"
+          :key="type"
+        >
+          <div class="type-title">
+            <p>{{ titleTranslate[type] }}</p>
+            <TypeIconLoader :icon-type="type" />
           </div>
-        </template>
+          <span
+            v-for="(item, key) in localAllHeaders.filter(
+              (item) => !realShownHeaders.includes(item) && fields[item].type == type
+            )"
+            :key="key"
+          >
+            <div class="inactive-field">
+              <p>{{ item }}</p>
+              <RiEyeOffFill color="var(--gray-2)" size="1.1rem" @click="activateField(item)" />
+            </div>
+          </span>
+        </span>
       </div>
     </div>
   </div>
@@ -33,50 +65,125 @@
 
 <script setup>
 import { RiEyeFill, RiEyeOffFill, RiDraggable } from '@remixicon/vue'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch, toRaw } from 'vue'
 import { useRouter } from 'vue-router'
 import SearchBar from '@/components/Forms/InputField/SearchBar.vue'
+import TypeIconLoader from '@/assets/TypeIcons/TypeIconLoader.vue'
+
+// EMITS
+const emit = defineEmits(['update:shownHeaders'])
+// PROPS
 const props = defineProps({
   allHeaders: Object,
-  shownHeaders: Object
+  shownHeaders: Object,
+  fields: Object
 })
 
+// VARIABLES
+const initAllHeaders = ref(JSON.parse(JSON.stringify(toRaw(props.allHeaders))))
+const localShownHeaders = ref(JSON.parse(JSON.stringify(toRaw(props.shownHeaders))))
+const localAllHeaders = ref(JSON.parse(JSON.stringify(toRaw(props.allHeaders))))
+const realShownHeaders = ref(JSON.parse(JSON.stringify(toRaw(props.shownHeaders))))
 const start = ref(false)
+const search = ref('')
 const router = useRouter()
-const localShownHeaders = ref({ ...props.shownHeaders })
+const draggedItem = ref(null)
+const titleTranslate = ref({
+  TEXT: 'Texto',
+  SHORT_TEXT: 'Texto Corto',
+  DATE: 'Fecha',
+  CHOICE: 'Selección',
+  NUMBER: 'Numero',
+  FLOAT: 'Decimal'
+})
 
+// FUNCTIONS
+
+// Drag Logic
+const handleDragStart = (item) => {
+  draggedItem.value = item
+}
+const handleDrop = (item) => {
+  const droppedItem = realShownHeaders.value.splice(
+    realShownHeaders.value.indexOf(draggedItem.value),
+    1
+  )[0]
+  realShownHeaders.value.splice(realShownHeaders.value.indexOf(item), 0, droppedItem)
+  updateLocalFields()
+}
+const handleDragEnd = () => {
+  draggedItem.value = null
+}
+const enableDrag = (event) => {
+  event.target.closest('.active-field').setAttribute('draggable', 'true')
+}
+const disableDrag = (event) => {
+  event.target.closest('.active-field').setAttribute('draggable', 'false')
+}
+
+// On Mounted
 onMounted(() => {
   setTimeout(() => {
     start.value = true
-  }, 2) // You can adjust the delay if needed
+  }, 2) // delay is so it doesnt close before it starts
 })
 
+watch(search, () => {
+  // Updates local fields acording to search value
+  updateLocalFields()
+})
+
+// Showing/hiding field logic
+const updateLocalFields = () => {
+  if (search.value != '' && search.value != undefined) {
+    localShownHeaders.value = realShownHeaders.value.filter((item) =>
+      item.toLowerCase().includes(search.value.toLowerCase())
+    )
+    localAllHeaders.value = initAllHeaders.value.filter((item) =>
+      item.toLowerCase().includes(search.value.toLowerCase())
+    )
+  } else {
+    localShownHeaders.value = JSON.parse(JSON.stringify(realShownHeaders.value))
+    localAllHeaders.value = JSON.parse(JSON.stringify(initAllHeaders.value))
+  }
+}
+
+const deactivateField = (field) => {
+  if (toRaw(realShownHeaders.value).length > 1) {
+    realShownHeaders.value.splice(realShownHeaders.value.indexOf(field), 1)
+    updateLocalFields()
+  }
+}
+
+const activateField = (field) => {
+  if (!realShownHeaders.value.includes(field)) {
+    realShownHeaders.value.push(field)
+  }
+  updateLocalFields()
+}
+
+// Navigation
 const goBack = () => {
   start.value = false
-  setTimeout(() => {
-    router.back()
-  }, 250) // You can adjust the delay if needed
-}
-
-const deactivateField = (key) => {
-  delete localShownHeaders.value[key]
-  updateShownHeaders()
-}
-
-const activateField = (key) => {
-  if (!localShownHeaders.value[key]) {
-    localShownHeaders.value[key] = props.allHeaders[key]
-  }
-  updateShownHeaders()
-}
-// Emiting change for shown headers:
-const emit = defineEmits(['update:shownHeaders'])
-const updateShownHeaders = () => {
   emit('update:shownHeaders', localShownHeaders.value)
+  setTimeout(() => {
+    router.push('/doctor/records')
+  }, 250) // Delay so closing animation plays before unloading component
 }
 </script>
 
 <style>
+.type-title {
+  margin-top: 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  border-bottom: 1px solid var(--gray-3);
+  margin-bottom: 0.5rem;
+}
+.type-title p {
+  color: var(--gray-1);
+}
 .table-overlayContainer {
   height: 100%;
   width: 100%;
@@ -104,6 +211,7 @@ const updateShownHeaders = () => {
 }
 .table-overlayContainer .title {
   color: var(--gray-1);
+  margin-top: 1rem;
 }
 
 .table-settings {
@@ -114,8 +222,8 @@ const updateShownHeaders = () => {
   overflow-y: auto;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   border-radius: 2vh 0 0 0;
-  width: 220px;
-  height: 80vh;
+  width: 290px;
+  height: 85vh;
   padding: 1.5rem;
   transition: right 0.3s;
 }
@@ -135,10 +243,13 @@ const updateShownHeaders = () => {
 /* Areas */
 .table-settings .do-show,
 .table-settings .no-show {
-  padding-top: 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
+  overflow-y: scroll;
+}
+.no-show {
+  margin-top: 1rem;
 }
 
 /* Draggable Fields */
@@ -154,6 +265,13 @@ const updateShownHeaders = () => {
   padding-right: 0.4rem;
 }
 
+.table-settings .active-field .drag-icon {
+  cursor: grab;
+}
+.table-settings .active-field .see-icon {
+  cursor: pointer;
+}
+
 .table-settings .active-field:hover,
 .table-settings .inactive-field:hover {
   background-color: var(--gray-3);
@@ -163,5 +281,13 @@ const updateShownHeaders = () => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.inactive-field {
+  margin-left: 1rem;
+}
+.icon {
+  height: 0.9rem;
+  width: 0.9rem;
 }
 </style>

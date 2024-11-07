@@ -7,6 +7,7 @@
 </template>
 
 <script setup>
+// import { RiArrowUpDownLine, RiFilterFill, RiAddLine } from '@remixicon/vue'
 const props = defineProps({
   msg: {
     type: String,
@@ -53,7 +54,7 @@ function handleClick() {
 
 .icon-button-component p {
   color: var(--gray-1);
-  font-size: 2.2vh;
+  font-size: small;
 }
 
 .icon-button-component:hover {

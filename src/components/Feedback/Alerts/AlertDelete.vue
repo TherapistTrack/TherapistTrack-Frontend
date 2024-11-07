@@ -2,17 +2,44 @@
   <div class="overlay-container">
     <div class="alert-container">
       <div class="alert-text">
-        <h3>
-          <b>¿Desea eliminar el expediente de {{ name }}?</b>
-        </h3>
-        <br />
-        <p>
-          Esta acción es irreversible, los archivos de este paciente serán eliminados totalmente.
-        </p>
-        <br />
-        <p>
-          Escribe <b>{{ name }}</b> para confirmar la eliminación.
-        </p>
+        <span v-if="type == 'record'">
+          <h3>
+            <b>¿Desea eliminar el expediente de {{ name }}?</b>
+          </h3>
+          <br />
+          <p>
+            Esta acción es irreversible, los archivos de este paciente serán eliminados totalmente.
+          </p>
+          <br />
+          <p>
+            Escribe <b>{{ name }}</b> para confirmar la eliminación.
+          </p>
+        </span>
+        <span v-else-if="type == 'file'">
+          <h3>
+            <b>¿Desea eliminar el archivo con nombre {{ name }}?</b>
+          </h3>
+          <br />
+          <p>Esta acción es irreversible.</p>
+          <br />
+          <p>
+            Escribe <b>{{ name }}</b> para confirmar la eliminación.
+          </p>
+        </span>
+        <span v-else>
+          <h3>
+            <b>¿Desea eliminar el usuario con nombre {{ name }}?</b>
+          </h3>
+          <br />
+          <p>
+            Esta acción es irreversible, la información asociada a este usuario será eliminada
+            totalmente.
+          </p>
+          <br />
+          <p>
+            Escribe <b>{{ name }}</b> para confirmar la eliminación.
+          </p>
+        </span>
       </div>
       <InputFieldSimple :id="'input-name'" v-model:model-value="localName" />
       <div class="alert-options">
@@ -40,7 +67,8 @@ const props = defineProps({
     default: ''
   },
   onYes: Function,
-  onNo: Function
+  onNo: Function,
+  type: String
 })
 
 watch(localName, () => {

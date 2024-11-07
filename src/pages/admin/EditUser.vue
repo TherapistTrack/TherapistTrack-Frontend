@@ -43,7 +43,7 @@
               v-model="user.specialty"
             />
           </span>
-          <span v-else>
+          <span v-else-if="user.rol == 'Assistant'">
             <InputField
               :id="'start-date'"
               :label="'Fecha inicio'"
@@ -133,41 +133,41 @@ onMounted(async () => {
   } catch {
     router.back()
   }
+
   user.value = {
     id: props.userId,
     names: localData.value.names || '',
     lastNames: localData.value.lastNames || '',
     phones: localData.value.phones || [],
     rol: localData.value.rol || '',
-    collegiateNumber: localData.value.rolDependentInfo[0].collegiateNumber || '',
-    specialty: localData.value.rolDependentInfo[0].specialty || '',
-    mails: localData.value.mails || [],
-    DPI: localData.value.rolDependentInfo[0].DPI || '',
-    startDate: '',
-    endDate: ''
+    mails: localData.value.mails || []
   }
   startData.value = {
+    id: props.userId,
     names: localData.value.names || '',
     lastNames: localData.value.lastNames || '',
-    phones: JSON.parse(JSON.stringify(localData.value.phones)) || [],
+    phones: localData.value.phones || [],
     rol: localData.value.rol || '',
-    collegiateNumber: localData.value.rolDependentInfo[0].collegiateNumber || '',
-    specialty: localData.value.rolDependentInfo[0].specialty || '',
-    mails: JSON.parse(JSON.stringify(localData.value.mails)) || [],
-    DPI: localData.value.rolDependentInfo[0].DPI || '',
-    startDate: '',
-    endDate: ''
+    mails: localData.value.mails || []
   }
-  try {
-    user.value.startDate = localData.value.rolDependentInfo[0].startDate.slice(0, 10)
-    user.value.endDate = localData.value.rolDependentInfo[0].endDate.slice(0, 10)
-    startData.value.startDate = localData.value.rolDependentInfo[0].startDate.slice(0, 10)
-    startData.value.endDate = localData.value.rolDependentInfo[0].endDate.slice(0, 10)
-  } catch {
-    user.value.startDate = ''
-    user.value.endDate = ''
-    startData.value.startDate = ''
-    startData.value.endDate = ''
+  if (localData.value.rol == 'Doctor') {
+    user.value['collegiateNumber'] = localData.value.roleDependentInfo.collegiateNumber || ''
+    user.value['specialty'] = localData.value.roleDependentInfo.specialty || ''
+    startData.value['collegiateNumber'] = localData.value.roleDependentInfo.collegiateNumber || ''
+    startData.value['specialty'] = localData.value.roleDependentInfo.specialty || ''
+  } else if (localData.value.rol == 'Assistant') {
+    user.value['DPI'] = localData.value.roleDependentInfo.DPI || ''
+    try {
+      user.value['startDate'] = localData.value.roleDependentInfo.startDate.slice(0, 10)
+      user.value['endDate'] = localData.value.roleDependentInfo.endDate.slice(0, 10)
+      startData.value['startDate'] = localData.value.roleDependentInfo.startDate.slice(0, 10)
+      startData.value['endDate'] = localData.value.roleDependentInfo.endDate.slice(0, 10)
+    } catch {
+      user.value.startDate = ''
+      user.value.endDate = ''
+      startData.value.startDate = ''
+      startData.value.endDate = ''
+    }
   }
 })
 
@@ -215,12 +215,12 @@ const updateUser = async () => {
         mails: [...user.value.mails]
       }
       if (user.value.rol == 'Doctor') {
-        formatedUser.value['rolDependentInfo'] = {
+        formatedUser.value['roleDependentInfo'] = {
           collegiateNumber: user.value.collegiateNumber,
           specialty: user.value.specialty
         }
       } else {
-        formatedUser.value['rolDependentInfo'] = {
+        formatedUser.value['roleDependentInfo'] = {
           startDate: user.value.startDate,
           endDate: user.value.endDate,
           DPI: user.value.DPI

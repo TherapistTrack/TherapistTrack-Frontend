@@ -7,9 +7,7 @@
           ? 'button-red'
           : color == 'white'
             ? 'button-white'
-            : color == 'blue'
-              ? 'button-blue'
-              : ''
+            : 'button-green'
     "
     @click="handleClick"
     :disabled="disabled"
@@ -61,19 +59,18 @@ button#disabled {
 button#disabled b {
   color: white;
 }
+.button-green {
+  background-color: var(--green-1);
+}
+.button-green:hover {
+  background-color: var(--green-2);
+}
 
 .button-yellow {
   background-color: var(--yellow-1);
 }
 .button-yellow:hover {
   background-color: var(--yellow-2);
-}
-
-.button-blue {
-  background-color: var(--blue-1);
-}
-.button-blue:hover {
-  background-color: var(--dark-blue-1);
 }
 
 .button-red {

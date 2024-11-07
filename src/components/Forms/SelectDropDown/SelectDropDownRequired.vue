@@ -1,7 +1,8 @@
 <template>
   <div class="select-group">
-    <label @mouseover="onMouseOver" @mouseleave="onMouseLeave" :for="id"
-      >{{ label }}<b class="red">*</b>
+    <label @mouseover="onMouseOver" @mouseleave="onMouseLeave" :for="id">
+      <TypeIconLoader :icon-type="'CHOICE'" />
+      <p>{{ label }}<b class="red">*</b></p>
       <div v-if="isHovered" class="descriptor">{{ description }}</div>
     </label>
 
@@ -13,6 +14,7 @@
 </template>
 
 <script setup>
+import TypeIconLoader from '@/assets/TypeIcons/TypeIconLoader.vue'
 import { ref } from 'vue'
 
 const isHovered = ref(false)
@@ -55,6 +57,10 @@ defineProps({
   description: {
     type: String,
     required: true
+  },
+  showTypeIcon: {
+    type: Boolean,
+    default: false
   }
 })
 </script>
@@ -64,7 +70,7 @@ defineProps({
   font-family: 'MotivaSansMedium';
   margin-bottom: 1rem;
   display: grid;
-  grid-template-columns: 1fr 3fr;
+  grid-template-columns: 1fr 1fr;
   gap: 1rem;
 }
 .select-group .red {
@@ -85,12 +91,16 @@ defineProps({
 .select-group label {
   padding-bottom: 1vh;
   position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 .select-group select,
 .select-group select option {
   font-family: 'MotivaSansMedium';
   font-weight: normal;
   font-style: normal;
+  width: 170px;
 }
 .select-group select {
   padding: 0.75rem;

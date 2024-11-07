@@ -38,7 +38,7 @@
             :label="'Rol'"
             :id="'role'"
             v-model="user.rol"
-            :options="['Doctor', 'Assistant']"
+            :options="['Doctor', 'Assistant', 'Admin']"
           />
           <!-- Campos condicionales para "Doctor" -->
           <span v-if="user.rol === 'Doctor'">
@@ -144,21 +144,10 @@ const goBack = () => {
   router.back()
 }
 
-function generateRandomId() {
-  let objectId = ''
-  for (let i = 0; i < 24; i++) {
-    const randomHexDigit = Math.floor(Math.random() * 16).toString(16)
-    objectId += randomHexDigit
-  }
-
-  return objectId
-}
-
 const createUser = async () => {
   if (valid.value) {
-    let objectId = generateRandomId()
     formatedUser.value = {
-      id: objectId,
+      id: user.value.id,
       names: user.value.names,
       lastNames: user.value.lastNames,
       phones: [...user.value.phones],
@@ -166,12 +155,12 @@ const createUser = async () => {
       mails: [...user.value.mails]
     }
     if (user.value.rol == 'Doctor') {
-      formatedUser.value['rolDependentInfo'] = {
+      formatedUser.value['roleDependentInfo'] = {
         collegiateNumber: user.value.collegiateNumber,
         specialty: user.value.specialty
       }
     } else {
-      formatedUser.value['rolDependentInfo'] = {
+      formatedUser.value['roleDependentInfo'] = {
         startDate: user.value.startDate,
         endDate: user.value.endDate,
         DPI: user.value.DPI
