@@ -5,25 +5,25 @@
         <!-- Título o contenido adicional si es necesario -->
       </div>
       <div class="content-container">
-        <div class="animation-container">
-          <div class="airplane-container">
+        <div class="animation-container" @click="triggerFileInput">
+          <div class="check-container">
             <DotLottieVue
-              :src="animationPathPlane"
+              :src="animationPathCheck"
               :autoplay="true"
-              :loop="true"
+              :loop="false"
               @lottie="handleAnimation"
+              @complete="handleAnimationComplete"
             />
           </div>
-          <div class="line-container" v-if="showLoader">
-            <div class="loader-wrapper">
-              <InfiniteLoading />
-            </div>
-          </div>
           <div class="upload-text">
-            <p>{{ uploadStatusText }}</p>
-            <p>No cierres la App</p>
+            <p>Archivos Subidos Exitosamente!</p>
           </div>
         </div>
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="actions">
+        <ButtonSimple msg="Finalizar" color="blue" @click="handleFinish" />
       </div>
     </div>
   </div>
@@ -31,53 +31,43 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { useUploadStore } from '@/stores/uploadStore'
-import { useRouter, useRoute } from 'vue-router'
+import { useUploadStore } from '@/stores/uploadStore' // Adjust the path as necessary
+import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import { DotLottieVue } from '@lottiefiles/dotlottie-vue'
-import InfiniteLoading from '@/components/Feedback/InfiniteLoading/InfiniteLoading.vue'
+import { useRoute } from 'vue-router'
 
-const router = useRouter()
 const animationInstance = ref(null)
-const route = useRoute()
-
-// Rutas a los archivos JSON
-const animationPathPlane = new URL('@/assets/animations/paper-airplane.json', import.meta.url).href
-
-// Propiedad reactiva para controlar el estado del botón
-const isButtonDisabled = ref(true)
-const uploadStatusText = ref('Subiendo Archivos...')
-const showLoader = ref(true)
 
 const uploadStore = useUploadStore()
-const currentFile = ref(uploadStore.files[0]) // Suponemos que se sube un archivo a la vez
+const route = useRoute()
+// Ruta al archivo JSON en la carpeta 'public'
+const animationPathCheck = new URL('@/assets/animations/check.json', import.meta.url).href
 
-function goToFinish() {
-  console.log('Archivos subidos:', currentFile.value) // Imprimir la información del archivo en la consola
-  router.push('/upload/finish')
+function handleFinish() {
+  uploadStore.files.forEach((file, index) => {
+    console.log(`Archivos subidos ${index + 1}:`, file)
+  })
 }
 
 function handleAnimation(anim) {
   animationInstance.value = anim
 }
 
-// Habilitar el botón después de 3 segundos y luego redirigir automáticamente después de otros 2 segundos
+function triggerFileInput() {
+  if (animationInstance.value) {
+    animationInstance.value.stop()
+    animationInstance.value.play()
+  }
+}
+
+function handleAnimationComplete() {
+  animationInstance.value?.stop()
+}
+
 onMounted(() => {
   uploadStore.files.forEach((file, index) => {
-    console.log(`Subiendo archivo ${index + 1}:`, file.data)
+    console.log(`Archivos subidos ${index + 1}:`, file)
   })
-  setTimeout(() => {
-    isButtonDisabled.value = false
-    uploadStatusText.value = 'Archivos Subidos' // Actualizar el texto
-    showLoader.value = true // Ocultar el loader (opcional)
-
-    console.log('El botón se ha habilitado y el texto ha cambiado después de 3 segundos.')
-
-    // Esperar 2 segundos más y redirigir automáticamente
-    setTimeout(() => {
-      console.log('Redirigiendo a la página de finalización después de 2 segundos.')
-      goToFinish() // Navegar a la página final
-    }, 1000) // 2000 milisegundos = 1 segundos
-  }, 3000) // 3000 milisegundos = 3 segundos
 
   history.pushState(null, null, document.URL)
 
@@ -138,31 +128,14 @@ onMounted(() => {
   padding: 0;
 }
 
-.airplane-container {
+.check-container {
   width: 100%;
   max-width: 500px;
   margin: 0;
   padding: 0;
 }
 
-.line-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  margin-bottom: 20px;
-}
-
-.loader-wrapper {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-}
-
-.airplane-container .dotlottie-player,
-.line-container .dotlottie-player {
+.check-container .dotlottie-player {
   width: 100%;
   height: auto;
   margin: 0;

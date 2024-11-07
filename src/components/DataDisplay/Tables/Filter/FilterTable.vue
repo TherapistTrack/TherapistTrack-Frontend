@@ -27,7 +27,12 @@
     <div class="fns-grid">
       <div class="s-table">
         <div class="header">
-          <IconButton :type="'sort'" :onClick="handleOpenSortForm" />
+          <IconButton
+            msg="Ordenar"
+            :onClick="handleOpenSortForm"
+            :first-icon="RiArrowUpDownLine"
+            :second-icon="RiAddLine"
+          />
         </div>
 
         <div class="field-body">
@@ -53,7 +58,12 @@
       </div>
       <div clas="f-table">
         <div class="header">
-          <IconButton :type="'filtro'" :onClick="handleOpenFilterForm" />
+          <IconButton
+            msg="Nuevo Filtro"
+            :onClick="handleOpenFilterForm"
+            :first-icon="RiFilterFill"
+            :second-icon="RiAddLine"
+          />
         </div>
         <div class="field-body">
           <div class="filter-grid">
@@ -87,7 +97,7 @@ import FormOverlay from './FormOverlay.vue'
 import IconButton from '@/components/Buttons/IconButton.vue'
 import FilterComponent from './FilterComponent.vue'
 import { ref } from 'vue'
-import { RiDeleteBin7Fill } from '@remixicon/vue'
+import { RiDeleteBin7Fill, RiArrowUpDownLine, RiFilterFill, RiAddLine } from '@remixicon/vue'
 import EditOverlay from './EditOverlay.vue'
 
 const emit = defineEmits(['updateFilters', 'updateSorts'])

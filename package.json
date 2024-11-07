@@ -20,11 +20,13 @@
   "dependencies": {
     "@auth0/auth0-vue": "^2.3.3",
     "@fortawesome/fontawesome-svg-core": "^6.5.2",
+    "@lottiefiles/dotlottie-vue": "^0.4.15",
     "@remixicon/vue": "^4.2.0",
     "@vitejs/plugin-vue": "^5.0.5",
     "axios": "^1.7.5",
     "husky": "^9.0.11",
     "pdf-vue3": "^1.0.12",
+    "pdfjs-dist": "^2.16.105",
     "pinia": "^2.1.7",
     "vee-validate": "^4.13.2",
     "vite": "^5.3.3",
