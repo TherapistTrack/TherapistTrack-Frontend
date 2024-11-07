@@ -81,13 +81,16 @@ const router = createRouter({
         }
       ]
     },
-    // RECORD VIEW
+
+    // DOCTOR VIEWS
+
     {
-      path: '/record',
-      component: () => import('@/pages/record/RecordIndex.vue'),
+      path: '/doctor',
+      component: () => import('@/pages/doctor/DoctorIndex.vue'),
       children: [
+        // Records Flow
         {
-          path: 'main',
+          path: 'records',
           component: () => import('@/pages/record/RecordView.vue'),
           children: [
             {
@@ -117,24 +120,16 @@ const router = createRouter({
             }
           ]
         },
-        {
-          path: 'create',
-          component: () => import('@/pages/record/CreateRecord.vue')
-        }
-      ]
-    },
 
-    // PATIENT VIEW
-    {
-      path: '/patient',
-      component: () => import('@/pages/patient/PatientIndex.vue'),
-      children: [
+        // Create Record
         {
-          path: 'create',
-          component: () => import('@/pages/patient/CreatePatient.vue')
+          path: 'create-record',
+          component: () => import('@/pages/record/CreateRecord.vue')
         },
+
+        // Patient Flow
         {
-          path: ':userId',
+          path: 'patient/:userId',
           component: () => import('@/pages/patient/PatientView.vue'),
           props: (route) => ({
             userId: route.params.userId
@@ -163,30 +158,36 @@ const router = createRouter({
               }
             }
           ]
-        }
-      ]
-    },
+        },
 
-    // FILE VIEW
-    {
-      path: '/file',
-      component: () => import('@/pages/file/FileIndex.vue'),
-      children: [
+        // Create Patient
         {
-          path: 'view/:id',
-          component: () => import('@/pages/file/FileView.vue'),
+          path: 'create-file',
+          component: () => import('@/pages/patient/CreatePatient.vue')
+        },
+
+        // File Flow
+        {
+          path: 'file',
+          component: () => import('@/pages/file/FileIndex.vue'),
           children: [
             {
-              path: 'info',
-              component: () => import('@/pages/file/FileInfo.vue')
-            },
-            {
-              path: 'editInfo',
-              component: () => import('@/pages/file/EditFileInfo.vue')
-            },
-            {
-              path: 'comments',
-              component: () => import('@/pages/file/FileComments.vue')
+              path: 'view/:id',
+              component: () => import('@/pages/file/FileView.vue'),
+              children: [
+                {
+                  path: 'info',
+                  component: () => import('@/pages/file/FileInfo.vue')
+                },
+                {
+                  path: 'editInfo',
+                  component: () => import('@/pages/file/EditFileInfo.vue')
+                },
+                {
+                  path: 'comments',
+                  component: () => import('@/pages/file/FileComments.vue')
+                }
+              ]
             }
           ]
         }

@@ -66,18 +66,18 @@ const handleNext = () => {
 
 const onShowComments = () => {
   emit('enableSpace')
-  router.push('/file/view/123/comments')
+  router.push('/doctor/file/view/123/comments')
 }
 const onHideComments = () => {
-  router.push('/file/view/123')
+  router.push('/doctor/file/view/123')
 }
 
 const onShowInfo = () => {
   emit('enableSpace')
-  router.push('/file/view/123/info')
+  router.push('/doctor/file/view/123/info')
 }
 const onHideInfo = () => {
-  router.push('/file/view/123')
+  router.push('/doctor/file/view/123')
 }
 
 const onDownload = () => {
@@ -89,10 +89,10 @@ const onDownload = () => {
 }
 
 const onShowEdit = () => {
-  router.push('/file/view/123/editInfo')
+  router.push('/doctor/file/view/123/editInfo')
 }
 const onHideEdit = () => {
-  console.log('/file/view/123/')
+  console.log('/doctor/file/view/123')
 }
 const disableSpace = () => {
   emit('disableSpace')

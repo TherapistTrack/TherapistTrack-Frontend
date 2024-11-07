@@ -4,6 +4,13 @@
   </div>
 </template>
 
+<script setup>
+import { provide } from 'vue'
+import { useTabs } from './components/DataDisplay/Composables/useTabs'
+
+const tabManager = useTabs()
+provide('tabManager', tabManager)
+</script>
 <script>
 export default {
   name: 'App'

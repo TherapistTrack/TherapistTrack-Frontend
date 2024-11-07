@@ -167,7 +167,7 @@ const goBack = () => {
   start.value = false
   emit('update:shownHeaders', localShownHeaders.value)
   setTimeout(() => {
-    router.push('/patient/123')
+    router.push('/doctor/patient/123')
   }, 250) // Delay so closing animation plays before unloading component
 }
 </script>

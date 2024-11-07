@@ -114,7 +114,7 @@ const updateData = async () => {
 }
 
 const handleOpenEdit = () => {
-  router.push(`/record/main/edit/${selected.value}`)
+  router.push(`/doctor/records/edit/${selected.value}`)
 }
 const templateFields = ref({})
 const shownHeaders = ref([])
@@ -190,15 +190,15 @@ onMounted(async () => {
 
 const handleOpenPreview = (key) => {
   selected.value = processedData.value[key]['Record ID']
-  router.push(`/record/main/view/${selected.value}`)
+  router.push(`/doctor/records/view/${selected.value}`)
 }
 
 const handleTableSettings = () => {
-  router.push('/record/main/table-settings')
+  router.push('/doctor/records/table-settings')
 }
 
 const handleNewRecord = () => {
-  router.push('/record/create')
+  router.push('create-record')
 }
 </script>
 
