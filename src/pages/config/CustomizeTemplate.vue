@@ -25,27 +25,25 @@
           <div class="field-name">
             <span class="field-label">{{ field.name }}</span>
           </div>
+          <!-- Tipo de Dato -->
           <div class="field-type">
             <DropdownField
-              v-if="!field.isConfigured"
               :id="'dropdown-' + index"
               :label="'Seleccione un tipo'"
               :disabledValue="'Seleccionar...'"
               :options="dataTypes"
               v-model="field.type"
-              @update:modelValue="configureField(index)"
+              @change="handleFieldTypeChange(index, $event.target.value)"
+              :disabled="!isEditing.value"
             />
-            <div v-else>
-              <span>{{ field.type }}</span>
-              <div class="reconfigure-button-container">
-                <button @click="reconfigureField(index)" class="reconfigure-button">
-                  Cambiar Tipo
-                </button>
-              </div>
-            </div>
           </div>
           <div class="field-required">
-            <Checkbox :id="'required-' + index" label="" v-model="field.required" />
+            <Checkbox
+              :id="'required-' + index"
+              label=""
+              v-model="field.required"
+              @change="handleFieldRequiredChange(index, $event.target.checked)"
+            />
           </div>
           <div class="field-options">
             <button class="more-options-btn" @click="handleContextMenu($event, field)">...</button>
@@ -56,7 +54,18 @@
         </button>
       </div>
 
-      <ButtonSimple msg="Guardar" class="save-button button-component" @click="saveTemplate" />
+      <ButtonSimple
+        v-if="!isEditing"
+        msg="Guardar"
+        class="save-button button-component"
+        @click="saveTemplate"
+      />
+      <ButtonSimple
+        v-else
+        msg="Regresar"
+        class="back-button button-component"
+        @click="goBackToPatients"
+      />
 
       <ContextMenu
         :position="contextMenuPosition"
@@ -91,7 +100,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import Checkbox from '@/components/Forms/CheckBox/CheckBox.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
@@ -101,17 +110,24 @@ import RemoveTemplate from '@/components/Feedback/Modals/RemoveTemplate.vue'
 import CreateTemplate from '@/components/Feedback/Modals/CreateTemplate.vue'
 import RenameTemplate from '@/components/Feedback/Modals/RenameTemplate.vue'
 import { useContextMenu } from '@/components/DataDisplay/Composables/useContextMenu.js'
+import { useApi } from '@/oauth/useApi'
+import { useAuth0 } from '@auth0/auth0-vue'
 
 const router = useRouter()
 const route = useRoute()
+const { getRequest, postRequest, putRequest, deleteRequest } = useApi()
+const auth0 = useAuth0()
 
-const templateName = ref(route.query.name || 'Plantilla-2024')
+const isEditing = ref(false)
+
+const templateId = ref(route.params.templateId || null)
+const templateName = ref(route.query.name || 'Nueva Plantilla')
 
 const dataTypes = ['SHORT_TEXT', 'TEXT', 'NUMBER', 'FLOAT', 'DATE']
 
 const fields = ref([
-  { name: 'Nombres', type: '', value: '', required: true, isConfigured: false },
-  { name: 'Apellidos', type: '', value: '', required: true, isConfigured: false },
+  { name: 'Primer Nombre', type: '', value: '', required: true, isConfigured: false },
+  { name: 'Apellido Familiar', type: '', value: '', required: true, isConfigured: false },
   { name: 'Hijos', type: '', value: '', required: false, isConfigured: false },
   { name: 'Estado Civil', type: '', value: '', required: false, isConfigured: false }
 ])
@@ -136,26 +152,117 @@ function showRenameModal() {
   isRenameModalVisible.value = true
 }
 
-function addNewField({ name, type }) {
-  fields.value.push({
+function goBackToPatients() {
+  router.push('/config/patients')
+}
+
+function addNewField({ name, type, required = false }) {
+  const newField = {
     name,
     type,
-    value: '',
-    required: false,
-    isConfigured: true
-  })
+    required
+  }
+
+  // Llamar a la función de agregar campo al servidor
+  addFieldToTemplate(newField)
   isCreateFieldModalVisible.value = false
 }
 
 function renameField(newName) {
-  selectedField.value.name = newName
+  const field = selectedField.value
+  const oldFieldName = field.name
+  field.name = newName
   isRenameModalVisible.value = false
+
+  if (!isEditing.value) {
+    // Modo creación: el cambio se guarda localmente y se enviará al guardar
+    return
+  }
+
+  const updatedFieldData = {
+    ...field,
+    name: newName
+  }
+
+  // Llamar a la función para editar el campo en el backend
+  editFieldInTemplate(oldFieldName, updatedFieldData)
 }
 
-function saveTemplate() {
-  console.log('Plantilla guardada:', fields.value)
-  router.push('/config/patients')
+async function saveTemplate() {
+  if (!templateName.value.trim()) {
+    alert('El nombre de la plantilla es requerido')
+    return
+  }
+
+  // Validación de campos...
+
+  const requestBody = {
+    doctorId: '66de4e2e2e0651893bc6b225',
+    name: templateName.value,
+    categories: ['General'],
+    fields: fields.value.map((field) => ({
+      name: field.name,
+      type: field.type,
+      required: field.required === true,
+      options: field.options || [],
+      description: field.description || 'Descripción predeterminada'
+    }))
+  }
+
+  try {
+    // Crear la nueva plantilla
+    const response = await postRequest('/doctor/PatientTemplate', requestBody)
+    console.log('Plantilla creada exitosamente:', response)
+
+    // Actualiza templateId y isEditing para reflejar la nueva plantilla
+    templateId.value = response.data.patientTemplateId
+    isEditing.value = true
+
+    // Redirigir o mostrar mensaje de éxito
+    router.push('/config/patients')
+  } catch (error) {
+    console.error('Error al guardar la plantilla:', error)
+    if (error.response && error.response.data) {
+      console.error('Detalles del error:', error.response.data)
+      alert(`Error al guardar la plantilla: ${error.response.data.message}`)
+    } else {
+      console.error('No se recibió respuesta del servidor')
+      alert('Error al guardar la plantilla')
+    }
+  }
 }
+
+// Load the template if we're editing an existing one
+async function loadTemplateData(templateId) {
+  try {
+    const doctorId = '66de4e2e2e0651893bc6b225'
+    const response = await getRequest(
+      `/doctor/PatientTemplate?doctorId=${doctorId}&templateId=${templateId}`
+    )
+
+    if (response.status === 200 && response.data) {
+      templateName.value = response.data.name
+      fields.value = response.data.fields.map((field) => ({
+        ...field,
+        isConfigured: true
+      }))
+      console.log('Datos de la plantilla cargados:', response.data)
+    } else {
+      console.error('No se encontraron datos de la plantilla en la respuesta:', response)
+    }
+  } catch (error) {
+    console.error('Error al cargar los datos de la plantilla:', error)
+  }
+}
+
+onMounted(() => {
+  if (templateId.value) {
+    isEditing.value = true
+    loadTemplateData(templateId.value)
+  } else {
+    console.log('Esta es una nueva plantilla sin un ID en el backend aún.')
+  }
+})
 
 function handleContextMenu(event, field) {
   event.stopPropagation()
@@ -167,19 +274,168 @@ function showRemoveModal() {
   isRemoveModalVisible.value = true
 }
 
-function removeField() {
-  fields.value = fields.value.filter((field) => field !== selectedField.value)
-  isRemoveModalVisible.value = false
-  hideContextMenu()
+// Agregar un log para verificar el token al inicio (debugging)
+auth0
+  .getAccessTokenSilently()
+  .then((token) => {
+    console.log('Access Token obtenido:', token)
+  })
+  .catch((error) => {
+    console.error('Error obteniendo el Access Token:', error)
+  })
+
+async function addFieldToTemplate(newField) {
+  if (!isEditing.value) {
+    // Modo creación: agregar el campo localmente
+    fields.value.push({ ...newField, isConfigured: true })
+    return
+  }
+
+  // Modo edición: enviar solicitud al backend
+  if (!templateId.value) {
+    console.error('El templateId no está definido')
+    return
+  }
+  const requestBody = {
+    doctorId: '66de4e2e2e0651893bc6b225',
+    templateId: templateId.value,
+    field: {
+      name: newField.name,
+      type: newField.type,
+      required: newField.required === true,
+      options: newField.options || [],
+      description: newField.description || 'Descripción predeterminada'
+    }
+  }
+
+  console.log('Datos para enviar a la API:', JSON.stringify(requestBody, null, 2))
+
+  try {
+    const response = await postRequest('/doctor/PatientTemplate/fields', requestBody)
+    console.log('Campo añadido exitosamente:', response.message)
+    fields.value.push({ ...newField, isConfigured: true })
+  } catch (error) {
+    console.error('Error al añadir el campo:', error)
+    alert(`Error al añadir el campo: ${error.response?.data?.message || error.message}`)
+  }
 }
 
-function configureField(index) {
-  fields.value[index].isConfigured = true
+// Función para editar un campo de la plantilla
+async function editFieldInTemplate(oldFieldName, updatedFieldData) {
+  if (!templateId.value || !oldFieldName) {
+    alert('Información insuficiente para editar el campo')
+    return
+  }
+
+  const requestBody = {
+    doctorId: '66de4e2e2e0651893bc6b225',
+    templateId: templateId.value,
+    oldFieldName,
+    fieldData: {
+      name: updatedFieldData.name,
+      type: updatedFieldData.type,
+      required: updatedFieldData.required === true,
+      options: updatedFieldData.options || [],
+      description: updatedFieldData.description || 'Descripción predeterminada'
+    }
+  }
+
+  try {
+    const response = await putRequest('/doctor/PatientTemplate/fields', requestBody)
+    console.log('Campo editado exitosamente:', response.message)
+    // Actualiza el campo en el estado local
+    const index = fields.value.findIndex((field) => field.name === oldFieldName)
+    if (index !== -1) {
+      fields.value[index] = { ...updatedFieldData, isConfigured: true }
+    }
+  } catch (error) {
+    console.error('Error al editar el campo:', error)
+    alert(`Error al editar el campo: ${error.response?.data?.message || error.message}`)
+  }
 }
 
-function reconfigureField(index) {
-  fields.value[index].isConfigured = false
-  fields.value[index].type = ''
+function handleFieldTypeChange(index, newType) {
+  if (!isEditing.value) {
+    fields.value[index].type = newType
+    return
+  }
+
+  const field = fields.value[index]
+  const oldFieldName = field.name
+
+  const updatedFieldData = {
+    ...field,
+    type: newType
+  }
+
+  editFieldInTemplate(oldFieldName, updatedFieldData)
+}
+
+function handleFieldRequiredChange(index, isRequired) {
+  if (!isEditing.value) {
+    fields.value[index].required = isRequired
+    return
+  }
+
+  const field = fields.value[index]
+  const oldFieldName = field.name
+
+  const updatedFieldData = {
+    ...field,
+    required: isRequired
+  }
+
+  editFieldInTemplate(oldFieldName, updatedFieldData)
+}
+
+async function deleteFieldFromTemplate(fieldName) {
+  if (!fieldName) {
+    alert('Información insuficiente para eliminar el campo.')
+    return
+  }
+
+  if (!isEditing.value) {
+    // Modo creación: eliminar el campo localmente
+    fields.value = fields.value.filter((field) => field.name !== fieldName)
+    isRemoveModalVisible.value = false
+    hideContextMenu()
+    return
+  }
+
+  // Modo edición: enviar solicitud al backend
+  if (!templateId.value) {
+    console.error('El templateId no está definido')
+    return
+  }
+
+  const requestBody = {
+    doctorId: '66de4e2e2e0651893bc6b225',
+    templateId: templateId.value,
+    name: fieldName
+  }
+
+  try {
+    const response = await deleteRequest('/doctor/PatientTemplate/fields', requestBody)
+    console.log('Campo eliminado exitosamente:', response.message)
+    // Actualizar el estado local
+    fields.value = fields.value.filter((field) => field.name !== fieldName)
+  } catch (error) {
+    console.error('Error al eliminar el campo:', error)
+    alert(`Error al eliminar el campo: ${error.response?.data?.message || error.message}`)
+  } finally {
+    isRemoveModalVisible.value = false
+    hideContextMenu()
+  }
+}
+
+async function removeField() {
+  const field = selectedField.value
+  if (!field || !field.name) {
+    alert('Campo inválido para eliminar.')
+    return
+  }
+
+  await deleteFieldFromTemplate(field.name)
 }
 </script>
 
