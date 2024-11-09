@@ -1,0 +1,399 @@
+{
+    "status": 201,
+    "message": "Success",
+    "records": [
+        {
+            "recordId": "64f12a7b4efc1234a789bcde",
+            "templateId": "671729a0bbbe0854912a4f24",
+            "createdAt": "2024/09/01",
+            "patient": {
+                "names": "Juan Andrés",
+                "lastNames": "De la Rosa",
+                "fields": [
+                    {
+                        "name": "Estado Civil",
+                        "type": "CHOICE",
+                        "options": ["Soltero", "Casado", "Separado"],
+                        "value": "Soltero",
+                        "required": true
+                      },
+                      {
+                        "name": "Fecha de Nacimiento",
+                        "type": "DATE",
+                        "value": "2003-02-02",
+                        "required": true
+                      },
+                      {
+                        "name": "Escolaridad",
+                        "type": "TEXT",
+                        "value": "Universidad",
+                        "required": false
+                      },
+                      {
+                        "name": "Ultima Cita",
+                        "type": "DATE",
+                        "value": "2024-08-01",
+                        "required": false
+                      },
+                      {
+                        "name": "Numero de Citas",
+                        "type": "NUMBER",
+                        "value": "10",
+                        "required": false
+                      },
+                      {
+                        "name": "Nombre de Pareja",
+                        "type": "TEXT",
+                        "options": [],
+                        "description": "",
+                        "required": false
+                    }
+                ]
+            }
+        },
+        {
+            "recordId": "5fa67c8d9b0d1e23f456def0",
+            "templateId": "671729a0bbbe0854912a4f24",
+            "createdAt": "2024/09/01",
+            "patient": {
+                "names": "María Fernanda",
+                "lastNames": "García López",
+                "fields": [
+                    {
+                        "name": "Estado Civil",
+                        "type": "CHOICE",
+                        "options": ["Soltero", "Casado", "Separado"],
+                        "value": "Casado",
+                        "required": true
+                      },
+                      {
+                        "name": "Fecha de Nacimiento",
+                        "type": "DATE",
+                        "value": "1998-05-14",
+                        "required": true
+                      },
+                      {
+                        "name": "Escolaridad",
+                        "type": "TEXT",
+                        "value": "Maestría",
+                        "required": false
+                      },
+                      {
+                        "name": "Ultima Cita",
+                        "type": "DATE",
+                        "value": "2024-09-05",
+                        "required": false
+                      },
+                      {
+                        "name": "Numero de Citas",
+                        "type": "NUMBER",
+                        "value": "2",
+                        "required": false
+                      },
+                      {
+                        "name": "Nombre de Pareja",
+                        "type": "TEXT",
+                        "options": [],
+                        "description": "Luis Martínez",
+                        "required": false
+                    }
+                ]
+            }
+        },
+        {
+          "recordId": "60d3c2fa7bc8a5e9b0c12345",
+          "templateId": "671729a0bbbe0854912a4f24",
+          "createdAt": "2024/09/01",
+          "patient": {
+              "names": "Carlos Eduardo",
+              "lastNames": "Martínez Rodríguez",
+              "fields": [
+                  {
+                      "name": "Estado Civil",
+                      "type": "CHOICE",
+                      "options": ["Soltero", "Casado", "Separado"],
+                      "value": "Separado",
+                      "required": true
+                    },
+                    {
+                      "name": "Fecha de Nacimiento",
+                      "type": "DATE",
+                      "value": "1985-09-23",
+                      "required": true
+                    },
+                    {
+                      "name": "Escolaridad",
+                      "type": "TEXT",
+                      "value": "Doctorado",
+                      "required": false
+                    },
+                    {
+                      "name": "Ultima Cita",
+                      "type": "DATE",
+                      "value": "2024-07-15",
+                      "required": false
+                    },
+                    {
+                      "name": "Numero de Citas",
+                      "type": "NUMBER",
+                      "value": "5",
+                      "required": false
+                    },
+                    {
+                      "name": "Nombre de Pareja",
+                      "type": "TEXT",
+                      "options": [],
+                      "description": "",
+                      "required": false
+                  }
+              ]
+          }
+        },
+        {
+          "recordId": "60d3c2fa7bc8a5e9b0c12345",
+          "templateId": "671729a0bbbe0854912a4f24",
+          "createdAt": "2024/09/01",
+          "patient": {
+              "names": "Luisa Gabriela",
+              "lastNames": "Pérez Sánchez",
+              "fields": [
+                  {
+                      "name": "Estado Civil",
+                      "type": "CHOICE",
+                      "options": ["Soltero", "Casado", "Separado"],
+                      "value": "Casado",
+                      "required": true
+                    },
+                    {
+                      "name": "Fecha de Nacimiento",
+                      "type": "DATE",
+                      "value": "1990-11-11",
+                      "required": true
+                    },
+                    {
+                      "name": "Escolaridad",
+                      "type": "TEXT",
+                      "value": "Bachillerato",
+                      "required": false
+                    },
+                    {
+                      "name": "Ultima Cita",
+                      "type": "DATE",
+                      "value": "2024-08-20",
+                      "required": false
+                    },
+                    {
+                      "name": "Numero de Citas",
+                      "type": "NUMBER",
+                      "value": "6",
+                      "required": false
+                    },
+                    {
+                      "name": "Nombre de Pareja",
+                      "type": "TEXT",
+                      "options": [],
+                      "description": "Carlos Hernández",
+                      "required": false
+                  }
+              ]
+          }
+        },
+        {
+          "recordId": "7c3b9d4e2f6a7b1c0d9e3456",
+          "templateId": "671729a0bbbe0854912a4f24",
+          "createdAt": "2024/09/01",
+          "patient": {
+              "names": "Santiago Felipe",
+              "lastNames": "Ramírez Ruiz",
+              "fields": [
+                  {
+                      "name": "Estado Civil",
+                      "type": "CHOICE",
+                      "options": ["Soltero", "Casado", "Separado"],
+                      "value": "Soltero",
+                      "required": true
+                    },
+                    {
+                      "name": "Fecha de Nacimiento",
+                      "type": "DATE",
+                      "value": "2000-04-07",
+                      "required": true
+                    },
+                    {
+                      "name": "Escolaridad",
+                      "type": "TEXT",
+                      "value": "Universidad",
+                      "required": false
+                    },
+                    {
+                      "name": "Ultima Cita",
+                      "type": "DATE",
+                      "value": "2024-08-10",
+                      "required": false
+                    },
+                    {
+                      "name": "Numero de Citas",
+                      "type": "NUMBER",
+                      "value": "12",
+                      "required": false
+                    },
+                    {
+                      "name": "Nombre de Pareja",
+                      "type": "TEXT",
+                      "options": [],
+                      "description": "",
+                      "required": false
+                  }
+              ]
+          }
+        },
+        {
+          "recordId": "5b7e9f1a8c3d2b4e6f7a0987",
+          "templateId": "671729a0bbbe0854912a4f24",
+          "createdAt": "2024/09/01",
+          "patient": {
+              "names": "Ana Sofía",
+              "lastNames": "López Martínez",
+              "fields": [
+                  {
+                      "name": "Estado Civil",
+                      "type": "CHOICE",
+                      "options": ["Soltero", "Casado", "Separado"],
+                      "value": "Casado",
+                      "required": true
+                    },
+                    {
+                      "name": "Fecha de Nacimiento",
+                      "type": "DATE",
+                      "value": "1988-03-18",
+                      "required": true
+                    },
+                    {
+                      "name": "Escolaridad",
+                      "type": "TEXT",
+                      "value": "Licenciatura",
+                      "required": false
+                    },
+                    {
+                      "name": "Ultima Cita",
+                      "type": "DATE",
+                      "value": "2024-09-01",
+                      "required": false
+                    },
+                    {
+                      "name": "Numero de Citas",
+                      "type": "NUMBER",
+                      "value": "5",
+                      "required": false
+                    },
+                    {
+                      "name": "Nombre de Pareja",
+                      "type": "TEXT",
+                      "options": [],
+                      "description": "Lucía Fernandez",
+                      "required": false
+                  }
+              ]
+          }
+        },
+        {
+          "recordId": "5b7e9f1a8c3d2b4e6f7a0987",
+          "templateId": "671729a0bbbe0854912a4f24",
+          "createdAt": "2024/09/01",
+          "patient": {
+              "names": "Ricardo Manuel",
+              "lastNames": "Torres Herrera",
+              "fields": [
+                  {
+                      "name": "Estado Civil",
+                      "type": "CHOICE",
+                      "options": ["Soltero", "Casado", "Separado"],
+                      "value": "Separado",
+                      "required": true
+                    },
+                    {
+                      "name": "Fecha de Nacimiento",
+                      "type": "DATE",
+                      "value": "1979-12-30",
+                      "required": true
+                    },
+                    {
+                      "name": "Escolaridad",
+                      "type": "TEXT",
+                      "value": "Maestría",
+                      "required": false
+                    },
+                    {
+                      "name": "Ultima Cita",
+                      "type": "DATE",
+                      "value": "2024-07-29",
+                      "required": false
+                    },
+                    {
+                      "name": "Numero de Citas",
+                      "type": "NUMBER",
+                      "value": "9",
+                      "required": false
+                    },
+                    {
+                      "name": "Nombre de Pareja",
+                      "type": "TEXT",
+                      "options": [],
+                      "description": "",
+                      "required": false
+                  }
+              ]
+          }
+        },
+        {
+          "recordId": "8f1b2d3e4c5a6b7d8e9f0c1b",
+          "templateId": "671729a0bbbe0854912a4f24",
+          "createdAt": "2024/09/01",
+          "patient": {
+              "names": "Elena Victoria",
+              "lastNames": "Gómez Castro",
+              "fields": [
+                  {
+                      "name": "Estado Civil",
+                      "type": "CHOICE",
+                      "options": ["Soltero", "Casado", "Separado"],
+                      "value": "Soltero",
+                      "required": true
+                    },
+                    {
+                      "name": "Fecha de Nacimiento",
+                      "type": "DATE",
+                      "value": "1995-06-09",
+                      "required": true
+                    },
+                    {
+                      "name": "Escolaridad",
+                      "type": "TEXT",
+                      "value": "Universidad",
+                      "required": false
+                    },
+                    {
+                      "name": "Ultima Cita",
+                      "type": "DATE",
+                      "value": "2024-08-18",
+                      "required": false
+                    },
+                    {
+                      "name": "Numero de Citas",
+                      "type": "NUMBER",
+                      "value": "9",
+                      "required": false
+                    },
+                    {
+                      "name": "Nombre de Pareja",
+                      "type": "TEXT",
+                      "options": [],
+                      "description": "",
+                      "required": false
+                  }
+              ]
+          }
+        }
+    ],
+    "total": 25
+}

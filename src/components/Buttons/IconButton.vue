@@ -1,26 +1,45 @@
 <template>
-  <div class="icon-button-component" @click="handleClick">
-    <RiArrowUpDownLine v-if="type == 'sort'" size="1.2rem" color="var(--gray-2)" />
-    <RiFilterFill size="1.2rem" color="var(--gray-2)" v-else />
-
-    <p v-if="type == 'sort'">Ordenar</p>
-    <p v-else>Nuevo Filtro</p>
-    <RiAddLine size="1.2rem" color="var(--gray-2)" />
+  <div class="icon-button-component" :class="{ disabled: props.disabled }" @click="handleClick">
+    <component v-if="firstIcon" :is="firstIcon" size="1.5rem" color="var(--gray-2)" />
+    <p>{{ msg }}</p>
+    <component v-if="secondIcon" :is="secondIcon" size="1.5rem" color="var(--gray-2)" />
   </div>
 </template>
 
 <script setup>
-import { RiArrowUpDownLine, RiFilterFill, RiAddLine } from '@remixicon/vue'
 const props = defineProps({
-  type: String,
-  onClick: Function
+  msg: {
+    type: String,
+    default: ''
+  },
+  disabled: {
+    type: Boolean,
+    default: false
+  },
+  firstIcon: {
+    type: Object,
+    required: false,
+    default: null
+  },
+  secondIcon: {
+    type: Object,
+    required: false,
+    default: null
+  },
+  onClick: {
+    type: Function,
+    default: null
+  }
 })
-const handleClick = () => {
-  props.onClick()
+
+function handleClick() {
+  if (!props.disabled && props.onClick) {
+    props.onClick()
+  }
 }
 </script>
 
-<style>
+<style scoped>
 .icon-button-component {
   padding: 0.4rem 1rem;
   border-radius: 0.7vh;
@@ -39,5 +58,11 @@ const handleClick = () => {
 
 .icon-button-component:hover {
   background-color: var(--gray-3);
+}
+
+.icon-button-component.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  pointer-events: none;
 }
 </style>

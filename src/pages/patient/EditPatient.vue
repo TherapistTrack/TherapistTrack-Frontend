@@ -3,7 +3,7 @@
     <div class="view-record" @click.stop="" :id="start ? 'init' : 'end'">
       <div class="top">
         <h1>
-          <b>{{ userData['Nombre'] }}<br />{{ userData['Apellido'] }}</b>
+          <b>{{ userData['Nombre'] }}</b>
         </h1>
         <RiCloseLine
           class-name="icon"
@@ -13,73 +13,81 @@
           @click="goBack()"
         />
       </div>
-      <div class="actions">
-        <RiEditBoxLine
-          class-name="act-edit"
-          size="1.5rem"
-          color="var(--gray-1)"
-          alt="edit"
-          @click="handleOpenEdit()"
-        />
-        <RiDeleteBin7Fill
-          class-name="act-delete"
-          size="1.5rem"
-          color="var(--gray-1)"
-          alt="delete"
-          @click="handleDelete(props.userId)"
-        />
-      </div>
       <div class="mid">
-        <SimpleTable
-          :data="userData"
-          :headers="userHeaders"
-          :isSet="true"
-          :has-type="true"
-          :fields="fields"
-        />
+        <span v-for="header in userHeaders" :key="header">
+          <span
+            v-if="fieldInfo[header].options !== null && fieldInfo[header].options !== undefined"
+          >
+            <span v-if="fieldInfo[header].required">
+              <SelectDropDownRequired
+                :label="header"
+                :disabled-value="'Escoga una opción'"
+                :model-value="userData[header]"
+                :options="fieldInfo[header].options"
+              />
+            </span>
+            <span v-else>
+              <SelectDropDown
+                :label="header"
+                :disabled-value="'Escoga una opción'"
+                :model-value="userData[header]"
+                :options="fieldInfo[header].options"
+              />
+            </span>
+          </span>
+          <span v-else>
+            <span v-if="fieldInfo[header].required">
+              <InputFieldRequired
+                :label="header"
+                :model-value="userData[header]"
+                :type="fieldInfo[header].type"
+              />
+            </span>
+            <span v-else>
+              <InputField
+                :label="header"
+                :model-value="userData[header]"
+                :type="fieldInfo[header].type"
+              />
+            </span>
+          </span>
+        </span>
       </div>
-
       <div class="bottom">
-        <ButtonSimple :msg="'Abrir'" />
+        <ButtonSimple :msg="'Guardar'" :color="'yellow'" />
       </div>
     </div>
   </div>
-
-  <AlertDelete
-    v-if="tryDelete"
-    :name="`${userData['Nombre']} ${userData['Apellidos']}`"
-    :on-no="abortDelete"
-    :on-yes="onDelete"
-    :type="'record'"
-  />
 </template>
 
 <script setup>
-import { RiCloseLine, RiEditBoxLine, RiDeleteBin7Fill } from '@remixicon/vue'
-import { ref, onMounted } from 'vue'
+import { RiCloseLine } from '@remixicon/vue'
+import { ref, onMounted, toRaw } from 'vue'
 import { useRouter } from 'vue-router'
-import SimpleTable from '@/components/DataDisplay/Tables/SimpleTable.vue'
+import InputField from '@/components/Forms/InputField/InputField.vue'
+import InputFieldRequired from '@/components/Forms/InputField/InputFieldRequired.vue'
+import SelectDropDown from '@/components/Forms/SelectDropDown/SelectDropDown.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
-import AlertDelete from '@/components/Feedback/Alerts/AlertDelete.vue'
 
-const ready = ref(false)
+import SelectDropDownRequired from '@/components/Forms/SelectDropDown/SelectDropDownRequired.vue'
+
 const start = ref(false)
 const router = useRouter()
-const userData = ref(null)
-const userHeaders = ref([])
-const tryDelete = ref(false)
 const props = defineProps({
-  recordId: String,
+  fileId: String,
   viewData: Object,
+  allData: Object,
   fields: Object
 })
+const ready = ref(false)
 
-const emit = defineEmits(['updateData', 'openEdit'])
+const userData = ref(null)
+const userHeaders = ref([])
+const fieldInfo = ref(JSON.parse(JSON.stringify(toRaw(props.fields))))
 
 onMounted(() => {
-  userData.value = props.viewData.filter((item) => item['Record ID'] === props.recordId)[0]
+  userData.value = props.viewData.filter((item) => item.fileId === props.fileId)[0]
   userHeaders.value = Object.keys(userData.value)
-
   ready.value = true
   setTimeout(() => {
     start.value = true
@@ -89,29 +97,8 @@ onMounted(() => {
 const goBack = () => {
   start.value = false
   setTimeout(() => {
-    router.push('/doctor/records')
-  }, 250) // You can adjust the delay if needed
-}
-
-const handleDelete = (id) => {
-  // Deleting based on the id
-  console.log(id)
-  tryDelete.value = true
-}
-const abortDelete = () => {
-  tryDelete.value = false
-}
-
-const onDelete = () => {
-  console.log('SE ELIMINA')
-  tryDelete.value = false
-  goBack()
-}
-
-const handleOpenEdit = () => {
-  start.value = false
-  setTimeout(() => {
-    emit('openEdit')
+    router.back()
+    router.back()
   }, 250) // You can adjust the delay if needed
 }
 </script>
@@ -148,9 +135,6 @@ const handleOpenEdit = () => {
   height: 100vh;
   padding: 2rem;
   transition: right 0.3s;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
 }
 .view-record#init {
   right: 0;
@@ -177,20 +161,12 @@ const handleOpenEdit = () => {
 .view-record .top {
   display: flex;
   justify-content: space-between;
-  padding-bottom: 0.3rem;
-}
-.view-record .actions {
-  display: flex;
-  gap: 1.5rem;
   padding-bottom: 1rem;
 }
 .view-record .mid {
   padding: 1rem;
-  height: 385px;
+  height: 360px;
   overflow-y: auto;
-}
-.view-record .mid * {
-  font-size: 0.8rem;
 }
 
 .view-record .bottom {

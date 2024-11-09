@@ -20,16 +20,21 @@
   "dependencies": {
     "@auth0/auth0-vue": "^2.3.3",
     "@fortawesome/fontawesome-svg-core": "^6.5.2",
+    "@lottiefiles/dotlottie-vue": "^0.4.15",
     "@remixicon/vue": "^4.2.0",
     "@vitejs/plugin-vue": "^5.0.5",
     "axios": "^1.7.5",
     "husky": "^9.0.11",
     "nanoid": "^5.0.8",
+    "pdf-vue3": "^1.0.12",
+    "pdfjs-dist": "^2.16.105",
+
     "pinia": "^2.1.7",
     "vee-validate": "^4.13.2",
     "vite": "^5.3.3",
     "vue": "^3.4.31",
     "vue-router": "^4.3.0",
+    "vue3-pdf-app": "^1.0.3",
     "yup": "^1.4.0"
   },
   "devDependencies": {

@@ -1,7 +1,7 @@
 <template>
-  <div class="tabs">
-    <RecordSideBar :minim="minim" @updateValue="updateMinim" />
-    <!-- All the tabs will be shown here -->
+  <div class="doctor-top">
+    <RecordSideBar v-if="showSidebar" :minim="minim" @updateValue="updateMinim" />
+    <Tabs />
   </div>
   <div class="view">
     <div class="sideSpace" :id="minim ? '' : 'max'"></div>
@@ -18,7 +18,11 @@
 <script setup>
 import RecordSideBar from '@/components/Navigation/SideBar/RecordSideBar.vue'
 import { ref } from 'vue'
+import Tabs from '@/components/Tabs/TabComponent.vue'
 import ToastLoader from '@/components/Feedback/Toast/ToastLoader.vue'
+
+const showSidebar = ref(true)
+
 const minim = ref(true)
 const toastList = ref([])
 
@@ -35,7 +39,7 @@ const updateMinim = () => {
 }
 </script>
 
-<style>
+<style scoped>
 #app {
   display: flex;
   flex-direction: column;
@@ -43,16 +47,16 @@ const updateMinim = () => {
   font-family: 'MotivaSansMedium';
 }
 
-.tabs {
+.doctor-top {
+  display: flex;
   background-color: var(--gray-3);
   border-bottom: 1px solid var(--gray-4);
-  display: flex;
 }
-
 .view {
   display: flex;
   height: auto;
   background-color: white;
+  height: 100%;
 }
 .toast-loader {
   position: fixed;

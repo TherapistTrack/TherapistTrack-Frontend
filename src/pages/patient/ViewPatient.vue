@@ -3,7 +3,7 @@
     <div class="view-record" @click.stop="" :id="start ? 'init' : 'end'">
       <div class="top">
         <h1>
-          <b>{{ userData['Nombre'] }}<br />{{ userData['Apellido'] }}</b>
+          <b>{{ userData['Nombre'] }}</b>
         </h1>
         <RiCloseLine
           class-name="icon"
@@ -26,7 +26,7 @@
           size="1.5rem"
           color="var(--gray-1)"
           alt="delete"
-          @click="handleDelete(props.userId)"
+          @click="handleDelete(props.fileId)"
         />
       </div>
       <div class="mid">
@@ -47,10 +47,10 @@
 
   <AlertDelete
     v-if="tryDelete"
-    :name="`${userData['Nombre']} ${userData['Apellidos']}`"
+    :name="`${userData['Nombre']}`"
     :on-no="abortDelete"
     :on-yes="onDelete"
-    :type="'record'"
+    :type="'file'"
   />
 </template>
 
@@ -69,7 +69,7 @@ const userData = ref(null)
 const userHeaders = ref([])
 const tryDelete = ref(false)
 const props = defineProps({
-  recordId: String,
+  fileId: String,
   viewData: Object,
   fields: Object
 })
@@ -77,7 +77,7 @@ const props = defineProps({
 const emit = defineEmits(['updateData', 'openEdit'])
 
 onMounted(() => {
-  userData.value = props.viewData.filter((item) => item['Record ID'] === props.recordId)[0]
+  userData.value = props.viewData.filter((item) => item.fileId === props.fileId)[0]
   userHeaders.value = Object.keys(userData.value)
 
   ready.value = true
@@ -89,7 +89,7 @@ onMounted(() => {
 const goBack = () => {
   start.value = false
   setTimeout(() => {
-    router.push('/doctor/records')
+    router.push('/doctor/patient/123')
   }, 250) // You can adjust the delay if needed
 }
 
