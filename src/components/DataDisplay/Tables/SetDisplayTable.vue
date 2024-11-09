@@ -19,9 +19,10 @@
       <div
         v-else
         class="table-row"
-        v-for="(item, key) in data"
-        :key="key"
-        @click="handleClick(key)"
+        v-for="(item, index) in data"
+        :key="index"
+        @click="handleClick(index)"
+        @contextmenu.prevent="handleContextMenu($event, item)"
       >
         <p class="table-item" v-for="(elem, key) in headers" :key="key">
           {{ item[key] }}
@@ -41,8 +42,16 @@ const props = defineProps({
   headers: Object,
   success: Boolean
 })
+
+const emit = defineEmits(['rowClick', 'contextmenu'])
+
 function handleClick(key) {
-  props.onClick(key)
+  emit('rowClick', props.data[key])
+}
+
+function handleContextMenu(event, patient) {
+  event.preventDefault() // Evita el menú contextual predeterminado
+  emit('contextmenu', event, patient) // Emitir el evento hacia el componente padre
 }
 </script>
 

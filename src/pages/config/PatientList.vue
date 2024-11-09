@@ -31,7 +31,7 @@
         :headers="tableHeaders"
         :success="true"
         @rowClick="handlePatientClick"
-        @contextmenu.prevent="showContextMenu($event, patient)"
+        @contextmenu="showContextMenu"
       ></SetDisplayTable>
 
       <!-- Context Menu -->
@@ -69,7 +69,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import SearchBar from '@/components/Forms/InputField/SearchBar.vue'
@@ -79,33 +79,30 @@ import RenameTemplate from '@/components/Feedback/Modals/RenameTemplate.vue'
 import RemoveTemplate from '@/components/Feedback/Modals/RemoveTemplate.vue'
 import { useContextMenu } from '@/components/DataDisplay/Composables/useContextMenu.js'
 import SetDisplayTable from '@/components/DataDisplay/Tables/SetDisplayTable.vue'
+import { useApi } from '@/oauth/useApi'
 
 // Usa useRouter para definir router
 const router = useRouter()
+
+const { patchRequest, getRequest, deleteRequest } = useApi()
 
 const searchQuery = ref('')
 const loading = ref(false)
 const isCreateModalVisible = ref(false)
 const isRenameModalVisible = ref(false)
 const isRemoveModalVisible = ref(false)
+const patients = ref([])
 const selectedPatient = ref({})
 
 const {
   position: contextMenuPosition,
   visible: contextMenuVisible,
-  showContextMenu,
   hideContextMenu
 } = useContextMenu()
 
-const patients = ref([
-  { id: 1, name: 'Plantilla Infante', createdAt: '02/3/2025' },
-  { id: 2, name: '2024-Adulto-v1', createdAt: '10/5/2024' },
-  { id: 3, name: '2016-Adulto-v0', createdAt: '30/6/2016' }
-])
-
 const tableHeaders = ref({
   name: 'Nombre',
-  createdAt: 'Created at'
+  createdAt: 'Fecha de Creación'
 })
 
 const filteredPatients = computed(() =>
@@ -119,18 +116,26 @@ function showCreateModal() {
 }
 
 function addNewTemplate(templateName) {
-  patients.value.push({
-    id: patients.value.length + 1,
-    name: templateName,
-    createdAt: new Date().toLocaleDateString()
-  })
+  // Cierra el modal de creación
   isCreateModalVisible.value = false
-  // Pasa el nombre de la plantilla como un parámetro
-  router.push({ path: '/config/template', query: { name: templateName } })
+
+  // Navega al componente CustomizeTemplate sin templateId, indicando que es una nueva plantilla
+  router.push({
+    path: `/config/template`,
+    query: { name: templateName }
+  })
 }
 
 function showRenameModal() {
   hideContextMenu()
+  console.log('Paciente recibido en showRenameModal:', selectedPatient.value)
+
+  if (!selectedPatient.value || !selectedPatient.value.name) {
+    console.error('No se ha seleccionado un paciente válido para renombrar.')
+    return
+  }
+
+  console.log('selectedPatient después de asignación en showRenameModal:', selectedPatient.value)
   isRenameModalVisible.value = true
 }
 
@@ -139,18 +144,154 @@ function showRemoveModal() {
   isRemoveModalVisible.value = true
 }
 
-function renamePatient(newName) {
-  selectedPatient.value.name = newName
+function handlePatientClick(patient) {
+  console.log('Paciente seleccionado:', patient)
+  if (patient && patient.templateId) {
+    router.push({ path: `/config/template/${patient.templateId}` })
+  } else {
+    console.error('El ID de la plantilla es requerido para redirigir.')
+  }
+}
+
+async function loadTemplates() {
+  loading.value = true
+  try {
+    const doctorId = '66de4e2e2e0651893bc6b225'
+    const response = await getRequest(`/doctor/PatientTemplate/list?doctorId=${doctorId}`)
+    console.log('Plantillas obtenidas:', response)
+
+    // Acceder a response.templates directamente
+    if (response.status === 200 && Array.isArray(response.templates)) {
+      patients.value = response.templates.map((template) => ({
+        templateId: template.templateId,
+        name: template.name,
+        createdAt: new Date(template.lastUpdate).toLocaleDateString()
+      }))
+    } else {
+      console.error('No se encontraron plantillas en la respuesta:', response)
+    }
+  } catch (error) {
+    console.error('Error al cargar las plantillas:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadTemplates() // Cargar las plantillas al montar el componente
+})
+
+async function renameTemplate(templateId, newName) {
+  console.log('templateId recibido en renameTemplate:', templateId)
+  console.log('newName recibido en renameTemplate:', newName)
+
+  // Convertir templateId a string si es necesario
+  if (typeof templateId !== 'string') {
+    templateId = String(templateId)
+    console.log('templateId convertido a string:', templateId)
+  }
+
+  if (!templateId) {
+    console.error('El ID de la plantilla es requerido y debe ser válido')
+    return
+  }
+
+  if (!newName || typeof newName !== 'string' || !newName.trim()) {
+    console.error('El nuevo nombre de la plantilla es requerido')
+    return
+  }
+
+  const requestBody = {
+    doctorId: '66de4e2e2e0651893bc6b225',
+    templateId: templateId,
+    name: newName
+  }
+
+  console.log('Datos para enviar a la API:', JSON.stringify(requestBody, null, 2))
+
+  try {
+    const response = await patchRequest('/doctor/PatientTemplate/', requestBody)
+    console.log('Respuesta de la API:', response)
+    const updatedPatient = patients.value.find((patient) => patient.templateId === templateId)
+    if (updatedPatient) {
+      updatedPatient.name = newName
+      console.log('Paciente actualizado en la lista:', updatedPatient)
+    }
+  } catch (error) {
+    console.error('Error al renombrar la plantilla:', error)
+    if (error.response) {
+      console.error('Detalles del error:', error.response.data)
+      alert(`Error: ${error.response.data.message}`)
+    } else {
+      console.error('No se recibió respuesta del servidor')
+      alert('No se pudo actualizar el nombre de la plantilla')
+    }
+  }
+}
+
+async function renamePatient(newName) {
+  console.log('Nuevo nombre recibido en renamePatient:', newName)
+  console.log('selectedPatient antes de renombrar:', selectedPatient.value)
+
+  // Verificar que `selectedPatient` tenga el `templateId` correctamente.
+  const templateId = selectedPatient.value.templateId
+  if (!templateId) {
+    console.error('El ID de la plantilla es requerido')
+    return
+  }
+
+  if (!newName.trim()) {
+    console.error('El nuevo nombre de la plantilla es requerido')
+    return
+  }
+
+  await renameTemplate(templateId, newName)
   isRenameModalVisible.value = false
 }
 
-function removePatient() {
-  patients.value = patients.value.filter((patient) => patient.id !== selectedPatient.value.id)
-  isRemoveModalVisible.value = false
+function showContextMenu(event, patient) {
+  if (!patient) {
+    console.error('No se ha proporcionado un paciente válido para el menú contextual.')
+    return
+  }
+
+  console.log('Paciente recibido en showContextMenu:', patient)
+  selectedPatient.value = patient
+  console.log('selectedPatient después de asignación en showContextMenu:', selectedPatient.value)
+  contextMenuPosition.value = { x: event.clientX, y: event.clientY }
+  contextMenuVisible.value = true
 }
 
-function handlePatientClick(patientId) {
-  console.log('Paciente seleccionado:', patientId)
+async function removePatient() {
+  const doctorId = '66de4e2e2e0651893bc6b225'
+  const templateId = selectedPatient.value.templateId
+
+  if (!templateId) {
+    console.error('El ID de la plantilla es requerido para eliminar.')
+    return
+  }
+
+  const requestBody = { doctorId, templateId }
+  try {
+    const response = await deleteRequest('/doctor/PatientTemplate', requestBody)
+    if (response.status === 200) {
+      // Filtrar la plantilla eliminada de la lista de pacientes
+      patients.value = patients.value.filter((patient) => patient.templateId !== templateId)
+      console.log(
+        `Plantilla eliminada exitosamente: Status ${response.status}, Message: ${response.message}`
+      )
+    } else {
+      console.warn('No se pudo eliminar la plantilla:', response.message)
+    }
+  } catch (error) {
+    console.error('Error al intentar eliminar la plantilla:', error)
+    if (error.response) {
+      alert(`Error: ${error.response.data.message}`)
+    }
+  } finally {
+    isRemoveModalVisible.value = false
+    hideContextMenu()
+  }
 }
 </script>
 

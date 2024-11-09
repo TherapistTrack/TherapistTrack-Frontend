@@ -68,6 +68,10 @@ const router = createRouter({
           component: () => import('@/pages/config/CustomizeTemplate.vue')
         },
         {
+          path: 'template/:templateId',
+          component: () => import('@/pages/config/CustomizeTemplate.vue')
+        },
+        {
           path: 'records',
           component: () => import('@/pages/notfound/NotFoundView.vue')
         },
@@ -76,7 +80,11 @@ const router = createRouter({
           component: () => import('@/pages/config/FileView.vue')
         },
         {
-          path: '/config/customize-file',
+          path: 'files/new',
+          component: () => import('@/pages/config/CustomizeFile.vue')
+        },
+        {
+          path: 'files/:fileId',
           component: () => import('@/pages/config/CustomizeFile.vue')
         }
       ]

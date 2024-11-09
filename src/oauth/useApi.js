@@ -115,6 +115,29 @@ export function useApi() {
     }
   }
 
+  const patchRequest = async (url, body) => {
+    const token = await getAuthToken()
+    if (!token) {
+      isLoading.value = false
+      throw new Error('User is not authenticated')
+    }
+
+    try {
+      const response = await axios.patch(`${url_base}${url}`, body, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        }
+      })
+      isLoading.value = false
+      return response.data
+    } catch (error) {
+      console.error('Error making PATCH request:', error)
+      isLoading.value = false
+      throw error
+    }
+  }
+
   const initialize = async () => {
     isLoading.value = true
     await getAuthToken()
@@ -129,6 +152,7 @@ export function useApi() {
     initialize,
     putRequest,
     postRequest,
-    deleteRequest
+    deleteRequest,
+    patchRequest
   }
 }
