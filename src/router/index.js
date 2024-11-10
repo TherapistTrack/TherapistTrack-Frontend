@@ -65,11 +65,11 @@ const router = createRouter({
         },
         {
           path: 'template',
-          component: () => import('@/pages/config/CustomizeTemplate.vue')
+          component: () => import('@/pages/config/CustomizeRecord.vue')
         },
         {
           path: 'template/:templateId',
-          component: () => import('@/pages/config/CustomizeTemplate.vue')
+          component: () => import('@/pages/config/CustomizeRecord.vue')
         },
         {
           path: 'records',

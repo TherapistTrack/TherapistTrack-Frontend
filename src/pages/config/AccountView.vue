@@ -12,6 +12,10 @@
         <p class="label"><strong>Correo:</strong></p>
         <p class="value">{{ auth0.user.value.email }}</p>
       </div>
+      <div class="user-info-row">
+        <p class="label"><strong>Rol:</strong></p>
+        <p class="value">{{ role }}</p>
+      </div>
       <!-- <a href="#" class="change-password-link">Configurar usuario</a> -->
     </div>
 
@@ -44,7 +48,26 @@
 
 <script setup>
 import { useAuth0 } from '@auth0/auth0-vue'
+import { useApi } from '@/oauth/useApi'
+import { onMounted, ref } from 'vue'
+
+// Constants
+const { postRequest } = useApi()
 const auth0 = useAuth0()
+const role = ref('')
+const id = ref('')
+
+// Functions
+onMounted(async () => {
+  id.value = auth0.user.value.sub.split('|')[1]
+  try {
+    const response = await postRequest('/users/@me', { id: id.value })
+    console.log(response.data)
+    role.value = response.data.rol
+  } catch {
+    // TODO: toast message couldnt get all info
+  }
+})
 </script>
 
 <style scoped>
