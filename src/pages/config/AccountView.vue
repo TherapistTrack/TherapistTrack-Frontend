@@ -1,16 +1,18 @@
 <template>
   <div class="account-container">
-    <h1>Jose Marchena</h1>
+    <h1>
+      <b>{{ auth0.user.value.name }}</b>
+    </h1>
     <div class="account-info">
       <div class="user-info-row">
         <p class="label"><strong>Usuario:</strong></p>
-        <p class="value">marchiUwU</p>
+        <p class="value">{{ auth0.user.value.nickname }}</p>
       </div>
       <div class="user-info-row">
-        <p class="label"><strong>Contraseña:</strong></p>
-        <p class="value">· · · · · · · ·</p>
-        <a href="#" class="change-password-link">Cambiar contraseña</a>
+        <p class="label"><strong>Correo:</strong></p>
+        <p class="value">{{ auth0.user.value.email }}</p>
       </div>
+      <!-- <a href="#" class="change-password-link">Configurar usuario</a> -->
     </div>
 
     <h2>Sesiones abiertas</h2>
@@ -40,26 +42,17 @@
   </div>
 </template>
 
-<script setup></script>
+<script setup>
+import { useAuth0 } from '@auth0/auth0-vue'
+const auth0 = useAuth0()
+</script>
 
 <style scoped>
-.profile-container {
-  display: flex;
+.account-container {
+  padding: 1rem 3rem 0 3rem;
+  width: 100vw;
+  background-color: white;
   height: 100vh;
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-.content {
-  flex-grow: 1;
-  padding: 65px;
-  background-color: #fff;
-  border-radius: 8px;
-  height: 100vh;
-  margin-left: 0;
-  box-shadow: none;
-  overflow-y: hidden;
 }
 
 h1 {

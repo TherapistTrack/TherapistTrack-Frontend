@@ -1,64 +1,53 @@
 <template>
   <div class="file-view-container" @click="hideContextMenu">
-    <SideBarConfig
-      backgroundColor="#1f3a93"
-      arrowColor="#ffffff"
-      iconColor="#ffffff"
-      userName="Jose Marchena"
-      userRole="Usuario"
-      selectedOption="Archivos"
+    <h1 class="page-title">Archivos</h1>
+    <p>Aquí puede administrar los archivos disponibles.</p>
+
+    <div class="top-bar">
+      <SearchBar pholder="Buscar por nombre..." v-model="searchQuery" />
+      <ButtonSimple msg="Nuevo" @click="showCreateModal" />
+    </div>
+
+    <SetDisplayTable
+      :loading="loading"
+      :data="filteredFiles"
+      :headers="tableHeaders"
+      :success="true"
+      @rowClick="handleFileClick"
+      @contextmenu="showContextMenu"
+    ></SetDisplayTable>
+
+    <!-- Context Menu -->
+    <ContextMenu
+      :position="contextMenuPosition"
+      :visible="contextMenuVisible"
+      @rename="showRenameModal"
+      @remove="showRemoveModal"
     />
 
-    <div class="content">
-      <h1 class="page-title">Archivos</h1>
-      <p>Aquí puede administrar los archivos disponibles.</p>
+    <!-- Modal para crear un nuevo archivo -->
+    <CreateTemplate
+      v-if="isCreateModalVisible"
+      type="file"
+      @close="isCreateModalVisible = false"
+      @create="addNewFile"
+    />
 
-      <div class="top-bar">
-        <SearchBar pholder="Buscar por nombre..." v-model="searchQuery" />
-        <ButtonSimple msg="Nuevo" @click="showCreateModal" />
-      </div>
+    <!-- Modal para renombrar archivo -->
+    <RenameTemplate
+      v-if="isRenameModalVisible"
+      :currentName="selectedFile.name"
+      @close="isRenameModalVisible = false"
+      @rename="renameFileHandler"
+    />
 
-      <SetDisplayTable
-        :loading="loading"
-        :data="filteredFiles"
-        :headers="tableHeaders"
-        :success="true"
-        @rowClick="handleFileClick"
-        @contextmenu="showContextMenu"
-      ></SetDisplayTable>
-
-      <!-- Context Menu -->
-      <ContextMenu
-        :position="contextMenuPosition"
-        :visible="contextMenuVisible"
-        @rename="showRenameModal"
-        @remove="showRemoveModal"
-      />
-
-      <!-- Modal para crear un nuevo archivo -->
-      <CreateTemplate
-        v-if="isCreateModalVisible"
-        type="file"
-        @close="isCreateModalVisible = false"
-        @create="addNewFile"
-      />
-
-      <!-- Modal para renombrar archivo -->
-      <RenameTemplate
-        v-if="isRenameModalVisible"
-        :currentName="selectedFile.name"
-        @close="isRenameModalVisible = false"
-        @rename="renameFileHandler"
-      />
-
-      <!-- Modal para eliminar archivo -->
-      <RemoveTemplate
-        v-if="isRemoveModalVisible"
-        :currentName="selectedFile.name"
-        @close="isRemoveModalVisible = false"
-        @remove="removeFile"
-      />
-    </div>
+    <!-- Modal para eliminar archivo -->
+    <RemoveTemplate
+      v-if="isRemoveModalVisible"
+      :currentName="selectedFile.name"
+      @close="isRemoveModalVisible = false"
+      @remove="removeFile"
+    />
   </div>
 </template>
 
@@ -249,22 +238,10 @@ onMounted(() => {
 
 <style scoped>
 .file-view-container {
-  display: flex;
+  padding: 1rem 3rem 0 3rem;
+  width: 100vw;
+  background-color: white;
   height: 100vh;
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-.content {
-  flex-grow: 1;
-  padding: 65px;
-  background-color: #fff;
-  border-radius: 8px;
-  height: 100vh;
-  margin-left: 0;
-  box-shadow: none;
-  overflow-y: hidden;
 }
 
 DisplayTable {
@@ -279,8 +256,9 @@ DisplayTable {
 }
 
 .top-bar {
+  margin-top: 1rem;
   display: flex;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 1rem;
 }
 </style>

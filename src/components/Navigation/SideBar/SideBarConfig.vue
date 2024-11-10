@@ -1,5 +1,5 @@
 <template>
-  <div class="sideBtn">
+  <div class="sideBtn" :style="{ backgroundColor: backgroundColor }">
     <!-- SideBar Configuration -->
     <img
       @click="setMin(false)"
@@ -46,13 +46,6 @@
             <!-- Corregido a 'Archivos' -->
           </router-link>
           <!-- Enlace a 'Backup' -->
-          <router-link
-            to="/config/backup"
-            class="option"
-            :class="{ selected: selectedOption === 'Backup' }"
-          >
-            <h4>Backup</h4>
-          </router-link>
         </div>
       </div>
 
@@ -104,6 +97,8 @@ const trySetting = ref(false)
 const tryLogout = ref(false)
 const router = useRouter()
 
+const emit = defineEmits(['updateValue'])
+
 const { backgroundColor, arrowColor, logoSrc, logoGraySrc, userName, userRole, selectedOption } =
   defineProps({
     backgroundColor: {
@@ -120,7 +115,7 @@ const { backgroundColor, arrowColor, logoSrc, logoGraySrc, userName, userRole, s
     },
     logoSrc: {
       type: String,
-      default: new URL('@/assets/Logo/LogoSoloMono.png', import.meta.url).href
+      default: new URL('@/assets/Logo/LogoSoloWhite.png', import.meta.url).href
     },
     logoGraySrc: {
       type: String,
@@ -141,7 +136,7 @@ const { backgroundColor, arrowColor, logoSrc, logoGraySrc, userName, userRole, s
   })
 
 const handleRecords = () => {
-  router.push('/record/main')
+  router.push('/doctor/records')
 }
 const onLogout = () => {
   tryLogout.value = true
@@ -164,7 +159,12 @@ const undoSetting = () => {
   trySetting.value = false
 }
 const setMin = (val) => {
+  emitUpdate(val)
   minim.value = val
+}
+
+const emitUpdate = (val) => {
+  emit('updateValue', val)
 }
 </script>
 
@@ -189,7 +189,6 @@ const setMin = (val) => {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: var(--gray-3);
   height: 8vh;
   width: 8vw;
   max-width: 100px;
@@ -213,7 +212,7 @@ const setMin = (val) => {
   border-radius: 0 3vh 3vh 0;
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.11);
   transition: left 0.5s;
-  position: absolute;
+  position: fixed;
   left: 0;
 }
 
@@ -235,39 +234,34 @@ const setMin = (val) => {
 .sideBtn .bar .mid {
   padding-top: 6vh;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
 }
 
 /* mid */
 .sideBtn .option {
   display: flex;
-  padding: 1vh 1.5vh;
-  border-radius: 1vh;
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.4rem;
   color: white;
   cursor: pointer;
 }
 
 .sideBtn .option.selected {
-  background-color: #1565c0;
-}
-
-.sideBtn .option h4 {
-  color: white;
-  margin: 0;
+  background-color: var(--blue-1);
 }
 
 .mid .option {
   text-decoration: none;
 }
-
 .mid .option h4 {
-  margin: 0;
   color: white;
-  text-decoration: none;
+  font-size: 0.85rem;
 }
 
-.mid .option:hover h4,
-.mid .option.selected h4 {
-  text-decoration: none;
+a:hover {
+  background-color: var(--blue-2);
 }
 
 /* Bottom */
@@ -281,21 +275,9 @@ const setMin = (val) => {
   gap: 1vw;
 }
 
-.sideBtn .bottom .userData {
-  color: #ffffff !important;
-}
-
-.sideBtn .bottom p {
-  margin: 0;
-}
-
-.sideBtn .bottom .userData p {
-  margin: 0;
-  color: #ffffff !important;
-}
-
-.sideBtn .bottom .userData b {
-  color: #ffffff !important;
+.sideBtn .bottom .userData * {
+  font-size: smaller;
+  color: var(--white);
 }
 
 /* Animations */
@@ -325,10 +307,6 @@ sideLogo#maximized {
 
 #selected {
   background-color: var(--gray-1);
-}
-
-#selected h4 {
-  color: aliceblue;
 }
 
 @media (min-aspect-ratio: 1/1) {

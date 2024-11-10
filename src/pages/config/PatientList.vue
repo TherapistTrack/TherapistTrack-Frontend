@@ -1,30 +1,19 @@
 <template>
-  <div class="patient-list-container" @click="hideContextMenu">
-    <!-- Usando la SideBarConfig con color azul -->
-    <SideBarConfig
-      backgroundColor="#1f3a93"
-      arrowColor="#ffffff"
-      iconColor="#ffffff"
-      userName="Jose Marchena"
-      userRole="Usuario"
-      selectedOption="Pacientes"
-    />
+  <div class="patient-container" @click="hideContextMenu">
+    <h1 class="page-title">Pacientes</h1>
+    <p>
+      En esta vista puede administrar a los usuarios que tienen acceso a la aplicación y editar su
+      información.
+    </p>
 
-    <div class="content">
-      <!-- Título de la página -->
-      <h1 class="page-title">Pacientes</h1>
-      <p>
-        En esta vista puede administrar a los usuarios que tienen acceso a la aplicación y editar su
-        información.
-      </p>
+    <!-- Barra de búsqueda y botón "Nuevo" -->
+    <div class="top-bar">
+      <SearchBar pholder="Buscar por nombre..." v-model="searchQuery" />
+      <ButtonSimple msg="Nuevo" @click="showCreateModal" />
+    </div>
 
-      <!-- Barra de búsqueda y botón "Nuevo" -->
-      <div class="top-bar">
-        <SearchBar pholder="Buscar por nombre..." v-model="searchQuery" />
-        <ButtonSimple msg="Nuevo" @click="showCreateModal" />
-      </div>
-
-      <!-- Tabla para mostrar la lista de pacientes -->
+    <!-- Tabla para mostrar la lista de pacientes -->
+    <div class="table-container">
       <SetDisplayTable
         :loading="loading"
         :data="filteredPatients"
@@ -33,38 +22,38 @@
         @rowClick="handlePatientClick"
         @contextmenu="showContextMenu"
       ></SetDisplayTable>
-
-      <!-- Context Menu -->
-      <ContextMenu
-        :position="contextMenuPosition"
-        :visible="contextMenuVisible"
-        @rename="showRenameModal"
-        @remove="showRemoveModal"
-      />
-
-      <!-- Modal para crear nueva plantilla -->
-      <CreateTemplate
-        v-if="isCreateModalVisible"
-        @close="isCreateModalVisible = false"
-        @create="addNewTemplate"
-      />
-
-      <!-- Modal para renombrar plantilla -->
-      <RenameTemplate
-        v-if="isRenameModalVisible"
-        :currentName="selectedPatient.name"
-        @close="isRenameModalVisible = false"
-        @rename="renamePatient"
-      />
-
-      <!-- Modal para eliminar plantilla -->
-      <RemoveTemplate
-        v-if="isRemoveModalVisible"
-        :currentName="selectedPatient.name"
-        @close="isRemoveModalVisible = false"
-        @remove="removePatient"
-      />
     </div>
+
+    <!-- Context Menu -->
+    <ContextMenu
+      :position="contextMenuPosition"
+      :visible="contextMenuVisible"
+      @rename="showRenameModal"
+      @remove="showRemoveModal"
+    />
+
+    <!-- Modal para crear nueva plantilla -->
+    <CreateTemplate
+      v-if="isCreateModalVisible"
+      @close="isCreateModalVisible = false"
+      @create="addNewTemplate"
+    />
+
+    <!-- Modal para renombrar plantilla -->
+    <RenameTemplate
+      v-if="isRenameModalVisible"
+      :currentName="selectedPatient.name"
+      @close="isRenameModalVisible = false"
+      @rename="renamePatient"
+    />
+
+    <!-- Modal para eliminar plantilla -->
+    <RemoveTemplate
+      v-if="isRemoveModalVisible"
+      :currentName="selectedPatient.name"
+      @close="isRemoveModalVisible = false"
+      @remove="removePatient"
+    />
   </div>
 </template>
 
@@ -296,28 +285,11 @@ async function removePatient() {
 </script>
 
 <style scoped>
-.patient-list-container {
-  display: flex;
+.patient-container {
+  padding: 1rem 3rem 0 3rem;
+  width: 100vw;
+  background-color: white;
   height: 100vh;
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-.content {
-  flex-grow: 1;
-  padding: 65px;
-  background-color: #fff;
-  border-radius: 8px;
-  height: 100vh;
-  margin-left: 0;
-  box-shadow: none;
-  overflow-y: hidden;
-}
-
-DisplayTable {
-  max-height: calc(100vh - 150px);
-  overflow-y: auto;
 }
 
 .page-title {
@@ -334,6 +306,11 @@ h1 {
 .top-bar {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.table-container {
+  padding: 0 1rem 0 0;
 }
 </style>

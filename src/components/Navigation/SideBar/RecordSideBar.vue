@@ -221,7 +221,7 @@ const logout = () => {
   gap: 1vw;
 }
 
-.R-sideBtn .bottom * {
+.R-sideBtn .bottom .userData * {
   font-size: smaller;
   color: var(--white);
 }

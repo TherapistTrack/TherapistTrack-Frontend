@@ -53,7 +53,7 @@ const router = createRouter({
     {
       path: '/config',
       redirect: '/config/account',
-      component: () => import('@/pages/config/ProfileView.vue'),
+      component: () => import('@/pages/config/ConfigIndex.vue'),
       children: [
         {
           path: 'account',

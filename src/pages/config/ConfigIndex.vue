@@ -1,17 +1,16 @@
 <template>
-  <div class="profile-container">
-    <!-- SideBarConfig ahora está aquí -->
+  <div class="config-top">
     <SideBarConfig
       :selectedOption="currentOption"
-      backgroundColor="#1f3a93"
+      backgroundColor="var(--dark-blue-1)"
       arrowColor="#ffffff"
       iconColor="#ffffff"
       :userName="auth0.user.value.name"
       userRole="Usuario"
+      @updateValue="updateMinim"
     />
-
-    <!-- Contenedor principal para las subrutas -->
-    <div class="content">
+    <div class="view">
+      <div class="sideSpace" :id="minim ? '' : 'max'"></div>
       <router-view />
     </div>
   </div>
@@ -26,6 +25,7 @@ import { useAuth0 } from '@auth0/auth0-vue'
 const auth0 = useAuth0()
 const route = useRoute()
 const currentOption = ref('Mi Cuenta')
+const minim = ref(true)
 
 watch(
   () => route.path,
@@ -34,7 +34,7 @@ watch(
   }
 )
 
-function updateSelectedOption(path) {
+const updateSelectedOption = (path) => {
   if (path.includes('/config/account')) {
     currentOption.value = 'Mi Cuenta'
   } else if (path.includes('/config/patients')) {
@@ -50,21 +50,43 @@ function updateSelectedOption(path) {
   }
 }
 
+const updateMinim = (val) => {
+  minim.value = val
+}
+
 updateSelectedOption(route.path)
 </script>
 
 <style scoped>
-.profile-container {
+#app {
   display: flex;
-  height: 100vh;
+  flex-direction: column;
+  height: 100%;
 }
 
-.content {
-  flex-grow: 1;
-  padding: 65px;
-  background-color: #fff;
-  border-radius: 8px;
-  height: 100vh;
-  overflow-y: auto;
+.config-top {
+  background-color: white;
+}
+
+.view {
+  display: flex;
+  height: auto;
+  background-color: white;
+  height: 100%;
+  overflow-y: scroll;
+}
+.sideSpace {
+  width: 0vw;
+  transition: Width 0.5s;
+}
+.sideSpace#max {
+  width: 200px;
+}
+
+/* Media tags */
+@media (max-aspect-ratio: 1/1) {
+  .sideSpace#max {
+    width: 0vw;
+  }
 }
 </style>
