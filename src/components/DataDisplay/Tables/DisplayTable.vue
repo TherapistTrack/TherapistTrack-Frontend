@@ -45,8 +45,7 @@
       :page-count="pageCount"
       v-model:current-page="currentPage"
       v-model:max-page="maxPage"
-      @updateCurrentPage="handleNewPage"
-      @updateMax="handleNewMax"
+      @update-pager="updatePager"
     />
   </div>
 </template>
@@ -58,7 +57,7 @@ import HideButton from '@/components/Buttons/HideButton.vue'
 import { ref, watchEffect } from 'vue'
 import TablePageButton from '@/components/Buttons/TablePageButton.vue'
 import TypeIconLoader from '@/assets/TypeIcons/TypeIconLoader.vue'
-const emit = defineEmits(['hideHeader', 'updateLimit', 'updatePage'])
+const emit = defineEmits(['hideHeader', 'updatePage'])
 const props = defineProps({
   loading: Boolean,
   onClick: Function,
@@ -86,21 +85,15 @@ watchEffect(() => {
   }
 })
 
-const handleNewMax = (max) => {
-  maxPage.value = Number(max)
-  emit('updateLimit', maxPage.value)
+const updatePager = (pager) => {
+  maxPage.value = pager[0]
+  currentPage.value = pager[1]
+  emit('updatePage', [maxPage.value, currentPage.value])
 }
 
 function handleClick(key) {
-  const calcPage = key + (currentPage.value - 1) * maxPage.value
-  props.onClick(calcPage)
+  props.onClick(key)
 }
-const handleNewPage = (newPage) => {
-  localData.value = props.data.slice(maxPage.value * (newPage - 1), maxPage.value * newPage)
-  currentPage.value = Number(newPage)
-  emit('updatePage', currentPage.value)
-}
-
 const handleHide = (key) => {
   hideAll()
   emit('hideHeader', key)

@@ -3,7 +3,7 @@
     <div class="view-record" @click.stop="" :id="start ? 'init' : 'end'">
       <div class="top">
         <h1>
-          <b>{{ userData['Nombre'] }}<br />{{ userData['Apellido'] }}</b>
+          <b>{{ recordData['Nombre'] }}<br />{{ recordData['Apellidos'] }}</b>
         </h1>
         <RiCloseLine
           class-name="icon"
@@ -31,11 +31,11 @@
       </div>
       <div class="mid">
         <SimpleTable
-          :data="userData"
-          :headers="userHeaders"
+          :data="recordData"
+          :headers="recordHeaders"
           :isSet="true"
           :has-type="true"
-          :fields="fields"
+          :fields="fieldInfo"
         />
       </div>
 
@@ -47,7 +47,7 @@
 
   <AlertDelete
     v-if="tryDelete"
-    :name="`${userData['Nombre']} ${userData['Apellidos']}`"
+    :name="`${recordData['Nombre']} ${recordData['Apellidos']}`"
     :on-no="abortDelete"
     :on-yes="onDelete"
     :type="'record'"
@@ -61,49 +61,118 @@ import { useRouter } from 'vue-router'
 import SimpleTable from '@/components/DataDisplay/Tables/SimpleTable.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import AlertDelete from '@/components/Feedback/Alerts/AlertDelete.vue'
+import { useApi } from '@/oauth/useApi'
 
+const { getRequest, deleteRequest } = useApi()
+const templateId = ref(null)
+const createdAt = ref(null)
 const ready = ref(false)
 const start = ref(false)
 const router = useRouter()
-const userData = ref(null)
-const userHeaders = ref([])
+const recordHeaders = ref([])
+const fieldInfo = ref({})
+
 const tryDelete = ref(false)
 const props = defineProps({
-  recordId: String,
-  viewData: Object,
-  fields: Object
+  doctorId: String,
+  recordId: String
 })
 
-const emit = defineEmits(['updateData', 'openEdit'])
+const recordData = ref({})
 
-onMounted(() => {
-  userData.value = props.viewData.filter((item) => item['Record ID'] === props.recordId)[0]
-  userHeaders.value = Object.keys(userData.value)
+const emit = defineEmits(['updateData', 'openEdit', 'addToast'])
 
+onMounted(async () => {
+  let raw_fields = await getRecord()
+  let format_fields = formatRawFields(raw_fields)
+  recordData.value = { ...recordData.value, ...format_fields }
+  fieldInfo.value = getHeaders(raw_fields)
+  recordHeaders.value = Object.keys(fieldInfo.value)
   ready.value = true
   setTimeout(() => {
     start.value = true
-  }, 2) // You can adjust the delay if needed
+  }, 2)
 })
+
+const getHeaders = (raw_fields) => {
+  let headers = raw_fields.reduce((arr, item) => {
+    arr[item.name] = {
+      type: item.type,
+      required: item.required,
+      options: item.options
+    }
+    return arr
+  }, {})
+  let complete_headers = {
+    Nombre: {
+      type: 'SHORT_TEXT',
+      required: true,
+      options: []
+    },
+    Apellidos: {
+      type: 'SHORT_TEXT',
+      required: true,
+      options: []
+    },
+    ...headers
+  }
+  return complete_headers
+}
+const getRecord = async () => {
+  let url = `/records/?doctorId=${props.doctorId}&recordId=${props.recordId}`
+  let fields = {}
+  try {
+    const response = await getRequest(url, {})
+    templateId.value = response.tempalteId
+    createdAt.value = response.createdAt
+    recordData.value['Nombre'] = response.patient.names
+    recordData.value['Apellidos'] = response.patient.lastNames
+    fields = response.patient.fields
+  } catch {
+    emit('addToast', { type: 0, content: 'Ocurrio un error obteniendo el expediente' })
+  }
+  return fields
+}
+
+const formatRawFields = (raw_fields) => {
+  let format_fields = raw_fields.reduce((arr, item) => {
+    arr[item.name] = item.value
+    return arr
+  }, {})
+  return format_fields
+}
 
 const goBack = () => {
   start.value = false
   setTimeout(() => {
+    emit('updateData')
     router.push('/doctor/records')
   }, 250) // You can adjust the delay if needed
 }
 
-const handleDelete = (id) => {
-  // Deleting based on the id
-  console.log(id)
+const handleDelete = () => {
   tryDelete.value = true
 }
+
 const abortDelete = () => {
   tryDelete.value = false
 }
 
-const onDelete = () => {
-  console.log('SE ELIMINA')
+const onDelete = async () => {
+  let body = {
+    doctorId: props.doctorId,
+    recordId: props.recordId
+  }
+  try {
+    const response = await deleteRequest('/records/', body)
+    if (response.status == 200) {
+      emit('addToast', { type: 1, content: 'Expediente fue borrado exitosamente' })
+    } else {
+      emit('addToast', { type: 0, content: 'Ocurrio un error eliminando el expediente' })
+    }
+  } catch {
+    emit('addToast', { type: 0, content: 'Ocurrio un error eliminando el expediente' })
+  }
   tryDelete.value = false
   goBack()
 }

@@ -1,5 +1,6 @@
 <template>
   <router-view
+    :doctorId="doctorId"
     :recordId="selected"
     :viewData="processedData"
     :fields="fieldInfo"
@@ -8,6 +9,7 @@
     :allData="fetchedData"
     @updateData="fetching_pipeline"
     @openEdit="handleOpenEdit"
+    @addToast="addToast"
   />
   <div class="page">
     <h1><b>Expedientes</b></h1>
@@ -30,7 +32,6 @@
         :onClick="handleOpenPreview"
         @hideHeader="onHideField"
         :success="true"
-        @updateLimit="updateLimit"
         @updatePage="updatePage"
       />
       <ConfigButton :onClick="handleTableSettings" />
@@ -84,15 +85,12 @@ const updateFilters = async (filters) => {
   fetching_pipeline()
 }
 // Display table navigation
-const updatePage = async (page) => {
-  currentPage.value = Number(page)
+const updatePage = async (pager) => {
+  pageLimit.value = Number(pager[0])
+  currentPage.value = Number(pager[1])
   await fetching_pipeline()
 }
 
-const updateLimit = async (limit) => {
-  pageLimit.value = Number(limit)
-  await fetching_pipeline()
-}
 // Emissions from children
 
 const handleOpenEdit = () => {
@@ -128,7 +126,7 @@ onMounted(async () => {
 const fetching_pipeline = async () => {
   loading.value = true
   await get_records_raw()
-  await format_records()
+  format_records()
   loading.value = false
 }
 
@@ -177,15 +175,12 @@ const format_records = () => {
 }
 
 const get_records_raw = async () => {
-  console.log('----------------------------')
   let fields = shownHeaders.value.filter((item) => item != 'Nombre' && item != 'Apellidos')
   let body = {
     doctorId: doctorId.value,
     limit: pageLimit.value,
     page: currentPage.value,
-    fields: [],
-    sorts: [{}],
-    filters: [{}]
+    fields: []
   }
   fields.forEach((item) => {
     let field = {
@@ -234,7 +229,7 @@ const get_headers = async () => {
 }
 
 const handleOpenPreview = (key) => {
-  selected.value = processedData.value[key]['Record ID']
+  selected.value = processedData.value[key].recordId
   router.push(`/doctor/records/view/${selected.value}`)
 }
 
