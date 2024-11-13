@@ -19,7 +19,7 @@
                 :label="key.name"
                 :disabledValue="'Seleccione una opción'"
                 :options="key.options"
-                v-model:modelValue="localInfo[item]"
+                v-model:modelValue="localInfo[item].value"
                 :description="key.description"
               />
             </span>
@@ -68,22 +68,29 @@ import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import SelectDropDown from '@/components/Forms/SelectDropDown/SelectDropDown.vue'
 import SelectDropDownRequired from '@/components/Forms/SelectDropDown/SelectDropDownRequired.vue'
 import DataLoader from '@/components/Feedback/Spinner/DataLoader.vue'
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, toRaw } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApi } from '@/oauth/useApi'
 import { useAuth0 } from '@auth0/auth0-vue'
 // Constants
-const { getRequest } = useApi()
+const { getRequest, postRequest } = useApi()
 const auth0 = useAuth0()
 const router = useRouter()
 const templateOptions = ref({})
 const loading = ref(false)
 const valid = ref(false)
+const doctorId = ref(null)
 
 const templateInfo = ref(null)
 const selectedTemplate = ref(null)
 const templateData = ref(null)
 const localInfo = ref({})
+
+// Emits
+const emit = defineEmits(['addToast'])
+const addToast = (toast) => {
+  emit('addToast', toast)
+}
 
 // Watching required values
 watch(
@@ -105,11 +112,10 @@ watch(selectedTemplate, () => {
 
 const getTemplateData = async () => {
   loading.value = true
-  let doctorId = auth0.user.value.sub.split('|')[1]
   let templateId = templateInfo.value.filter((item) => item.name == selectedTemplate.value)[0].id
   try {
     const response = await getRequest(
-      `/doctor/PatientTemplate?doctorId=${doctorId}&templateId=${templateId}`
+      `/doctor/PatientTemplate?doctorId=${doctorId.value}&templateId=${templateId}`
     )
     templateData.value = [
       {
@@ -137,9 +143,9 @@ const getTemplateData = async () => {
 // On Mounted
 onMounted(async () => {
   loading.value = true
-  let doctorId = auth0.user.value.sub.split('|')[1]
+  await get_doctor_id()
   try {
-    const response = await getRequest(`/doctor/PatientTemplate/list?doctorId=${doctorId}`)
+    const response = await getRequest(`/doctor/PatientTemplate/list?doctorId=${doctorId.value}`)
     templateInfo.value = response.templates.map((item) => ({
       name: item.name,
       id: item.templateId
@@ -153,6 +159,16 @@ onMounted(async () => {
   loading.value = false
 })
 
+const get_doctor_id = async () => {
+  let userId = auth0.user.value.sub.split('|')[1]
+  try {
+    const response = await postRequest('/users/@me', { id: userId })
+    doctorId.value = response.data.roleDependentInfo.id
+  } catch {
+    addToast({ content: 'Ocurrio un error obteniendo información del doctor', type: 0 })
+  }
+}
+
 const resetLocalInfo = () => {
   localInfo.value = templateData.value.map((item) => ({
     name: item.name,
@@ -162,8 +178,55 @@ const resetLocalInfo = () => {
   }))
 }
 
-const createRecord = () => {
-  router.push('/doctor/records/')
+const format_record = () => {
+  let templateId = toRaw(templateInfo.value).filter(
+    (item) => item.name == selectedTemplate.value
+  )[0].id
+  let names = ''
+  let lastnames = ''
+  let fields = []
+  toRaw(localInfo.value).forEach((item) => {
+    if (item.name == 'Nombres') {
+      names = item.value
+    } else if (item.name == 'Apellidos') {
+      lastnames = item.value
+    } else {
+      let tem_field = { name: item.name }
+      if (item.type == 'NUMBER' || item.type == 'FLOAT') {
+        tem_field['value'] = Number(item.value)
+      } else {
+        tem_field['value'] = item.value
+      }
+      fields.push(tem_field)
+    }
+  })
+  let body = {
+    doctorId: doctorId.value,
+    templateId: templateId,
+    patient: {
+      names: names,
+      lastnames: lastnames,
+      fields: fields
+    }
+  }
+  return body
+}
+
+const createRecord = async () => {
+  loading.value = true
+  let body = format_record()
+  try {
+    const response = await postRequest('/records/', body)
+    if (response.status == 200) {
+      addToast({ content: 'Expediente creado exitosamente', type: 1 })
+    } else {
+      addToast({ content: 'Ocurrio un error obteniendo creando expediente', type: 0 })
+    }
+  } catch {
+    addToast({ content: 'Ocurrio un error obteniendo  creando expediente', type: 0 })
+  }
+  loading.value = false
+  router.push('/doctor/records')
 }
 </script>
 

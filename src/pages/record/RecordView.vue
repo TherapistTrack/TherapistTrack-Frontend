@@ -6,7 +6,7 @@
     v-model:shownHeaders="shownHeaders"
     :allHeaders="allHeaders"
     :allData="fetchedData"
-    @updateData="updateData"
+    @updateData="fetching_pipeline"
     @openEdit="handleOpenEdit"
   />
   <div class="page">
@@ -26,6 +26,7 @@
         v-model:loading="loading"
         v-model:page-limit="pageLimit"
         v-model:current-page="currentPage"
+        :recordCount="recordCount"
         :onClick="handleOpenPreview"
         @hideHeader="onHideField"
         :success="true"
@@ -50,7 +51,7 @@ import { useApi } from '@/oauth/useApi'
 // Constants
 const { getRequest, postRequest } = useApi()
 const auth0 = useAuth0()
-const doctorId = ref(auth0.user.value.sub.split('|')[1])
+const doctorId = ref(null)
 const router = useRouter()
 const fetchedData = ref({})
 const processedData = ref({})
@@ -59,8 +60,11 @@ const selected = ref(0)
 const localSorts = ref([])
 const localFitlers = ref([])
 
+const recordCount = ref(0)
 const currentPage = ref(1)
 const pageLimit = ref(6)
+
+const isFirst = ref(true)
 // TOAST EMITS
 //-------------------------------------------
 const emit = defineEmits(['addToast'])
@@ -72,44 +76,24 @@ const addToast = (toast) => {
 // refining Data, (sort and filters)
 const updateSorts = async (sorts) => {
   localSorts.value = sorts
-  updateData()
+  fetching_pipeline()
 }
 
 const updateFilters = async (filters) => {
   localFitlers.value = filters
-  updateData()
+  fetching_pipeline()
 }
 // Display table navigation
-const updatePage = (page) => {
+const updatePage = async (page) => {
   currentPage.value = Number(page)
-  updateData()
+  await fetching_pipeline()
 }
 
-const updateLimit = (limit) => {
+const updateLimit = async (limit) => {
   pageLimit.value = Number(limit)
-  updateData()
+  await fetching_pipeline()
 }
 // Emissions from children
-const updateData = async () => {
-  // let fields = shownHeaders.value.map((val) => ({
-  //   name: val,
-  //   type: fieldInfo.value[val].type
-  // }))
-  // let body = {
-  //   doctorId: auth0.user.value.sub.split('|')[1],
-  //   limit: pageLimit.value,
-  //   page: currentPage.value,
-  //   fields: fields,
-  //   filters: localFitlers.value || [],
-  //   sorts: localSorts.value || []
-  // }
-  // loading.value = true
-  // setTimeout(() => {
-  //   // console.log('API CALL!!!')
-  //   // console.log(JSON.stringify(body))
-  //   loading.value = false
-  // }, 250)
-}
 
 const handleOpenEdit = () => {
   router.push(`/doctor/records/edit/${selected.value}`)
@@ -121,8 +105,9 @@ const allHeaders = ref([])
 watch(
   shownHeaders,
   () => {
-    fetching_pipeline()
-    console.log('euueue')
+    if (!isFirst.value) {
+      fetching_pipeline()
+    }
   },
   { deep: true }
 )
@@ -133,7 +118,10 @@ const onHideField = (header) => {
 }
 
 onMounted(async () => {
+  loading.value = true
+  await get_doctor_id()
   await get_headers()
+  isFirst.value = false
   await fetching_pipeline()
 })
 
@@ -144,8 +132,18 @@ const fetching_pipeline = async () => {
   loading.value = false
 }
 
+const get_doctor_id = async () => {
+  let userId = auth0.user.value.sub.split('|')[1]
+  try {
+    const response = await postRequest('/users/@me', { id: userId })
+    doctorId.value = response.data.roleDependentInfo.id
+  } catch {
+    addToast({ content: 'Ocurrio un error obteniendo información del doctor', type: 0 })
+  }
+}
+
 // Fucntions
-const format_records = async () => {
+const format_records = () => {
   let raw_data = toRaw(fetchedData.value)
   let fields = toRaw(shownHeaders.value)
   let formatted_data = []
@@ -168,7 +166,6 @@ const format_records = async () => {
           [field.name]: field.value.split('T')[0]
         }
       }
-
       format_patient = {
         ...format_patient,
         ...tem
@@ -180,11 +177,12 @@ const format_records = async () => {
 }
 
 const get_records_raw = async () => {
+  console.log('----------------------------')
   let fields = shownHeaders.value.filter((item) => item != 'Nombre' && item != 'Apellidos')
   let body = {
     doctorId: doctorId.value,
-    limit: 6,
-    page: 0,
+    limit: pageLimit.value,
+    page: currentPage.value,
     fields: [],
     sorts: [{}],
     filters: [{}]
@@ -199,6 +197,7 @@ const get_records_raw = async () => {
   try {
     const response = await postRequest('/records/search', body)
     fetchedData.value = response.records
+    recordCount.value = response.total
   } catch {
     addToast({ content: 'Ocurrio un error obteniendo los registros', type: 0 })
   }

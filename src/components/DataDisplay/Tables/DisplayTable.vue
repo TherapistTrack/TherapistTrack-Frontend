@@ -67,12 +67,13 @@ const props = defineProps({
   success: Boolean,
   currentPage: Number,
   pageLimit: Number,
+  recordCount: Number,
   fields: Object
 })
 
 const localData = ref(null)
 const headerHide = ref({})
-const pageCount = ref(1)
+const pageCount = ref(0)
 const currentPage = ref(props.currentPage)
 const maxPage = ref(props.pageLimit)
 props.headers.map((value) => {
@@ -80,8 +81,8 @@ props.headers.map((value) => {
 })
 watchEffect(() => {
   if (!props.loading) {
-    localData.value = props.data.slice(0, maxPage.value)
-    pageCount.value = Math.ceil(props.data.length / maxPage.value)
+    localData.value = [...props.data]
+    pageCount.value = Math.ceil(props.recordCount / maxPage.value)
   }
 })
 
