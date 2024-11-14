@@ -89,7 +89,6 @@ const valid = ref(false)
 const lastType = ref('')
 const errors = ref([])
 const localFilter = ref(props.filter)
-console.log(props.fields)
 // Functions
 // Saving the form
 const handleSave = () => {

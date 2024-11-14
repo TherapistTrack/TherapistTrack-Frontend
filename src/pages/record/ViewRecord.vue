@@ -118,6 +118,7 @@ const getHeaders = (raw_fields) => {
   }
   return complete_headers
 }
+
 const getRecord = async () => {
   let url = `/records/?doctorId=${props.doctorId}&recordId=${props.recordId}`
   let fields = {}
@@ -136,7 +137,11 @@ const getRecord = async () => {
 
 const formatRawFields = (raw_fields) => {
   let format_fields = raw_fields.reduce((arr, item) => {
-    arr[item.name] = item.value
+    if (item.type == 'DATE') {
+      arr[item.name] = item.value.split('T')[0]
+    } else {
+      arr[item.name] = item.value
+    }
     return arr
   }, {})
   return format_fields

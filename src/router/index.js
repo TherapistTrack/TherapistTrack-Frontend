@@ -105,17 +105,14 @@ const router = createRouter({
               path: 'edit/:recordId',
               component: () => import('@/pages/record/EditRecord.vue'),
               props: (route) => ({
-                recordId: route.params.id, // Pass id from route parameters
-                viewData: Object,
-                allData: Object
+                recordId: route.params.id // Pass id from route parameters
               })
             },
             {
               path: 'view/:recordId',
               component: () => import('@/pages/record/ViewRecord.vue'),
               props: (route) => ({
-                recordId: route.params.id, // Pass id from route parameters
-                viewData: Object
+                recordId: route.params.id // Pass id from route parameters
               })
             },
             {

@@ -14,7 +14,11 @@
   <div class="page">
     <h1><b>Expedientes</b></h1>
     <div class="actions">
-      <FilterTable @updateSorts="updateSorts" @updateFilters="updateFilters" :fields="fieldInfo" />
+      <FilterTable
+        @updateSorts="updateSorts"
+        @updateFilters="updateFilters"
+        :fields="filterFields"
+      />
       <div class="new-container">
         <ButtonSimple :msg="'Nuevo'" :on-click="handleNewRecord" />
       </div>
@@ -50,22 +54,28 @@ import { useAuth0 } from '@auth0/auth0-vue'
 import { useApi } from '@/oauth/useApi'
 
 // Constants
+// Api calls
 const { getRequest, postRequest } = useApi()
+// Navigation and user info
 const auth0 = useAuth0()
 const doctorId = ref(null)
 const router = useRouter()
+const selected = ref(0)
+const loading = ref(true)
+// Data storage
 const fetchedData = ref({})
 const processedData = ref({})
-const loading = ref(true)
-const selected = ref(0)
+const shownHeaders = ref([])
+const allHeaders = ref([])
 const localSorts = ref([])
-const localFitlers = ref([])
-
+const fieldInfo = ref({})
+// Page navigation
 const recordCount = ref(0)
 const currentPage = ref(1)
 const pageLimit = ref(6)
-
+const filterFields = ref(null)
 const isFirst = ref(true)
+
 // TOAST EMITS
 //-------------------------------------------
 const emit = defineEmits(['addToast'])
@@ -76,29 +86,46 @@ const addToast = (toast) => {
 
 // refining Data, (sort and filters)
 const updateSorts = async (sorts) => {
-  localSorts.value = sorts
-  fetching_pipeline()
+  let format_sort = []
+  sorts.forEach((item) => {
+    let tem_sort = {
+      name: item.name,
+      type: item.type,
+      mode: 'desc'
+    }
+    if (item.mode == 'Ascendiente') {
+      tem_sort.mode = 'asc'
+    }
+    format_sort.push(tem_sort)
+  })
+  localSorts.value = format_sort
+  await fetching_pipeline()
 }
 
 const updateFilters = async (filters) => {
-  localFitlers.value = filters
-  fetching_pipeline()
+  console.log('TODO: ', filters)
+  // localFitlers.value = filters
+  // fetching_pipeline()
 }
-// Display table navigation
+
+// Display table
 const updatePage = async (pager) => {
   pageLimit.value = Number(pager[0])
   currentPage.value = Number(pager[1])
   await fetching_pipeline()
 }
-
-// Emissions from children
-
-const handleOpenEdit = () => {
-  router.push(`/doctor/records/edit/${selected.value}`)
+const onHideField = (header) => {
+  shownHeaders.value.splice(shownHeaders.value.indexOf(header), 1)
 }
-const fieldInfo = ref({})
-const shownHeaders = ref([])
-const allHeaders = ref([])
+
+// OnMounted and Watch
+onMounted(async () => {
+  loading.value = true
+  await get_doctor_id()
+  await get_headers()
+  isFirst.value = false
+  await fetching_pipeline()
+})
 
 watch(
   shownHeaders,
@@ -110,19 +137,7 @@ watch(
   { deep: true }
 )
 
-// Table field logic
-const onHideField = (header) => {
-  shownHeaders.value.splice(shownHeaders.value.indexOf(header), 1)
-}
-
-onMounted(async () => {
-  loading.value = true
-  await get_doctor_id()
-  await get_headers()
-  isFirst.value = false
-  await fetching_pipeline()
-})
-
+// Fectching and formatting data
 const fetching_pipeline = async () => {
   loading.value = true
   await get_records_raw()
@@ -140,7 +155,6 @@ const get_doctor_id = async () => {
   }
 }
 
-// Fucntions
 const format_records = () => {
   let raw_data = toRaw(fetchedData.value)
   let fields = toRaw(shownHeaders.value)
@@ -182,6 +196,9 @@ const get_records_raw = async () => {
     page: currentPage.value,
     fields: []
   }
+  if (localSorts.value.length !== 0) {
+    body['sorts'] = localSorts.value
+  }
   fields.forEach((item) => {
     let field = {
       name: item,
@@ -220,6 +237,9 @@ const get_headers = async () => {
       ...ext,
       ...fdata
     }
+    filterFields.value = {
+      ...fdata
+    }
     let fields = Object.keys(fdata)
     allHeaders.value = [...fields, 'Nombre', 'Apellidos']
     shownHeaders.value = ['Nombre', 'Apellidos', ...fields.slice(0, 2)]
@@ -227,6 +247,8 @@ const get_headers = async () => {
     addToast({ content: 'Ocurrio un error obteniendo los registros', type: 0 })
   }
 }
+
+// Navigation
 
 const handleOpenPreview = (key) => {
   selected.value = processedData.value[key].recordId
@@ -239,6 +261,10 @@ const handleTableSettings = () => {
 
 const handleNewRecord = () => {
   router.push('create-record')
+}
+
+const handleOpenEdit = () => {
+  router.push(`/doctor/records/edit/${selected.value}`)
 }
 </script>
 
