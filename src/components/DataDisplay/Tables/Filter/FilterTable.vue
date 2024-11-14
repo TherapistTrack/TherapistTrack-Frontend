@@ -101,7 +101,7 @@ import { RiDeleteBin7Fill, RiArrowUpDownLine, RiFilterFill, RiAddLine } from '@r
 import EditOverlay from './EditOverlay.vue'
 
 const emit = defineEmits(['updateFilters', 'updateSorts'])
-defineProps({
+const props = defineProps({
   fields: Object
 })
 
@@ -150,7 +150,8 @@ const handleOpenFilterForm = () => {
 const addSort = (sort) => {
   sorts.value.push({
     name: sort.name,
-    mode: sort.mode
+    mode: sort.mode,
+    type: props.fields[sort.name].type
   })
   emit('updateSorts', sorts.value)
 }

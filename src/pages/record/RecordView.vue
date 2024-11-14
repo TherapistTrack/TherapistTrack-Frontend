@@ -1,13 +1,15 @@
 <template>
   <router-view
+    :doctorId="doctorId"
     :recordId="selected"
     :viewData="processedData"
-    :fields="templateFields"
+    :fields="fieldInfo"
     v-model:shownHeaders="shownHeaders"
     :allHeaders="allHeaders"
     :allData="fetchedData"
-    @updateData="updateData"
+    @updateData="fetching_pipeline"
     @openEdit="handleOpenEdit"
+    @addToast="addToast"
   />
   <div class="page">
     <h1><b>Expedientes</b></h1>
@@ -15,7 +17,7 @@
       <FilterTable
         @updateSorts="updateSorts"
         @updateFilters="updateFilters"
-        :fields="templateFields"
+        :fields="filterFields"
       />
       <div class="new-container">
         <ButtonSimple :msg="'Nuevo'" :on-click="handleNewRecord" />
@@ -26,14 +28,14 @@
       <DisplayTable
         :data="processedData"
         :headers="shownHeaders"
-        :fields="templateFields"
+        :fields="fieldInfo"
         v-model:loading="loading"
         v-model:page-limit="pageLimit"
         v-model:current-page="currentPage"
+        :recordCount="recordCount"
         :onClick="handleOpenPreview"
         @hideHeader="onHideField"
         :success="true"
-        @updateLimit="updateLimit"
         @updatePage="updatePage"
       />
       <ConfigButton :onClick="handleTableSettings" />
@@ -44,25 +46,36 @@
 <script setup>
 import DisplayTable from '@/components/DataDisplay/Tables/DisplayTable.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, toRaw } from 'vue'
 import { useRouter } from 'vue-router'
 import ConfigButton from '@/components/Buttons/ConfigButton.vue'
 import FilterTable from '@/components/DataDisplay/Tables/Filter/FilterTable.vue'
-import records from './records.json'
 import { useAuth0 } from '@auth0/auth0-vue'
+import { useApi } from '@/oauth/useApi'
 
 // Constants
+// Api calls
+const { getRequest, postRequest } = useApi()
+// Navigation and user info
 const auth0 = useAuth0()
+const doctorId = ref(null)
 const router = useRouter()
+const selected = ref(0)
+const loading = ref(true)
+// Data storage
 const fetchedData = ref({})
 const processedData = ref({})
-const loading = ref(true)
-const selected = ref(0)
+const shownHeaders = ref([])
+const allHeaders = ref([])
 const localSorts = ref([])
-const localFitlers = ref([])
-
+const fieldInfo = ref({})
+// Page navigation
+const recordCount = ref(0)
 const currentPage = ref(1)
 const pageLimit = ref(6)
+const filterFields = ref(null)
+const isFirst = ref(true)
+
 // TOAST EMITS
 //-------------------------------------------
 const emit = defineEmits(['addToast'])
@@ -73,123 +86,172 @@ const addToast = (toast) => {
 
 // refining Data, (sort and filters)
 const updateSorts = async (sorts) => {
-  localSorts.value = sorts
-  updateData()
+  let format_sort = []
+  sorts.forEach((item) => {
+    let tem_sort = {
+      name: item.name,
+      type: item.type,
+      mode: 'desc'
+    }
+    if (item.mode == 'Ascendiente') {
+      tem_sort.mode = 'asc'
+    }
+    format_sort.push(tem_sort)
+  })
+  localSorts.value = format_sort
+  await fetching_pipeline()
 }
 
 const updateFilters = async (filters) => {
-  localFitlers.value = filters
-  updateData()
-}
-// Display table navigation
-const updatePage = (page) => {
-  currentPage.value = Number(page)
-  updateData()
+  console.log('TODO: ', filters)
+  // localFitlers.value = filters
+  // fetching_pipeline()
 }
 
-const updateLimit = (limit) => {
-  pageLimit.value = Number(limit)
-  updateData()
+// Display table
+const updatePage = async (pager) => {
+  pageLimit.value = Number(pager[0])
+  currentPage.value = Number(pager[1])
+  await fetching_pipeline()
 }
-// Emissions from children
-const updateData = async () => {
-  let fields = shownHeaders.value.map((val) => ({
-    name: val,
-    type: templateFields.value[val].type
-  }))
-  let body = {
-    doctorId: auth0.user.value.sub.split('|')[1],
-    limit: pageLimit.value,
-    page: currentPage.value,
-    fields: fields,
-    filters: localFitlers.value || [],
-    sorts: localSorts.value || []
-  }
+const onHideField = (header) => {
+  shownHeaders.value.splice(shownHeaders.value.indexOf(header), 1)
+}
+
+// OnMounted and Watch
+onMounted(async () => {
   loading.value = true
-  setTimeout(() => {
-    console.log('API CALL!!!')
-    console.log(JSON.stringify(body))
-    loading.value = false
-  }, 250)
-}
-
-const handleOpenEdit = () => {
-  router.push(`/doctor/records/edit/${selected.value}`)
-}
-const templateFields = ref({})
-const shownHeaders = ref([])
-const allHeaders = ref([])
+  await get_doctor_id()
+  await get_headers()
+  isFirst.value = false
+  await fetching_pipeline()
+})
 
 watch(
   shownHeaders,
   () => {
-    updateData()
+    if (!isFirst.value) {
+      fetching_pipeline()
+    }
   },
   { deep: true }
 )
 
-// Table field logic
-const onHideField = (header) => {
-  shownHeaders.value.splice(shownHeaders.value.indexOf(header), 1)
-}
-// On Mounted
-const getHeaders = (json) => {
-  let fieldArray = Object.entries(json)
-  let headers = []
-  let tem = {}
-  for (let key in fieldArray) {
-    let record = fieldArray[key][1].fields
-    for (let field in record) {
-      if (!headers.includes(record[field].name)) {
-        headers.push(record[field].name)
-        tem = { type: record[field].type }
-        if (record[field].type === 'CHOICE') {
-          tem['options'] = record[field].options
-        }
-        templateFields.value[record[field].name] = tem
-      }
-      tem = {}
-    }
-  }
-  return headers
-}
-
-const convertToObject = (json) => {
-  let fieldArray = Object.entries(json)
-  let object = []
-  let temElement = {}
-  for (let key in fieldArray) {
-    let record = fieldArray[key][1].fields
-    for (let field in record) {
-      temElement[record[field].name] = record[field].value
-    }
-    object.push(temElement)
-    temElement = {}
-  }
-  return object
-}
-onMounted(async () => {
+// Fectching and formatting data
+const fetching_pipeline = async () => {
   loading.value = true
-  // simulation time
-  await new Promise((resolve) => setTimeout(resolve, 500))
-  let successToast = { type: 1, content: 'Toast messages implemented in record view' }
-  addToast(successToast)
-  // Initial data fetch
-  fetchedData.value = records
-  // Obtaining headers from data fetch
-  allHeaders.value = getHeaders(records)
-  shownHeaders.value = allHeaders.value.slice(0, 4)
-  // Convert fetched data into working object
-  processedData.value = convertToObject(records)
+  await get_records_raw()
+  format_records()
   loading.value = false
-  console.log(templateFields.value)
-  return fetchedData
-})
+}
 
-// Fucntions
+const get_doctor_id = async () => {
+  let userId = auth0.user.value.sub.split('|')[1]
+  try {
+    const response = await postRequest('/users/@me', { id: userId })
+    doctorId.value = response.data.roleDependentInfo.id
+  } catch {
+    addToast({ content: 'Ocurrio un error obteniendo información del doctor', type: 0 })
+  }
+}
+
+const format_records = () => {
+  let raw_data = toRaw(fetchedData.value)
+  let fields = toRaw(shownHeaders.value)
+  let formatted_data = []
+
+  raw_data.forEach((patient) => {
+    let format_patient = {
+      recordId: patient.recordId,
+      createdAt: patient.createdAt,
+      templateId: patient.templateId,
+      Nombre: patient.patient.names,
+      Apellidos: patient.patient.lastNames
+    }
+    let found_fields = patient.patient.fields.filter((item) => fields.includes(item.name))
+    found_fields.forEach((field) => {
+      let tem = {
+        [field.name]: field.value
+      }
+      if (fieldInfo.value[field.name].type == 'DATE') {
+        tem = {
+          [field.name]: field.value.split('T')[0]
+        }
+      }
+      format_patient = {
+        ...format_patient,
+        ...tem
+      }
+    })
+    formatted_data.push(format_patient)
+  })
+  processedData.value = formatted_data
+}
+
+const get_records_raw = async () => {
+  let fields = shownHeaders.value.filter((item) => item != 'Nombre' && item != 'Apellidos')
+  let body = {
+    doctorId: doctorId.value,
+    limit: pageLimit.value,
+    page: currentPage.value,
+    fields: []
+  }
+  if (localSorts.value.length !== 0) {
+    body['sorts'] = localSorts.value
+  }
+  fields.forEach((item) => {
+    let field = {
+      name: item,
+      type: fieldInfo.value[item].type
+    }
+    body.fields.push(field)
+  })
+  try {
+    const response = await postRequest('/records/search', body)
+    fetchedData.value = response.records
+    recordCount.value = response.total
+  } catch {
+    addToast({ content: 'Ocurrio un error obteniendo los registros', type: 0 })
+  }
+}
+
+const get_headers = async () => {
+  try {
+    const response = await getRequest(`/records/search?doctorId=${doctorId.value}`, {})
+    let data = response.fields
+    let fdata = data.reduce((arr, item) => {
+      arr[item.name] = {
+        type: item.type
+      }
+      return arr
+    }, {})
+    let ext = {
+      Nombre: {
+        type: 'SHORT_TEXT'
+      },
+      Apellidos: {
+        type: 'SHORT_TEXT'
+      }
+    }
+    fieldInfo.value = {
+      ...ext,
+      ...fdata
+    }
+    filterFields.value = {
+      ...fdata
+    }
+    let fields = Object.keys(fdata)
+    allHeaders.value = [...fields, 'Nombre', 'Apellidos']
+    shownHeaders.value = ['Nombre', 'Apellidos', ...fields.slice(0, 2)]
+  } catch {
+    addToast({ content: 'Ocurrio un error obteniendo los registros', type: 0 })
+  }
+}
+
+// Navigation
 
 const handleOpenPreview = (key) => {
-  selected.value = processedData.value[key]['Record ID']
+  selected.value = processedData.value[key].recordId
   router.push(`/doctor/records/view/${selected.value}`)
 }
 
@@ -199,6 +261,10 @@ const handleTableSettings = () => {
 
 const handleNewRecord = () => {
   router.push('create-record')
+}
+
+const handleOpenEdit = () => {
+  router.push(`/doctor/records/edit/${selected.value}`)
 }
 </script>
 

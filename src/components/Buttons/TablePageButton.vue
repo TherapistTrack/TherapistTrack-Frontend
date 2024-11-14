@@ -29,7 +29,7 @@
 import { RiArrowLeftSLine, RiArrowRightSLine } from '@remixicon/vue'
 import PageInput from '../Forms/InputField/PageInput.vue'
 import { ref, watch } from 'vue'
-const emit = defineEmits(['updateCurrentPage', 'updateMax'])
+const emit = defineEmits(['updatePager'])
 
 const props = defineProps({
   pageCount: Number,
@@ -41,8 +41,7 @@ const localMaxPage = ref(Number(props.maxPage))
 watch(localMaxPage, () => {
   try {
     if (parseInt(localMaxPage.value) > 0 && !isNaN(Number(localMaxPage.value))) {
-      emit('updateCurrentPage', 1)
-      emit('updateMax', Number(parseInt(localMaxPage.value)))
+      emit('updatePager', [Number(parseInt(localMaxPage.value)), 1])
     }
   } catch {
     ;() => {}
@@ -51,21 +50,21 @@ watch(localMaxPage, () => {
 
 const handleClick = (key) => {
   if (key !== props.currentPage) {
-    emit('updateCurrentPage', key)
+    emit('updatePager', [Number(parseInt(localMaxPage.value)), key])
   }
 }
 
 const handleUp = () => {
   if (props.currentPage + 1 <= props.pageCount) {
     let newPage = props.currentPage + 1
-    emit('updateCurrentPage', newPage)
+    emit('updatePager', [Number(parseInt(localMaxPage.value)), newPage])
   }
 }
 
 const handleDown = () => {
   if (props.currentPage - 1 > 0) {
     let newPage = props.currentPage - 1
-    emit('updateCurrentPage', newPage)
+    emit('updatePager', [Number(parseInt(localMaxPage.value)), newPage])
   }
 }
 </script>
