@@ -286,7 +286,7 @@ async function removePatient() {
 
 <style scoped>
 .patient-container {
-  padding: 1rem 3rem 0 3rem;
+  padding: 2rem 4rem;
   width: 100vw;
   background-color: white;
   height: 100vh;
@@ -295,22 +295,22 @@ async function removePatient() {
 .page-title {
   font-size: 36px;
   font-weight: bold;
-  margin-bottom: 10px;
+  margin-bottom: 2rem;
 }
 
 h1 {
   font-size: 24px;
-  margin-bottom: 10px;
+  margin-bottom: 2rem;
 }
 
 .top-bar {
   display: flex;
   justify-content: space-between;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
 }
 
 .table-container {
-  padding: 0 1rem 0 0;
+  padding: 0 0 0 0;
 }
 </style>

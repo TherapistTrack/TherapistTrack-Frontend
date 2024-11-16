@@ -8,6 +8,7 @@
       <ButtonSimple msg="Nuevo" @click="showCreateModal" />
     </div>
 
+    <div class="table-container"></div>
     <SetDisplayTable
       :loading="loading"
       :data="filteredFiles"
@@ -238,27 +239,26 @@ onMounted(() => {
 
 <style scoped>
 .file-view-container {
-  padding: 1rem 3rem 0 3rem;
+  padding: 2rem 4rem;
   width: 100vw;
   background-color: white;
   height: 100vh;
 }
 
-DisplayTable {
-  max-height: calc(100vh - 150px);
-  overflow-y: auto;
-}
-
 .page-title {
   font-size: 36px;
   font-weight: bold;
-  margin-bottom: 10px;
+  margin-bottom: 2rem;
 }
 
 .top-bar {
-  margin-top: 1rem;
+  margin-top: 2rem;
   display: flex;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  margin-bottom: 2rem;
+}
+
+.table-container {
+  padding: 0 0 0 0;
 }
 </style>
