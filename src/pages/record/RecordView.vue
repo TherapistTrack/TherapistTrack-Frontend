@@ -277,13 +277,6 @@ const handleOpenRecord = (name) => {
     recordId: selected.value
   }
   tabManager.changeTab(name, `/doctor/patient/${selected.value}`, metadata)
-  // router.push({
-  //     path: `/doctor/patient/${selected.value}`,
-  //     query:{
-  //       patientName: name,
-  //       doctorId: doctorId.value
-  //     }
-  //   })
 }
 </script>
 

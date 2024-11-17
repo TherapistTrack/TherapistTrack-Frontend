@@ -64,9 +64,13 @@ import SetDisplayTable from '@/components/DataDisplay/Tables/SetDisplayTable.vue
 import ContextMenu from '@/components/Feedback/Modals/ContextMenu.vue'
 import { useApi } from '@/oauth/useApi'
 import { useContextMenu } from '@/components/DataDisplay/Composables/useContextMenu.js'
+import { useAuth0 } from '@auth0/auth0-vue'
 
+const emit = defineEmits('addToast')
+
+const auth0 = useAuth0()
 const router = useRouter()
-const { getRequest, patchRequest, deleteRequest } = useApi()
+const { getRequest, patchRequest, deleteRequest, postRequest } = useApi()
 
 const searchQuery = ref('')
 const loading = ref(false)
@@ -90,6 +94,18 @@ const tableHeaders = ref({
 const filteredFiles = computed(() =>
   files.value.filter((file) => file.name.toLowerCase().includes(searchQuery.value.toLowerCase()))
 )
+
+const get_doctor_id = async () => {
+  let userId = auth0.user.value.sub.split('|')[1]
+  let doctorId = ''
+  try {
+    const response = await postRequest('/users/@me', { id: userId })
+    doctorId = response.data.roleDependentInfo.id
+  } catch {
+    emit('addToast', { content: 'Ocurrio un error obteniendo información del doctor', type: 0 })
+  }
+  return doctorId
+}
 
 function showCreateModal() {
   isCreateModalVisible.value = true
@@ -150,9 +166,9 @@ async function renameFile(fileId, newName) {
     console.error('El nuevo nombre del archivo es requerido')
     return
   }
-
+  let doctorId = await get_doctor_id()
   const requestBody = {
-    doctorId: '66de4e2e2e0651893bc6b225',
+    doctorId: doctorId,
     templateId: fileId, // Cambiar a templateId
     name: newName
   }
@@ -185,8 +201,9 @@ async function removeFile() {
     return
   }
 
+  let doctorId = await get_doctor_id()
   const requestBody = {
-    doctorId: '66de4e2e2e0651893bc6b225',
+    doctorId: doctorId,
     templateId: fileId // Cambiar a templateId
   }
 
@@ -212,7 +229,7 @@ async function removeFile() {
 async function loadFiles() {
   loading.value = true
   try {
-    const doctorId = '66de4e2e2e0651893bc6b225'
+    const doctorId = await get_doctor_id()
     const response = await getRequest(`/doctor/FileTemplate/list?doctorId=${doctorId}`)
     console.log('Archivos obtenidos:', response)
 

@@ -2,6 +2,10 @@
   <div class="upload-files-container">
     <div class="upload-card">
       <div class="header-container">
+        <div class="go-back" @click="goBack()">
+          <RiArrowGoBackLine color="var(--gray-1)" class="icon-go-back" size="1.2rem" />
+          <p>Regresar</p>
+        </div>
         <h2>Subir Archivos</h2>
       </div>
       <div class="content-container">
@@ -44,8 +48,9 @@ import { onMounted, ref } from 'vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import { RiUploadCloudLine } from '@remixicon/vue'
 import { useUploadStore } from '@/stores/uploadStore'
+import { RiArrowGoBackLine } from '@remixicon/vue'
 
-const emit = defineEmits(['goToSelect'])
+const emit = defineEmits(['goToSelect', 'goToStart'])
 
 const fileInput = ref(null)
 const uploadStore = useUploadStore()
@@ -75,6 +80,10 @@ function goToSelect() {
   if (uploadStore.files.length > 0) {
     emit('goToSelect')
   }
+}
+
+const goBack = () => {
+  emit('goToStart')
 }
 </script>
 
@@ -166,5 +175,25 @@ function goToSelect() {
   width: 30px;
   height: 30px;
   margin-right: 10px;
+}
+
+.go-back {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: fit-content;
+  padding: 0.3rem;
+  border-radius: 0.4rem;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.go-back:hover {
+  background-color: var(--gray-3);
+}
+.go-back p {
+  color: var(--gray-1);
+}
+.icon-go-back {
+  flex-shrink: 0;
 }
 </style>
