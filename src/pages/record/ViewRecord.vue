@@ -40,7 +40,7 @@
       </div>
 
       <div class="bottom">
-        <ButtonSimple :msg="'Abrir'" />
+        <ButtonSimple :msg="'Abrir'" :onClick="handleOpenRecord" />
       </div>
     </div>
   </div>
@@ -80,18 +80,22 @@ const props = defineProps({
 
 const recordData = ref({})
 
-const emit = defineEmits(['updateData', 'openEdit', 'addToast'])
+const emit = defineEmits(['updateData', 'openEdit', 'addToast', 'openRecord'])
 
 onMounted(async () => {
-  let raw_fields = await getRecord()
-  let format_fields = formatRawFields(raw_fields)
-  recordData.value = { ...recordData.value, ...format_fields }
-  fieldInfo.value = getHeaders(raw_fields)
-  recordHeaders.value = Object.keys(fieldInfo.value)
-  ready.value = true
-  setTimeout(() => {
-    start.value = true
-  }, 2)
+  if (props.doctorId != null) {
+    let raw_fields = await getRecord()
+    let format_fields = formatRawFields(raw_fields)
+    recordData.value = { ...recordData.value, ...format_fields }
+    fieldInfo.value = getHeaders(raw_fields)
+    recordHeaders.value = Object.keys(fieldInfo.value)
+    ready.value = true
+    setTimeout(() => {
+      start.value = true
+    }, 2)
+  } else {
+    router.push('/doctor')
+  }
 })
 
 const getHeaders = (raw_fields) => {
@@ -150,7 +154,6 @@ const formatRawFields = (raw_fields) => {
 const goBack = () => {
   start.value = false
   setTimeout(() => {
-    emit('updateData')
     router.push('/doctor/records')
   }, 250) // You can adjust the delay if needed
 }
@@ -179,6 +182,7 @@ const onDelete = async () => {
     emit('addToast', { type: 0, content: 'Ocurrio un error eliminando el expediente' })
   }
   tryDelete.value = false
+  emit('updateData')
   goBack()
 }
 
@@ -187,6 +191,10 @@ const handleOpenEdit = () => {
   setTimeout(() => {
     emit('openEdit')
   }, 250) // You can adjust the delay if needed
+}
+
+const handleOpenRecord = () => {
+  emit('openRecord', `${recordData.value['Nombre']} ${recordData.value['Apellidos']}`)
 }
 </script>
 
