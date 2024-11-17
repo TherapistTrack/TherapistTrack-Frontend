@@ -10,6 +10,7 @@
     @updateData="fetching_pipeline"
     @openEdit="handleOpenEdit"
     @addToast="addToast"
+    @openRecord="handleOpenRecord"
   />
   <div class="page">
     <h1><b>Expedientes</b></h1>
@@ -52,9 +53,11 @@ import ConfigButton from '@/components/Buttons/ConfigButton.vue'
 import FilterTable from '@/components/DataDisplay/Tables/Filter/FilterTable.vue'
 import { useAuth0 } from '@auth0/auth0-vue'
 import { useApi } from '@/oauth/useApi'
+import { useTabStore } from '@/stores/tabStore'
 
 // Constants
 // Api calls
+const tabManager = useTabStore()
 const { getRequest, postRequest } = useApi()
 // Navigation and user info
 const auth0 = useAuth0()
@@ -265,6 +268,22 @@ const handleNewRecord = () => {
 
 const handleOpenEdit = () => {
   router.push(`/doctor/records/edit/${selected.value}`)
+}
+
+const handleOpenRecord = (name) => {
+  let metadata = {
+    patientName: name,
+    doctorId: doctorId.value,
+    recordId: selected.value
+  }
+  tabManager.changeTab(name, `/doctor/patient/${selected.value}`, metadata)
+  // router.push({
+  //     path: `/doctor/patient/${selected.value}`,
+  //     query:{
+  //       patientName: name,
+  //       doctorId: doctorId.value
+  //     }
+  //   })
 }
 </script>
 

@@ -29,25 +29,33 @@
       <div class="mid">
         <SelectDropDown
           label="Plantilla"
-          v-model:modelValue="fileData.template"
+          v-model:modelValue="currentTemplate"
           id="plantilla-select"
           disabledValue="Seleccione una plantilla"
-          :options="plantillaOptions"
+          :options="Object.keys(templateOptions)"
         />
-        <InputField :label="'Nombres'" v-model:modelValue="fileData.name" />
-        <InputField :label="'Páginas'" v-model:model-value="fileData.pages" />
-        <SelectDropDown
-          label="Categoría"
-          v-model:modelValue="fileData.category"
-          id="categoria-select"
-          disabledValue="Seleccione una categoría"
-          :options="categoriaOptions"
-        />
-        <InputField
-          :label="'Fecha de Creación'"
-          v-model:model-value="fileData.creation"
-          :type="'date'"
-        />
+
+        <InputField :label="'Nombre'" v-model:modelValue="fileData.name" type="SHORT_TEXT" />
+
+        <span v-for="(field, key) in Object.keys(templateInfo)" :key="key">
+          <span v-if="templateInfo[field].type == 'CHOICE'">
+            <SelectDropDown
+              :id="field + templateInfo[field].type"
+              :label="field"
+              :options="templateInfo[field].options"
+              v-model:model-value="fileData[field]"
+              disabled-value="Escoga una opción"
+            />
+          </span>
+          <span v-else>
+            <InputField
+              :label="field"
+              :type="templateInfo[field].type"
+              v-model:model-value="fileData[field]"
+              :required="templateInfo[field].required"
+            />
+          </span>
+        </span>
       </div>
       <div class="bottom">
         <IconButton
@@ -100,7 +108,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRoute } from 'vue-router'
 import IconButton from '@/components/Buttons/IconButton.vue'
 import InputField from '@/components/Forms/InputField/InputField.vue'
 import SelectDropDown from '@/components/Forms/SelectDropDown/SelectDropDown.vue'
@@ -116,29 +124,28 @@ import { useUploadStore } from '@/stores/uploadStore'
 // Importar PDF.js y el worker
 import * as pdfjsLib from 'pdfjs-dist/build/pdf'
 import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.js?url'
+import { useApi } from '@/oauth/useApi'
+
+const emit = defineEmits(['goToDoing', 'goToFiles'])
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker
 
 const uploadStore = useUploadStore()
-const router = useRouter()
 const route = useRoute()
 const currentFileIndex = ref(0)
 const sidebarOpen = ref(true)
 const fileUrl = ref('')
 
-// Opciones para los select
-const plantillaOptions = ['Normal', 'Especial', 'Personalizada']
-const categoriaOptions = ['Consultas', 'Análisis', 'Reportes']
+const { getRequest } = useApi()
 
+// Opciones para los select
 // Datos del archivo actual
-const fileData = ref({
-  template: '',
-  name: '',
-  pages: '',
-  category: '',
-  creation: ''
-})
+
+const templateOptions = ref({})
+const currentTemplate = ref('')
+const templateInfo = ref({})
+const fileData = ref({})
 
 // Íconos
 const trashIcon = RiDeleteBinFill
@@ -165,6 +172,67 @@ const currentFileName = computed(() => {
 const currentFileIndexDisplay = computed(() => currentFileIndex.value + 1)
 
 // Funciones
+
+watch(currentTemplate, async () => {
+  await getTemplateInfo()
+  updateFileData()
+})
+
+watch(
+  fileData,
+  (newData) => {
+    if (currentFile.value) {
+      currentFile.value.data = { ...newData }
+    }
+  },
+  { deep: true }
+)
+watch(currentFileIndex, async () => {
+  await getTemplateInfo()
+  updateFileData()
+})
+
+// Template logic
+const getTemplateOptions = async () => {
+  let doctorId = uploadStore.doctorId
+  if (doctorId != '' && doctorId != undefined) {
+    try {
+      const response = await getRequest(`/doctor/FIleTemplate/list?doctorId=${doctorId}`, {})
+      templateOptions.value = response.templates.reduce((arr, item) => {
+        arr[item.name] = item.templateId
+        return arr
+      }, {})
+      currentTemplate.value = Object.keys(templateOptions.value)[0]
+    } catch {
+      console.log('couldnt get template options')
+    }
+  }
+}
+const getTemplateInfo = async () => {
+  let temId = templateOptions.value[currentTemplate.value]
+  let doctorId = uploadStore.doctorId
+  try {
+    const response = await getRequest(
+      `/doctor/FileTemplate?doctorId=${doctorId}&templateId=${temId}`
+    )
+    let fields = response.data.fields
+    templateInfo.value = fields.reduce((arr, item) => {
+      arr[item.name] = {
+        type: item.type,
+        options: item.options,
+        required: item.required
+      }
+      return arr
+    }, {})
+    fileData.value = fields.reduce((arr, item) => {
+      arr[item.name] = ''
+      return arr
+    }, {})
+  } catch {
+    console.log('couldng get template info')
+  }
+}
+
 function handleDiscard() {
   if (currentFile.value) {
     // Eliminar el archivo actual del store
@@ -177,7 +245,7 @@ function handleDiscard() {
 
     // Si no quedan archivos, redirigir o manejar el caso
     if (uploadStore.files.length === 0) {
-      router.push('/upload/')
+      emit('goToFiles')
     } else {
       // Actualizar los datos del archivo actual
       updateFileData()
@@ -203,49 +271,23 @@ function goToNextFile() {
   }
 }
 
-function getLocalDateString() {
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  const day = String(now.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
 async function updateFileData() {
-  console.log('updateFileData called')
   if (fileUrl.value) {
     URL.revokeObjectURL(fileUrl.value)
   }
   if (currentFile.value) {
-    console.log('currentFile.value:', currentFile.value)
+    console.log('currentFile.value.data:', currentFile.value.data)
     console.log('currentFile.value.file:', currentFile.value.file)
     if (!currentFile.value.data) {
       currentFile.value.data = {
-        template: '',
-        name: currentFile.value.name.replace('.pdf', ''),
-        pages: '',
-        category: '',
-        creation: ''
+        templateId: templateOptions.value[currentTemplate.value],
+        name: currentFile.value.name.replace('.pdf', '')
       }
     }
-
-    // Obtener el número de páginas del PDF
-    try {
-      const typedarray = await currentFile.value.file.arrayBuffer()
-      const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise
-      const numPages = pdf.numPages
-      currentFile.value.data.pages = numPages.toString() // Convertimos a string
-    } catch (error) {
-      console.error('Error al obtener el número de páginas:', error)
+    fileData.value = {
+      ...currentFile.value.data,
+      templateId: templateOptions.value[currentTemplate.value]
     }
-
-    // Establecer la fecha actual si no está establecida
-    if (!currentFile.value.data.creation) {
-      const today = getLocalDateString()
-      currentFile.value.data.creation = today
-    }
-
-    fileData.value = { ...currentFile.value.data }
     if (currentFile.value.file instanceof Blob || currentFile.value.file instanceof File) {
       fileUrl.value = URL.createObjectURL(currentFile.value.file)
     } else {
@@ -271,21 +313,13 @@ function goToDoing() {
       console.log('Subiendo:', file.data)
     })
   }
-  router.push('/upload/doing')
+  emit('goToDoing')
 }
 
 // Watchers
-watch(
-  fileData,
-  (newData) => {
-    if (currentFile.value) {
-      currentFile.value.data = { ...newData }
-    }
-  },
-  { deep: true }
-)
 
-onMounted(() => {
+onMounted(async () => {
+  await getTemplateOptions()
   updateFileData()
 
   history.pushState(null, null, document.URL)
@@ -305,10 +339,6 @@ onMounted(() => {
   onBeforeUnmount(() => {
     window.removeEventListener('popstate', handlePopState)
   })
-})
-
-watch(currentFileIndex, () => {
-  updateFileData()
 })
 </script>
 

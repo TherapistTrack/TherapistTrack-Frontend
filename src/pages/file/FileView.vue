@@ -8,9 +8,9 @@
     @downloadFile="onDownload"
   />
   <div class="page">
-    <h1><b></b>{{ name }}</h1>
+    <h1><b></b>{{ fileName }}</h1>
     <div class="info-tab">
-      <p class="file-date">{{ date }}</p>
+      <p class="file-date">{{ createdAt }}</p>
       <div class="file-options">
         <div class="change-file" @click="handlePrevious">
           <RiArrowUpSLine color="var(--gray-1)" />
@@ -23,10 +23,6 @@
         </div>
       </div>
       <div class="file-info">
-        <div class="comment-container" @click="onShowComments">
-          <RiChat2Fill color="var(--gray-1)" />
-          <p>Comentarios</p>
-        </div>
         <div class="info-container" @click="onShowInfo">
           <RiFile3Fill color="var(--gray-1)" />
           <p>Info</p>
@@ -34,27 +30,69 @@
       </div>
     </div>
     <div class="doc-space">
-      <FileVisualizer />
+      <FileVisualizer v-if="ready" :pdf-src="pdfSrc" />
     </div>
   </div>
+  <div class="overlay-space" v-if="spaceOverlay"></div>
 </template>
 
 <script setup>
 import FileVisualizer from './FileVisualizer.vue'
-import { RiFile3Fill, RiChat2Fill, RiArrowDownSLine, RiArrowUpSLine } from '@remixicon/vue'
-import { ref } from 'vue'
+import { RiFile3Fill, RiArrowDownSLine, RiArrowUpSLine } from '@remixicon/vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import test from './test.pdf'
-
+import { useTabStore } from '@/stores/tabStore'
+import { useApi } from '@/oauth/useApi'
+import { storeToRefs } from 'pinia'
 // Emits
-const emit = defineEmits(['disableSpace', 'enableSpace'])
-
 // Variables
+
+const { getRequest } = useApi()
+const tabManager = useTabStore()
+const { activeTab } = storeToRefs(tabManager)
 const router = useRouter()
-const date = ref('3-11-20022')
-const name = ref('Consulta_1')
+const doctorId = ref('')
+const fileId = ref('')
+const fileName = ref('')
+const createdAt = ref('')
+const pdfSrc = ref('')
+const ready = ref(false)
+const spaceOverlay = ref(false)
+// const fileData = ref({})
 
 // On mounted
+watch(activeTab, () => {
+  getMetada()
+  if (fileId.value) {
+    getFile()
+  }
+})
+
+onMounted(async () => {
+  let currentTab = tabManager.getActiveTab()
+  doctorId.value = currentTab.metadata.doctorId
+  fileId.value = currentTab.metadata.fileId
+  await getFile()
+})
+const getMetada = () => {
+  let currentTab = tabManager.getActiveTab()
+  doctorId.value = currentTab.metadata.doctorId
+  fileId.value = currentTab.metadata.fileId
+}
+
+const getFile = async () => {
+  try {
+    let url = `/files?doctorId=${doctorId.value}&fileId=${fileId.value}`
+    const response = await getRequest(url, {})
+    fileName.value = response.name
+    createdAt.value = response.createdAt.split('T')[0]
+    pdfSrc.value = response.fileURL
+    ready.value = true
+  } catch {
+    console.log('something went wrong')
+  }
+}
+
 //Funcions
 const handlePrevious = () => {
   console.log('Go to PREVIOUS file')
@@ -63,39 +101,24 @@ const handlePrevious = () => {
 const handleNext = () => {
   console.log('Go to NEXT file')
 }
-
-const onShowComments = () => {
-  emit('enableSpace')
-  router.push('/doctor/file/view/123/comments')
-}
-const onHideComments = () => {
-  router.push('/doctor/file/view/123')
-}
-
 const onShowInfo = () => {
-  emit('enableSpace')
-  router.push('/doctor/file/view/123/info')
+  spaceOverlay.value = true
+  router.push(`/doctor/file/${fileId.value}/info`)
 }
 const onHideInfo = () => {
-  router.push('/doctor/file/view/123')
+  spaceOverlay.value = false
+  router.push(`/doctor/file/${fileId.value}`)
 }
 
 const onDownload = () => {
-  const pdfPath = test
+  const pdfPath = pdfSrc.value
+  const newTab = window.open(pdfPath, '_blank')
   const link = document.createElement('a')
   link.href = pdfPath
-  link.download = 'test_test.pdf'
-  link.click()
-}
-
-const onShowEdit = () => {
-  router.push('/doctor/file/view/123/editInfo')
-}
-const onHideEdit = () => {
-  console.log('/doctor/file/view/123')
-}
-const disableSpace = () => {
-  emit('disableSpace')
+  link.download = `${fileName.value}.pdf`
+  newTab.onload = () => {
+    link.click()
+  }
 }
 </script>
 
@@ -172,6 +195,11 @@ const disableSpace = () => {
   width: 1px;
   height: auto;
   background-color: var(--gray-2);
+}
+
+.overlay-space {
+  width: 30vw;
+  transition: width 0.2s;
 }
 
 /* Other */

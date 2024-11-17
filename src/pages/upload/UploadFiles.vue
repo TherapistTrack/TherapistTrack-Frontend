@@ -40,20 +40,23 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { onMounted, ref } from 'vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import { RiUploadCloudLine } from '@remixicon/vue'
 import { useUploadStore } from '@/stores/uploadStore'
 
+const emit = defineEmits(['goToSelect'])
+
 const fileInput = ref(null)
-const router = useRouter()
 const uploadStore = useUploadStore()
 
 function triggerFileInput() {
   fileInput.value.click()
 }
 
+onMounted(() => {
+  console.log(uploadStore.files)
+})
 function handleFileChange(event) {
   const selectedFiles = Array.from(event.target.files).map((file) => ({
     name: file.name,
@@ -70,7 +73,7 @@ function handleCancel() {
 // Función para redirigir a UploadSelect
 function goToSelect() {
   if (uploadStore.files.length > 0) {
-    router.push('/upload/select')
+    emit('goToSelect')
   }
 }
 </script>

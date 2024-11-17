@@ -3,7 +3,7 @@
     <div class="view-record" @click.stop="" :id="start ? 'init' : 'end'">
       <div class="top">
         <h1>
-          <b>{{ userData['Nombre'] }}</b>
+          <b>{{ fileName }}</b>
         </h1>
         <RiCloseLine
           class-name="icon"
@@ -14,15 +14,13 @@
         />
       </div>
       <div class="mid">
-        <span v-for="header in userHeaders" :key="header">
-          <span
-            v-if="fieldInfo[header].options !== null && fieldInfo[header].options !== undefined"
-          >
+        <span v-for="header in fileHeaders" :key="header">
+          <span v-if="fieldInfo[header].type == 'CHOICE'">
             <span v-if="fieldInfo[header].required">
               <SelectDropDownRequired
                 :label="header"
                 :disabled-value="'Escoga una opción'"
-                :model-value="userData[header]"
+                v-model:model-value="fileData[header]"
                 :options="fieldInfo[header].options"
               />
             </span>
@@ -30,7 +28,7 @@
               <SelectDropDown
                 :label="header"
                 :disabled-value="'Escoga una opción'"
-                :model-value="userData[header]"
+                v-model:model-value="fileData[header]"
                 :options="fieldInfo[header].options"
               />
             </span>
@@ -39,14 +37,14 @@
             <span v-if="fieldInfo[header].required">
               <InputFieldRequired
                 :label="header"
-                :model-value="userData[header]"
+                v-model:model-value="fileData[header]"
                 :type="fieldInfo[header].type"
               />
             </span>
             <span v-else>
               <InputField
                 :label="header"
-                :model-value="userData[header]"
+                v-model:model-value="fileData[header]"
                 :type="fieldInfo[header].type"
               />
             </span>
@@ -54,7 +52,17 @@
         </span>
       </div>
       <div class="bottom">
-        <ButtonSimple :msg="'Guardar'" :color="'yellow'" />
+        <span v-if="!dataIsValid">
+          <p v-for="(err, key) in errors" :key="key">
+            {{ err }}
+          </p>
+        </span>
+        <ButtonSimple
+          :disabled="!dataIsValid"
+          :msg="'Guardar'"
+          :color="'yellow'"
+          :onClick="updateFile"
+        />
       </div>
     </div>
   </div>
@@ -62,44 +70,166 @@
 
 <script setup>
 import { RiCloseLine } from '@remixicon/vue'
-import { ref, onMounted, toRaw } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import InputField from '@/components/Forms/InputField/InputField.vue'
 import InputFieldRequired from '@/components/Forms/InputField/InputFieldRequired.vue'
 import SelectDropDown from '@/components/Forms/SelectDropDown/SelectDropDown.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
-
+import { recordSchema } from '@/schemas/recordSchema'
 import SelectDropDownRequired from '@/components/Forms/SelectDropDown/SelectDropDownRequired.vue'
+import { useApi } from '@/oauth/useApi'
+import { useAuth0 } from '@auth0/auth0-vue'
+const emit = defineEmits(['addToast', 'updateData'])
 
+const { getTemplateSchema } = recordSchema()
+const { postRequest, getRequest, putRequest } = useApi()
 const start = ref(false)
 const router = useRouter()
+
 const props = defineProps({
-  fileId: String,
-  viewData: Object,
-  allData: Object,
-  fields: Object
+  fileId: String
 })
 const ready = ref(false)
 
-const userData = ref(null)
-const userHeaders = ref([])
-const fieldInfo = ref(JSON.parse(JSON.stringify(toRaw(props.fields))))
+const fileData = ref({})
+const fileHeaders = ref([])
+const fieldInfo = ref({})
+const fileName = ref('')
+const doctorId = ref('')
+const auth0 = useAuth0()
+const dataIsValid = ref(true)
+const errors = ref([])
 
-onMounted(() => {
-  userData.value = props.viewData.filter((item) => item.fileId === props.fileId)[0]
-  userHeaders.value = Object.keys(userData.value)
+watch(
+  fileData,
+  () => {
+    if (ready.value) {
+      verifyData()
+    }
+  },
+  { deep: true }
+)
+
+const verifyData = () => {
+  const validation = getTemplateSchema(fieldInfo.value)
+  validation
+    .validate(fileData.value)
+    .then(() => (dataIsValid.value = true))
+    .catch((err) => {
+      dataIsValid.value = false
+      errors.value = err.errors
+    })
+}
+
+onMounted(async () => {
+  doctorId.value = await getDoctorId()
+  let raw_data = await getFilesRaw()
+  let ffiles = formatData(raw_data)
+
+  fileData.value = {
+    ...fileData.value,
+    ...ffiles
+  }
+  fieldInfo.value = getHeaders(raw_data)
+  fileHeaders.value = Object.keys(fieldInfo.value)
   ready.value = true
   setTimeout(() => {
     start.value = true
   }, 2) // You can adjust the delay if needed
 })
 
+const getHeaders = (raw_data) => {
+  let headers = raw_data.reduce((arr, item) => {
+    arr[item.name] = {
+      type: item.type,
+      required: item.required,
+      options: item.options
+    }
+    return arr
+  }, {})
+  return headers
+}
+
+const formatData = (raw_data) => {
+  let ffiles = raw_data.reduce((arr, item) => {
+    arr[item.name] = item.value
+    return arr
+  }, {})
+  return ffiles
+}
+
+const getDoctorId = async () => {
+  let userId = auth0.user.value.sub.split('|')[1]
+  let doctorId = ''
+  try {
+    const response = await postRequest('/users/@me', { id: userId })
+    doctorId = response.data.roleDependentInfo.id
+  } catch {
+    emit('addToast', { type: 0, content: 'Hubo un error' })
+  }
+  return doctorId
+}
+
+const getFilesRaw = async () => {
+  let url = `/files?doctorId=${doctorId.value}&fileId=${props.fileId}`
+  const raw_data = ref([])
+  try {
+    const response = await getRequest(url, {})
+    const raw_fields = response.fields
+    raw_data.value = raw_fields
+    fileData.value['Nombre'] = response.name
+    fileName.value = response.name
+    fileData.value.recordId = response.recordId
+    fileData.value.category = response.category
+    fileData.value.createdAt = response.createdAt.split('T')[0]
+  } catch {
+    emit('addToast', { type: 0, content: 'Hubo un error' })
+  }
+
+  return raw_data.value
+}
+
+const updateFile = async () => {
+  let body = {
+    doctorId: doctorId.value,
+    fileId: props.fileId,
+    name: fileName.value,
+    category: fileData.value.category,
+    fields: []
+  }
+  fileHeaders.value.forEach((item) => {
+    let field = {
+      name: item,
+      value: fileData.value[item]
+    }
+    if (fieldInfo.value[item].type == 'NUMBER' || fieldInfo.value[item].type == 'FLOAT') {
+      field = {
+        name: item,
+        value: Number(fileData.value[item])
+      }
+    }
+    body.fields.push(field)
+  })
+  try {
+    const response = await putRequest('/files', body)
+    console.log(response)
+    if (response.status == 200) {
+      emit('addToast', { type: 1, content: 'Archivo actualizado exitosamente' })
+    }
+  } catch {
+    emit('addToast', { type: 0, content: 'Hubo un error' })
+  }
+  emit('updateData')
+  goBack()
+}
+
 const goBack = () => {
   start.value = false
   setTimeout(() => {
     router.back()
     router.back()
-  }, 250) // You can adjust the delay if needed
+  }, 250)
 }
 </script>
 
@@ -175,6 +305,13 @@ const goBack = () => {
   width: 100%;
   display: flex;
   justify-content: end;
+  flex-direction: column;
+}
+
+.view-record .bottom p {
+  font-size: small;
+  color: var(--red-1);
+  margin-bottom: 1rem;
 }
 
 @media (max-aspect-ratio: 1/1) {
