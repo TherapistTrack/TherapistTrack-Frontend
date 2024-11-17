@@ -69,12 +69,12 @@ import RemoveTemplate from '@/components/Feedback/Modals/RemoveTemplate.vue'
 import { useContextMenu } from '@/components/DataDisplay/Composables/useContextMenu.js'
 import SetDisplayTable from '@/components/DataDisplay/Tables/SetDisplayTable.vue'
 import { useApi } from '@/oauth/useApi'
-
+import { useAuth0 } from '@auth0/auth0-vue'
 // Usa useRouter para definir router
+
+const emit = defineEmits('addToast')
 const router = useRouter()
-
-const { patchRequest, getRequest, deleteRequest } = useApi()
-
+const { patchRequest, getRequest, deleteRequest, postRequest } = useApi()
 const searchQuery = ref('')
 const loading = ref(false)
 const isCreateModalVisible = ref(false)
@@ -82,6 +82,19 @@ const isRenameModalVisible = ref(false)
 const isRemoveModalVisible = ref(false)
 const patients = ref([])
 const selectedPatient = ref({})
+const auth0 = useAuth0()
+
+const get_doctor_id = async () => {
+  let userId = auth0.user.value.sub.split('|')[1]
+  let doctorId = ''
+  try {
+    const response = await postRequest('/users/@me', { id: userId })
+    doctorId = response.data.roleDependentInfo.id
+  } catch {
+    emit('addToast', { content: 'Ocurrio un error obteniendo información del doctor', type: 0 })
+  }
+  return doctorId
+}
 
 const {
   position: contextMenuPosition,
@@ -145,7 +158,7 @@ function handlePatientClick(patient) {
 async function loadTemplates() {
   loading.value = true
   try {
-    const doctorId = '66de4e2e2e0651893bc6b225'
+    const doctorId = await get_doctor_id()
     const response = await getRequest(`/doctor/PatientTemplate/list?doctorId=${doctorId}`)
     console.log('Plantillas obtenidas:', response)
 

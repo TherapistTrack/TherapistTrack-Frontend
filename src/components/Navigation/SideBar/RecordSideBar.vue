@@ -16,15 +16,9 @@
           <RiArrowLeftDoubleFill size="1.5rem" color="White" alt="minimize" />
         </div>
         <div class="mid">
-          <b>Recientes</b>
-          <div class="option" :id="select == 0 ? 'selected' : ''" @click="setSelect(0)">
-            ● Daniel Rayo
-          </div>
-          <div class="option" :id="select == 1 ? 'selected' : ''" @click="setSelect(1)">
-            ● Esteban Zambrano
-          </div>
-          <div class="option" :id="select == 2 ? 'selected' : ''" @click="setSelect(2)">
-            ● Juan Pablo Solis
+          <div class="option" @click="goToHomepage">
+            <RiFileTextLine />
+            <p>Home Page</p>
           </div>
         </div>
       </div>
@@ -63,12 +57,15 @@
 </template>
 
 <script setup>
-import { RiArrowLeftDoubleFill, RiSettings3Fill } from '@remixicon/vue'
+import { RiArrowLeftDoubleFill, RiSettings3Fill, RiFileTextLine } from '@remixicon/vue'
 import SettingsMenu from '@/components/DataDisplay/Tooltip/SettingsTooltip.vue'
 import AlertOptionSimple from '@/components/Feedback/Alerts/AlertOptionSimple.vue'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth0 } from '@auth0/auth0-vue'
+import { useTabStore } from '@/stores/tabStore'
+
+const tabManager = useTabStore()
 const auth0 = useAuth0()
 const trySetting = ref(false)
 const logoutAttempt = ref(false)
@@ -90,6 +87,10 @@ const handleProfile = () => {
   router.push('/config')
 }
 
+const goToHomepage = () => {
+  tabManager.changeTab('Home Page', '/doctor', {})
+}
+
 defineProps({
   minim: {
     type: Boolean,
@@ -97,11 +98,6 @@ defineProps({
   }
 })
 const localMin = ref(true)
-
-const select = ref(0)
-const setSelect = (val) => {
-  select.value = val
-}
 
 const handleClick = () => {
   localMin.value = !localMin.value
@@ -204,11 +200,17 @@ const logout = () => {
 }
 
 .R-sideBtn .bar .mid .option {
+  width: fit-content;
   display: flex;
-  padding: 0.4vh 0.4vh 0 1.5vh;
+  padding: 0.5rem;
   border-radius: 1vh;
+  gap: 1rem;
   cursor: pointer;
   align-items: center;
+}
+
+.R-sideBtn .bar .mid .option:hover {
+  background-color: var(--blue-2);
 }
 /* Bottom */
 .R-sideBtn .bottom {

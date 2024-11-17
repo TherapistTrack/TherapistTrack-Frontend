@@ -13,7 +13,9 @@
     <div class="form-section">
       <div v-for="(field, index) in fields" :key="index" class="form-group">
         <div class="field-name">
-          <span class="field-label">{{ field.name }}</span>
+          <span class="field-label"
+            ><b>{{ field.name }}:</b></span
+          >
         </div>
         <!-- Tipo de Dato -->
         <div class="field-type">
@@ -39,6 +41,12 @@
         <div class="field-options">
           <RiMoreFill class="more-options-btn" @click="handleContextMenu($event, field)" />
         </div>
+        <DynamicList
+          v-if="field.type == 'CHOICE'"
+          title="Opciones disponibles"
+          v-model:model-array="field.options"
+          @change="handleChoiceChange(index)"
+        />
       </div>
       <div class="form-bottom">
         <ButtonSimple msg="Agregar Campo" @click="showCreateFieldModal" />
@@ -98,11 +106,13 @@ import ContextMenu from '@/components/Feedback/Modals/ContextMenu.vue'
 import RemoveTemplate from '@/components/Feedback/Modals/RemoveTemplate.vue'
 import CreateTemplate from '@/components/Feedback/Modals/CreateTemplate.vue'
 import RenameTemplate from '@/components/Feedback/Modals/RenameTemplate.vue'
+import DynamicList from '@/components/Forms/DynamicList/DynamicList.vue'
 import { useContextMenu } from '@/components/DataDisplay/Composables/useContextMenu.js'
 import { useApi } from '@/oauth/useApi'
 import { useAuth0 } from '@auth0/auth0-vue'
 import { RiMoreFill } from '@remixicon/vue'
 
+const emit = defineEmits('addToast')
 const router = useRouter()
 const route = useRoute()
 const { getRequest, postRequest, putRequest, deleteRequest } = useApi()
@@ -113,13 +123,20 @@ const isEditing = ref(false)
 const templateId = ref(route.params.templateId || null)
 const templateName = ref(route.query.name || 'Nueva Plantilla')
 
-const dataTypes = ['SHORT_TEXT', 'TEXT', 'NUMBER', 'FLOAT', 'DATE']
+const dataTypes = ['SHORT_TEXT', 'TEXT', 'NUMBER', 'FLOAT', 'DATE', 'CHOICE']
 
 const fields = ref([
-  { name: 'Primer Nombre', type: '', value: '', required: true, isConfigured: false },
-  { name: 'Apellido Familiar', type: '', value: '', required: true, isConfigured: false },
+  { name: 'Primer Nombre', type: '', value: '', required: true, isConfigured: false, options: [] },
+  {
+    name: 'Apellido Familiar',
+    type: '',
+    value: '',
+    required: true,
+    isConfigured: false,
+    options: []
+  },
   { name: 'Hijos', type: '', value: '', required: false, isConfigured: false },
-  { name: 'Estado Civil', type: '', value: '', required: false, isConfigured: false }
+  { name: 'Estado Civil', type: '', value: '', required: false, isConfigured: false, options: [] }
 ])
 
 const selectedField = ref({})
@@ -133,6 +150,18 @@ const {
   showContextMenu,
   hideContextMenu
 } = useContextMenu()
+
+const get_doctor_id = async () => {
+  let userId = auth0.user.value.sub.split('|')[1]
+  let doctorId = ''
+  try {
+    const response = await postRequest('/users/@me', { id: userId })
+    doctorId = response.data.roleDependentInfo.id
+  } catch {
+    emit('addToast', { content: 'Ocurrio un error obteniendo información del doctor', type: 0 })
+  }
+  return doctorId
+}
 
 function showCreateFieldModal() {
   isCreateFieldModalVisible.value = true
@@ -185,9 +214,9 @@ async function saveTemplate() {
   }
 
   // Validación de campos...
-
+  let doctorId = await get_doctor_id()
   const requestBody = {
-    doctorId: '66de4e2e2e0651893bc6b225',
+    doctorId: doctorId,
     name: templateName.value,
     categories: ['General'],
     fields: fields.value.map((field) => ({
@@ -225,7 +254,7 @@ async function saveTemplate() {
 // Load the template if we're editing an existing one
 async function loadTemplateData(templateId) {
   try {
-    const doctorId = '66de4e2e2e0651893bc6b225'
+    const doctorId = await get_doctor_id()
     const response = await getRequest(
       `/doctor/PatientTemplate?doctorId=${doctorId}&templateId=${templateId}`
     )
@@ -286,8 +315,9 @@ async function addFieldToTemplate(newField) {
     console.error('El templateId no está definido')
     return
   }
+  let doctorId = await get_doctor_id()
   const requestBody = {
-    doctorId: '66de4e2e2e0651893bc6b225',
+    doctorId: doctorId,
     templateId: templateId.value,
     field: {
       name: newField.name,
@@ -316,9 +346,9 @@ async function editFieldInTemplate(oldFieldName, updatedFieldData) {
     alert('Información insuficiente para editar el campo')
     return
   }
-
+  let doctorId = await get_doctor_id()
   const requestBody = {
-    doctorId: '66de4e2e2e0651893bc6b225',
+    doctorId: doctorId,
     templateId: templateId.value,
     oldFieldName,
     fieldData: {
@@ -342,6 +372,23 @@ async function editFieldInTemplate(oldFieldName, updatedFieldData) {
     console.error('Error al editar el campo:', error)
     alert(`Error al editar el campo: ${error.response?.data?.message || error.message}`)
   }
+}
+
+const handleChoiceChange = (index) => {
+  const options = fields.value[index].options
+  if (!isEditing.value) {
+    return
+  }
+  if (options.length == 0 || options == undefined || options == null) {
+    return
+  }
+  const field = fields.value[index]
+  const oldFieldName = field.name
+  const updatedFieldData = {
+    ...field,
+    options: options
+  }
+  editFieldInTemplate(oldFieldName, updatedFieldData)
 }
 
 function handleFieldTypeChange(index, newType) {
@@ -397,9 +444,9 @@ async function deleteFieldFromTemplate(fieldName) {
     console.error('El templateId no está definido')
     return
   }
-
+  let doctorId = await get_doctor_id()
   const requestBody = {
-    doctorId: '66de4e2e2e0651893bc6b225',
+    doctorId: doctorId,
     templateId: templateId.value,
     name: fieldName
   }
