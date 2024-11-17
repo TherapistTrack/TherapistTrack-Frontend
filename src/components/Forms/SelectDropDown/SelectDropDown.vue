@@ -1,7 +1,7 @@
 <template>
   <div class="select-group">
     <label :for="id" v-if="label !== ''">
-      <TypeIconLoader :icon-type="'CHOICE'" />
+      <TypeIconLoader v-if="showTypeIcon" :icon-type="'CHOICE'" />
       <p>{{ label }}</p>
     </label>
     <select :id="id" :value="modelValue" @change="updateValue">
@@ -62,12 +62,17 @@ defineProps({
   align-items: center;
   gap: 0.6rem;
 }
+
 .select-group select,
 .select-group select option {
   font-family: 'MotivaSansMedium';
   font-weight: normal;
   font-style: normal;
   width: 170px;
+}
+
+.select-group select option {
+  font-family: 'MotivaSansMedium' !important;
 }
 .select-group select {
   padding: 0.75rem;

@@ -1,101 +1,90 @@
 <template>
-  <div class="template-container" @click="hideContextMenu">
-    <SideBarConfig
-      backgroundColor="#1f3a93"
-      arrowColor="#ffffff"
-      iconColor="#ffffff"
-      userName="Jose Marchena"
-      userRole="Administrador"
-      selectedOption="Pacientes"
+  <div class="record-template-container" @click="hideContextMenu">
+    <h1 class="page-title">{{ templateName }}</h1>
+    <p>Aquí se puede editar los campos de información que se debe registrar sobre un paciente.</p>
+
+    <div class="form-header">
+      <span class="header-item">Nombre del Campo</span>
+      <span class="header-item">Tipo de Dato</span>
+      <span class="header-item">Obligatorio</span>
+      <span class="header-item">Opciones</span>
+    </div>
+
+    <div class="form-section">
+      <div v-for="(field, index) in fields" :key="index" class="form-group">
+        <div class="field-name">
+          <span class="field-label">{{ field.name }}</span>
+        </div>
+        <!-- Tipo de Dato -->
+        <div class="field-type">
+          <DropdownField
+            :show-type-icon="false"
+            :id="'dropdown-' + index"
+            :label="'Seleccione un tipo'"
+            :disabledValue="'Seleccionar...'"
+            :options="dataTypes"
+            v-model="field.type"
+            @change="handleFieldTypeChange(index, $event.target.value)"
+            :disabled="!isEditing.value"
+          />
+        </div>
+        <div class="field-required">
+          <Checkbox
+            :id="'required-' + index"
+            label=""
+            v-model="field.required"
+            @change="handleFieldRequiredChange(index, $event.target.checked)"
+          />
+        </div>
+        <div class="field-options">
+          <RiMoreFill class="more-options-btn" @click="handleContextMenu($event, field)" />
+        </div>
+      </div>
+      <div class="form-bottom">
+        <ButtonSimple msg="Agregar Campo" @click="showCreateFieldModal" />
+        <ButtonSimple
+          v-if="!isEditing"
+          msg="Guardar"
+          class="save-button button-component"
+          @click="saveTemplate"
+        />
+        <ButtonSimple
+          v-else
+          msg="Regresar"
+          class="back-button button-component"
+          @click="goBackToPatients"
+        />
+      </div>
+    </div>
+
+    <ContextMenu
+      :position="contextMenuPosition"
+      :visible="contextMenuVisible"
+      @remove="showRemoveModal"
+      @rename="showRenameModal"
     />
 
-    <div class="content">
-      <h1 class="page-title">{{ templateName }}</h1>
-      <p>Aquí se puede editar los campos de información que se debe registrar sobre un paciente.</p>
+    <RemoveTemplate
+      v-if="isRemoveModalVisible"
+      :currentName="selectedField.name"
+      @close="isRemoveModalVisible = false"
+      @remove="removeField"
+    />
 
-      <div class="form-header">
-        <span class="header-item">Nombre del Campo</span>
-        <span class="header-item">Tipo de Dato</span>
-        <span class="header-item">Obligatorio</span>
-        <span class="header-item">Opciones</span>
-      </div>
+    <CreateTemplate
+      v-if="isCreateFieldModalVisible"
+      type="field"
+      @close="isCreateFieldModalVisible = false"
+      @create="addNewField"
+    />
 
-      <div class="form-section">
-        <div v-for="(field, index) in fields" :key="index" class="form-group">
-          <div class="field-name">
-            <span class="field-label">{{ field.name }}</span>
-          </div>
-          <!-- Tipo de Dato -->
-          <div class="field-type">
-            <DropdownField
-              :id="'dropdown-' + index"
-              :label="'Seleccione un tipo'"
-              :disabledValue="'Seleccionar...'"
-              :options="dataTypes"
-              v-model="field.type"
-              @change="handleFieldTypeChange(index, $event.target.value)"
-              :disabled="!isEditing.value"
-            />
-          </div>
-          <div class="field-required">
-            <Checkbox
-              :id="'required-' + index"
-              label=""
-              v-model="field.required"
-              @change="handleFieldRequiredChange(index, $event.target.checked)"
-            />
-          </div>
-          <div class="field-options">
-            <button class="more-options-btn" @click="handleContextMenu($event, field)">...</button>
-          </div>
-        </div>
-        <button class="add-field-btn button-component" @click="showCreateFieldModal">
-          Agregar Campo +
-        </button>
-      </div>
-
-      <ButtonSimple
-        v-if="!isEditing"
-        msg="Guardar"
-        class="save-button button-component"
-        @click="saveTemplate"
-      />
-      <ButtonSimple
-        v-else
-        msg="Regresar"
-        class="back-button button-component"
-        @click="goBackToPatients"
-      />
-
-      <ContextMenu
-        :position="contextMenuPosition"
-        :visible="contextMenuVisible"
-        @remove="showRemoveModal"
-        @rename="showRenameModal"
-      />
-
-      <RemoveTemplate
-        v-if="isRemoveModalVisible"
-        :currentName="selectedField.name"
-        @close="isRemoveModalVisible = false"
-        @remove="removeField"
-      />
-
-      <CreateTemplate
-        v-if="isCreateFieldModalVisible"
-        type="field"
-        @close="isCreateFieldModalVisible = false"
-        @create="addNewField"
-      />
-
-      <RenameTemplate
-        v-if="isRenameModalVisible"
-        :currentName="selectedField.name"
-        type="field"
-        @close="isRenameModalVisible = false"
-        @rename="renameField"
-      />
-    </div>
+    <RenameTemplate
+      v-if="isRenameModalVisible"
+      :currentName="selectedField.name"
+      type="field"
+      @close="isRenameModalVisible = false"
+      @rename="renameField"
+    />
   </div>
 </template>
 
@@ -112,6 +101,7 @@ import RenameTemplate from '@/components/Feedback/Modals/RenameTemplate.vue'
 import { useContextMenu } from '@/components/DataDisplay/Composables/useContextMenu.js'
 import { useApi } from '@/oauth/useApi'
 import { useAuth0 } from '@auth0/auth0-vue'
+import { RiMoreFill } from '@remixicon/vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -440,18 +430,11 @@ async function removeField() {
 </script>
 
 <style scoped>
-.template-container {
-  display: flex;
+.record-template-container {
+  padding: 1rem 3rem 0 3rem;
+  width: 100vw;
+  background-color: white;
   height: 100vh;
-}
-
-.content {
-  flex-grow: 1;
-  padding: 65px;
-  background-color: #fff;
-  border-radius: 8px;
-  height: 100vh;
-  overflow-y: auto;
 }
 
 .page-title {
@@ -466,35 +449,43 @@ async function removeField() {
   align-items: center;
   margin-bottom: 15px;
   font-weight: bold;
-  padding: 10px 0;
   border-bottom: 2px solid #ddd;
   gap: 20px;
   text-align: center;
+  padding: 1rem 1.5rem 1rem 1.5rem;
 }
 
 .form-header .header-item:first-child {
   text-align: left;
   padding-left: 10px;
+  color: var(--gray-1);
 }
 
+.form-header .header-item {
+  color: var(--gray-1);
+  font-size: 0.9rem;
+}
 .form-section {
-  margin-bottom: 20px;
+  padding: 0 1.5rem 0 1.5rem;
 }
 
 .form-group {
   display: grid;
   grid-template-columns: 3fr 2fr 1fr auto;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 1rem;
   background-color: #f8f8f8;
   padding: 10px;
   border-radius: 8px;
   transition: background-color 0.3s ease;
-  gap: 20px;
+  gap: 1rem;
 }
 
 .form-group:hover {
   background-color: #eaeaea;
+}
+.form-group * {
+  align-items: center;
 }
 
 .field-name {
@@ -511,19 +502,20 @@ async function removeField() {
   justify-content: center;
   align-items: center;
 }
+.field-type .select-group {
+  margin: 0;
+}
 
 .more-options-btn {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
+  flex-shrink: 0;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 50%;
-  transition: background-color 0.3s ease;
+  border-radius: 0.4rem;
+  transition: background-color 0.2s ease;
+  margin-right: 1.5rem;
 }
 
 .more-options-btn:hover {
-  background-color: #e0e0e0;
+  background-color: var(--gray-4);
 }
 
 .add-field-btn,
@@ -562,5 +554,12 @@ async function removeField() {
 
 .reconfigure-button:hover {
   background-color: #ff9900;
+}
+
+.form-bottom {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2rem;
 }
 </style>
