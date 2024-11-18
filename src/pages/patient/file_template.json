@@ -1,0 +1,40 @@
+{
+    "status": 0,
+    "message": "string",
+    "templates": [
+        {
+            "templateId": "60d5ec49d8a0c540d8d6d8b5",
+            "name": "Archivo-2024",
+            "fields": [
+                {
+                    "name": "Fecha de Creación",
+                    "type": "DATE",
+                    "options": [],
+                    "required": true,
+                    "description": "Fecha en la que se subió el documento a Therapisttrack"
+                },
+                {
+                    "name": "Páginas",
+                    "type": "NUMBER",
+                    "options": [],
+                    "required": false,
+                    "description": "Número de paginas en el documento"
+                },
+                {
+                    "name": "Tipo",
+                    "type": "CHOICE",
+                    "options": [
+                        "Sesion",
+                        "Documento Legal",
+                        "Scan",
+                        "Prueba Psicometrica",
+                        "Otro"
+                    ],
+                    "required": true,
+                    "description": "Tipo de contenido del documento"
+                }
+            ]
+        }
+    ],
+    "total": 1
+}

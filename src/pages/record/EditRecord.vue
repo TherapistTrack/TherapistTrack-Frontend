@@ -1,107 +1,271 @@
 <template>
-  <div class="overlayContainer" @click="goBack()" :id="start ? 'init' : 'end'">
+  <div v-if="ready" class="overlayContainer" @click="handleLeave" :id="start ? 'init' : 'end'">
     <div class="view-record" @click.stop="" :id="start ? 'init' : 'end'">
       <div class="top">
         <h1>
-          <b>{{ localData[props.id].nombre }}<br />{{ localData[props.id].apellido }}</b>
+          <b>{{ names[0] }} {{ names[1] }}</b>
         </h1>
         <RiCloseLine
           class-name="icon"
           size="2rem"
           color="var(--gray-2)"
           alt="close"
-          @click="goBack()"
-        />
-      </div>
-      <div class="actions">
-        <RiDeleteBin7Fill
-          class-name="act-delete"
-          size="1.5rem"
-          color="var(--gray-1)"
-          alt="delete"
-          @click="handleDelete(props.id)"
+          @click="handleLeave"
         />
       </div>
       <div class="mid">
-        <InputField
-          :label="'Nombres'"
-          :id="'nombres'"
-          v-model:model-value="localData[props.id].nombre"
-        />
-        <InputField
-          :label="'Apellidos'"
-          :id="'apellidos'"
-          v-model:model-value="localData[props.id].apellido"
-        />
-        <InputField
-          :label="'Ultima Actualización'"
-          :id="'ultimaAct'"
-          v-model:model-value="localData[props.id].ultimaAct"
-          :type="'date'"
-        />
-        <InputField
-          :label="'Fecha de Nacimiento'"
-          :id="'nacimiento'"
-          v-model:model-value="localData[props.id].nacimiento"
-          :type="'date'"
-        />
-        <InputField
-          :label="'Estado Civil'"
-          :id="'estadoCivil'"
-          v-model:model-value="localData[props.id].estadoCivil"
-        />
+        <span v-for="header in recordHeaders" :key="header">
+          <span v-if="fieldInfo[header].type == 'CHOICE'">
+            <span v-if="fieldInfo[header].required">
+              <SelectDropDownRequired
+                :id="'select-required' + header"
+                :label="header"
+                :disabled-value="'Escoga una opción'"
+                v-model:model-value="recordData[header]"
+                :options="fieldInfo[header].options"
+              />
+            </span>
+            <span v-else>
+              <SelectDropDown
+                :id="'select-' + header"
+                :label="header"
+                :disabled-value="'Escoga una opción'"
+                v-model:model-value="recordData[header]"
+                :options="fieldInfo[header].options"
+              />
+            </span>
+          </span>
+          <span v-else>
+            <span v-if="fieldInfo[header].required">
+              <InputFieldRequired
+                :id="'input-required' + header"
+                :label="header"
+                v-model:model-value="recordData[header]"
+                :type="fieldInfo[header].type"
+              />
+            </span>
+            <span v-else>
+              <InputField
+                :id="'input' + header"
+                :label="header"
+                v-model:model-value="recordData[header]"
+                :type="fieldInfo[header].type"
+              />
+            </span>
+          </span>
+        </span>
       </div>
-
       <div class="bottom">
-        <ButtonSimple :msg="'Guardar'" :color="'yellow'" />
+        <span v-if="!dataIsValid">
+          <p v-for="(err, key) in errors" :key="key">
+            {{ err }}
+          </p>
+        </span>
+        <ButtonSimple
+          :msg="'Guardar'"
+          :color="'yellow'"
+          :on-click="handleSave"
+          :disabled="!dataIsValid"
+        />
       </div>
     </div>
   </div>
-  <AlertDelete
-    v-if="tryDelete"
-    :name="`${props.data[props.id].nombre} ${props.data[props.id].apellido}`"
-    :on-no="abortDelete"
+  <AlertOptionSimple
+    v-if="leaveTry"
+    msg="Si regresas, tus cambios no serán guardados ¿Deseas continuar?"
+    :on-no="
+      () => {
+        leaveTry = false
+      }
+    "
+    :on-yes="goBack"
   />
 </template>
 
 <script setup>
-import { RiCloseLine, RiDeleteBin7Fill } from '@remixicon/vue'
-import { ref, onMounted } from 'vue'
+import { RiCloseLine } from '@remixicon/vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import InputField from '@/components/Forms/InputField/InputField.vue'
+import InputFieldRequired from '@/components/Forms/InputField/InputFieldRequired.vue'
+import SelectDropDown from '@/components/Forms/SelectDropDown/SelectDropDown.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
-import AlertDelete from '@/components/Feedback/Alerts/AlertDelete.vue'
+import SelectDropDownRequired from '@/components/Forms/SelectDropDown/SelectDropDownRequired.vue'
+import { useApi } from '@/oauth/useApi'
+import { recordSchema } from '@/schemas/recordSchema'
+import AlertOptionSimple from '@/components/Feedback/Alerts/AlertOptionSimple.vue'
 
-const tryDelete = ref(false)
+const emit = defineEmits(['addToast', 'updateData'])
+const props = defineProps({
+  recordId: String,
+  doctorId: String
+})
+
+const { getTemplateSchema } = recordSchema()
+const { getRequest, putRequest } = useApi()
 const start = ref(false)
 const router = useRouter()
-const localData = ref(null)
-const props = defineProps({
-  id: String,
-  data: Object
-})
-localData.value = props.data
+const ready = ref(false)
+const recordHeaders = ref([])
+const fieldInfo = ref({})
+const recordData = ref({})
+const dataIsValid = ref(true)
+const errors = ref([])
 
-onMounted(() => {
+const initialData = ref(null)
+const names = ref([])
+
+const leaveTry = ref(false)
+
+watch(
+  recordData,
+  () => {
+    if (ready.value) {
+      verifyData()
+    }
+  },
+  { deep: true }
+)
+
+const verifyData = () => {
+  const validation = getTemplateSchema(fieldInfo.value)
+  validation
+    .validate(recordData.value)
+    .then(() => (dataIsValid.value = true))
+    .catch((err) => {
+      dataIsValid.value = false
+      errors.value = err.errors
+    })
+}
+
+onMounted(async () => {
+  let raw_fields = await getRecord()
+  formatRawFields(raw_fields)
+  fieldInfo.value = getHeaders(raw_fields)
+  recordHeaders.value = Object.keys(fieldInfo.value)
+  initialData.value = JSON.parse(JSON.stringify(recordData.value))
+  ready.value = true
   setTimeout(() => {
     start.value = true
-  }, 2) // You can adjust the delay if needed
+  }, 2)
 })
+
+const handleLeave = () => {
+  let hasChanged = checkChange()
+  if (hasChanged) {
+    leaveTry.value = true
+  } else {
+    goBack()
+  }
+}
 
 const goBack = () => {
   start.value = false
+  emit('updateData')
   setTimeout(() => {
     router.back()
     router.back()
-  }, 250) // You can adjust the delay if needed
+  }, 250)
 }
-const handleDelete = (id) => {
-  // Deleting based on the id
-  console.log(id)
-  tryDelete.value = !tryDelete.value
+
+const getRecord = async () => {
+  let url = `/records/?doctorId=${props.doctorId}&recordId=${props.recordId}`
+  let fields = {}
+  try {
+    const response = await getRequest(url, {})
+    let init_data = {
+      Nombre: response.patient.names,
+      Apellidos: response.patient.lastNames
+    }
+    if (!ready.value) {
+      names.value = [response.patient.names, response.patient.lastNames]
+    }
+    recordData.value = { ...init_data }
+    fields = response.patient.fields
+  } catch {
+    emit('addToast', { type: 0, content: 'Ocurrio un error obteniendo el expediente' })
+  }
+  return fields
 }
-const abortDelete = () => {
-  tryDelete.value = false
+
+const formatRawFields = (raw_fields) => {
+  raw_fields.forEach((field) => {
+    if (field.type == 'DATE') {
+      recordData.value = { ...recordData.value, [field.name]: field.value.split('T')[0] }
+    } else {
+      recordData.value = { ...recordData.value, [field.name]: field.value }
+    }
+  })
+}
+
+const getHeaders = (raw_fields) => {
+  let headers = raw_fields.reduce((arr, item) => {
+    arr[item.name] = {
+      type: item.type,
+      required: item.required,
+      options: item.options
+    }
+    return arr
+  }, {})
+  let complete_headers = {
+    Nombre: {
+      type: 'SHORT_TEXT',
+      required: true,
+      options: []
+    },
+    Apellidos: {
+      type: 'SHORT_TEXT',
+      required: true,
+      options: []
+    },
+    ...headers
+  }
+  return complete_headers
+}
+
+const handleSave = async () => {
+  let hasChanged = checkChange()
+  if (hasChanged) {
+    let body = {
+      recordId: props.recordId,
+      doctorId: props.doctorId,
+      patient: {
+        names: recordData.value['Nombres'],
+        lastNames: recordData.value['Apellidos'],
+        fields: []
+      }
+    }
+    let headers = Object.keys(recordData.value).filter(
+      (item) => item !== 'Nombres' && item !== 'Apellidos'
+    )
+    headers.forEach((item) => {
+      body.patient.fields.push({
+        name: item,
+        value: recordData.value[item]
+      })
+    })
+    try {
+      const response = await putRequest('/records/', body)
+      if (response.status == 200) {
+        emit('addToast', { type: 1, content: 'Expediente guardado exitosamente' })
+      } else {
+        emit('addToast', { type: 0, content: 'Ocurrio un error guardando el expediente' })
+      }
+    } catch {
+      emit('addToast', { type: 0, content: 'Ocurrio un error guardando el expediente' })
+    }
+    goBack()
+  }
+}
+
+const checkChange = () => {
+  let init = JSON.stringify(initialData.value)
+  let curr = JSON.stringify(recordData.value)
+  if (init == curr) {
+    return false
+  } else {
+    return true
+  }
 }
 </script>
 
@@ -165,11 +329,6 @@ const abortDelete = () => {
   justify-content: space-between;
   padding-bottom: 1rem;
 }
-.view-record .actions {
-  display: flex;
-  gap: 1.5rem;
-  padding-bottom: 1rem;
-}
 .view-record .mid {
   padding: 1rem;
   height: 360px;
@@ -182,5 +341,18 @@ const abortDelete = () => {
   width: 100%;
   display: flex;
   justify-content: end;
+  flex-direction: column;
+}
+
+.view-record .bottom p {
+  font-size: small;
+  color: var(--red-1);
+  margin-bottom: 1rem;
+}
+
+@media (max-aspect-ratio: 1/1) {
+  .view-record {
+    width: 300px;
+  }
 }
 </style>

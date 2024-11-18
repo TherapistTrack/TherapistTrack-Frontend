@@ -1,16 +1,16 @@
 <template>
-  <span>
-    <div class="tabs">
-      <SideBar :minim="minim" @updateValue="updateMinim" :user="auth0.user.value" />
-    </div>
-    <div class="view">
-      <div class="sideSpace" :id="minim ? '' : 'max'"></div>
-      <router-view @addToast="addToast" />
-    </div>
-  </span>
+  <div class="tabs">
+    <SideBar :minim="minim" @updateValue="updateMinim" :user="auth0.user.value" />
+  </div>
+  <div class="view">
+    <div class="sideSpace" :id="minim ? '' : 'max'"></div>
+    <router-view @addToast="addToast" />
+  </div>
   <div class="toast-loader">
     <div class="sideSpace" :id="minim ? '' : 'max'"></div>
-    <ToastLoader v-model:toastList="toastList" />
+    <span>
+      <ToastLoader v-model:toastList="toastList" />
+    </span>
   </div>
 </template>
 <script setup>
@@ -23,8 +23,13 @@ const minim = ref(true)
 const toastList = ref([])
 
 const addToast = (toast) => {
-  toastList.value.push(toast)
+  let newToast = {
+    ...toast,
+    id: [Math.floor(Math.random() * 100) + 1]
+  }
+  toastList.value.push(newToast)
 }
+
 const updateMinim = () => {
   minim.value = !minim.value
 }

@@ -20,11 +20,11 @@
     </div>
 
     <DisplayTable
-      :data="fetchedData"
+      :data="processedData"
       :headers="headers"
       :loading="loading"
-      :onClick="handleOpenView"
       :success="success"
+      @rowClick="handleOpenView"
     />
   </div>
 </template>
@@ -34,12 +34,13 @@ import OverlayLoader from '@/components/Feedback/Spinner/OverlayLoader.vue'
 import { ref, onMounted, watch } from 'vue'
 import Button from '@/components/Buttons/ButtonSimple.vue'
 import CustomInput from '@/components/Forms/InputField/SearchBar.vue'
-import DisplayTable from '@/components/DataDisplay/Tables/DisplayTable.vue'
+import DisplayTable from '@/components/DataDisplay/Tables/SetDisplayTable.vue'
 import { useRouter } from 'vue-router'
 import { useApi } from '@/oauth/useApi'
 const { getRequest } = useApi()
 const selected = ref('')
 const fetchedData = ref(null)
+const processedData = ref(null)
 const headers = ref(null)
 const router = useRouter()
 const loading = ref(false)
@@ -61,12 +62,16 @@ const handleOpenEdit = () => {
   router.push(`/admin/user/edit/${selected.value}`)
 }
 watch(search, () => {
-  console.log(search.value)
+  if (search.value === '' || search.value === undefined) {
+    processedData.value = fetchedData.value
+  } else {
+    // Apply search
+    processedData.value = applySearch(fetchedData.value, search.value)
+  }
 })
 headers.value = {
   names: 'Nombre',
-  lastNames: 'Apellidos',
-  rol: 'Rol'
+  role: 'Rol'
 }
 
 const getCurrentUser = async () => {
@@ -85,12 +90,14 @@ const apiCall = async () => {
   try {
     const response = await getRequest('/users/list')
     fetchedData.value = response.users
+    processedData.value = response.users
     success.value = true
+    search.value = ''
+    triggerToast(1, 'Usuarios fueron exitosamente obtenidos')
   } catch {
     triggerToast(0, 'No se pudieron obtener los usuarios disponibles')
   }
   loading.value = false
-  return fetchedData
 }
 
 onMounted(async () => {
@@ -102,9 +109,17 @@ const handleOpenCreate = () => {
 }
 
 const handleOpenView = async (key) => {
-  selected.value = fetchedData.value[key].id
+  selected.value = key.id
   await getCurrentUser()
-  router.push(`/admin/user/view/${fetchedData.value[key].id}`)
+  router.push(`/admin/user/view/${selected.value}`)
+}
+
+const applySearch = (originalData, value) => {
+  const processed = ref(null)
+  processed.value = originalData.filter(
+    (item) => item.names !== undefined && item.names.toLowerCase().includes(value.toLowerCase())
+  )
+  return processed.value
 }
 </script>
 

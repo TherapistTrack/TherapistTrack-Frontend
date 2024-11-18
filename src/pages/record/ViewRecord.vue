@@ -1,9 +1,9 @@
 <template>
-  <div class="overlayContainer" @click="goBack()" :id="start ? 'init' : 'end'">
+  <div v-if="ready" class="overlayContainer" @click="goBack()" :id="start ? 'init' : 'end'">
     <div class="view-record" @click.stop="" :id="start ? 'init' : 'end'">
       <div class="top">
         <h1>
-          <b>{{ localData[props.id].nombre }}<br />{{ localData[props.id].apellido }}</b>
+          <b>{{ recordData['Nombre'] }}<br />{{ recordData['Apellidos'] }}</b>
         </h1>
         <RiCloseLine
           class-name="icon"
@@ -19,29 +19,38 @@
           size="1.5rem"
           color="var(--gray-1)"
           alt="edit"
-          @click="handleOpenEdit(props.id)"
+          @click="handleOpenEdit()"
         />
         <RiDeleteBin7Fill
           class-name="act-delete"
           size="1.5rem"
           color="var(--gray-1)"
           alt="delete"
-          @click="handleDelete(props.id)"
+          @click="handleDelete(props.userId)"
         />
       </div>
       <div class="mid">
-        <SimpleTable :data="localData[props.id]" :headers="headers" />
+        <SimpleTable
+          :data="recordData"
+          :headers="recordHeaders"
+          :isSet="true"
+          :has-type="true"
+          :fields="fieldInfo"
+        />
       </div>
 
       <div class="bottom">
-        <ButtonSimple :msg="'Abrir'" />
+        <ButtonSimple :msg="'Abrir'" :onClick="handleOpenRecord" />
       </div>
     </div>
   </div>
+
   <AlertDelete
     v-if="tryDelete"
-    :name="`${props.data[props.id].nombre} ${props.data[props.id].apellido}`"
+    :name="`${recordData['Nombre']} ${recordData['Apellidos']}`"
     :on-no="abortDelete"
+    :on-yes="onDelete"
+    :type="'record'"
   />
 </template>
 
@@ -52,52 +61,140 @@ import { useRouter } from 'vue-router'
 import SimpleTable from '@/components/DataDisplay/Tables/SimpleTable.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import AlertDelete from '@/components/Feedback/Alerts/AlertDelete.vue'
+import { useApi } from '@/oauth/useApi'
 
+const { getRequest, deleteRequest } = useApi()
+const templateId = ref(null)
+const createdAt = ref(null)
+const ready = ref(false)
 const start = ref(false)
 const router = useRouter()
-const localData = ref(null)
+const recordHeaders = ref([])
+const fieldInfo = ref({})
+
 const tryDelete = ref(false)
 const props = defineProps({
-  id: String,
-  data: Object
-})
-localData.value = props.data
-
-onMounted(() => {
-  setTimeout(() => {
-    start.value = true
-  }, 2) // You can adjust the delay if needed
+  doctorId: String,
+  recordId: String
 })
 
-const headers = ref({
-  nombre: 'Nombre',
-  apellido: 'Apellidos',
-  ultimaAct: 'Ultima Actualización',
-  nacimiento: 'Nacimiento',
-  estadoCivil: 'Estado Civil',
-  nombrePareja: 'Nombre de Pareja'
+const recordData = ref({})
+
+const emit = defineEmits(['updateData', 'openEdit', 'addToast', 'openRecord'])
+
+onMounted(async () => {
+  if (props.doctorId != null) {
+    let raw_fields = await getRecord()
+    let format_fields = formatRawFields(raw_fields)
+    recordData.value = { ...recordData.value, ...format_fields }
+    fieldInfo.value = getHeaders(raw_fields)
+    recordHeaders.value = Object.keys(fieldInfo.value)
+    ready.value = true
+    setTimeout(() => {
+      start.value = true
+    }, 2)
+  } else {
+    router.push('/doctor')
+  }
 })
+
+const getHeaders = (raw_fields) => {
+  let headers = raw_fields.reduce((arr, item) => {
+    arr[item.name] = {
+      type: item.type,
+      required: item.required,
+      options: item.options
+    }
+    return arr
+  }, {})
+  let complete_headers = {
+    Nombre: {
+      type: 'SHORT_TEXT',
+      required: true,
+      options: []
+    },
+    Apellidos: {
+      type: 'SHORT_TEXT',
+      required: true,
+      options: []
+    },
+    ...headers
+  }
+  return complete_headers
+}
+
+const getRecord = async () => {
+  let url = `/records/?doctorId=${props.doctorId}&recordId=${props.recordId}`
+  let fields = {}
+  try {
+    const response = await getRequest(url, {})
+    templateId.value = response.tempalteId
+    createdAt.value = response.createdAt
+    recordData.value['Nombre'] = response.patient.names
+    recordData.value['Apellidos'] = response.patient.lastNames
+    fields = response.patient.fields
+  } catch {
+    emit('addToast', { type: 0, content: 'Ocurrio un error obteniendo el expediente' })
+  }
+  return fields
+}
+
+const formatRawFields = (raw_fields) => {
+  let format_fields = raw_fields.reduce((arr, item) => {
+    if (item.type == 'DATE') {
+      arr[item.name] = item.value.split('T')[0]
+    } else {
+      arr[item.name] = item.value
+    }
+    return arr
+  }, {})
+  return format_fields
+}
 
 const goBack = () => {
   start.value = false
   setTimeout(() => {
-    router.back()
+    router.push('/doctor/records')
   }, 250) // You can adjust the delay if needed
 }
 
-const handleDelete = (id) => {
-  // Deleting based on the id
-  console.log(id)
-  tryDelete.value = !tryDelete.value
+const handleDelete = () => {
+  tryDelete.value = true
 }
+
 const abortDelete = () => {
   tryDelete.value = false
 }
+
+const onDelete = async () => {
+  let body = {
+    doctorId: props.doctorId,
+    recordId: props.recordId
+  }
+  try {
+    const response = await deleteRequest('/records/', body)
+    if (response.status == 200) {
+      emit('addToast', { type: 1, content: 'Expediente fue borrado exitosamente' })
+    } else {
+      emit('addToast', { type: 0, content: 'Ocurrio un error eliminando el expediente' })
+    }
+  } catch {
+    emit('addToast', { type: 0, content: 'Ocurrio un error eliminando el expediente' })
+  }
+  tryDelete.value = false
+  emit('updateData')
+  goBack()
+}
+
 const handleOpenEdit = () => {
   start.value = false
   setTimeout(() => {
-    router.push(`/record/main/edit/${props.id}`)
+    emit('openEdit')
   }, 250) // You can adjust the delay if needed
+}
+
+const handleOpenRecord = () => {
+  emit('openRecord', `${recordData.value['Nombre']} ${recordData.value['Apellidos']}`)
 }
 </script>
 
@@ -133,6 +230,9 @@ const handleOpenEdit = () => {
   height: 100vh;
   padding: 2rem;
   transition: right 0.3s;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 .view-record#init {
   right: 0;
@@ -159,7 +259,7 @@ const handleOpenEdit = () => {
 .view-record .top {
   display: flex;
   justify-content: space-between;
-  padding-bottom: 1rem;
+  padding-bottom: 0.3rem;
 }
 .view-record .actions {
   display: flex;
@@ -168,8 +268,11 @@ const handleOpenEdit = () => {
 }
 .view-record .mid {
   padding: 1rem;
-  height: 360px;
+  height: 385px;
   overflow-y: auto;
+}
+.view-record .mid * {
+  font-size: 0.8rem;
 }
 
 .view-record .bottom {
@@ -178,5 +281,14 @@ const handleOpenEdit = () => {
   width: 100%;
   display: flex;
   justify-content: end;
+}
+
+@media (max-aspect-ratio: 1/1) {
+  .view-record {
+    width: 280px;
+  }
+  .view-record .mid {
+    height: 65vh;
+  }
 }
 </style>

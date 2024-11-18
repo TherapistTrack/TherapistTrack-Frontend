@@ -53,7 +53,7 @@ const router = createRouter({
     {
       path: '/config',
       redirect: '/config/account',
-      component: () => import('@/pages/config/ProfileView.vue'),
+      component: () => import('@/pages/config/ConfigIndex.vue'),
       children: [
         {
           path: 'account',
@@ -65,7 +65,11 @@ const router = createRouter({
         },
         {
           path: 'template',
-          component: () => import('@/pages/config/CustomizeTemplate.vue')
+          component: () => import('@/pages/config/CustomizeRecord.vue')
+        },
+        {
+          path: 'template/:templateId',
+          component: () => import('@/pages/config/CustomizeRecord.vue')
         },
         {
           path: 'records',
@@ -76,34 +80,40 @@ const router = createRouter({
           component: () => import('@/pages/config/FileView.vue')
         },
         {
-          path: '/config/customize-file',
+          path: 'files/new',
+          component: () => import('@/pages/config/CustomizeFile.vue')
+        },
+        {
+          path: 'files/:fileId',
           component: () => import('@/pages/config/CustomizeFile.vue')
         }
       ]
     },
-    // RECORD VIEW
+
+    // DOCTOR VIEWS
+
     {
-      path: '/record',
-      component: () => import('@/pages/record/RecordIndex.vue'),
+      path: '/doctor',
+      component: () => import('@/pages/doctor/DoctorIndex.vue'),
+      redirect: '/doctor/records',
       children: [
+        // Records Flow
         {
-          path: 'main',
+          path: 'records',
           component: () => import('@/pages/record/RecordView.vue'),
           children: [
             {
-              path: 'edit/:id',
+              path: 'edit/:recordId',
               component: () => import('@/pages/record/EditRecord.vue'),
               props: (route) => ({
-                userId: route.params.id, // Pass id from route parameters
-                data: Object
+                recordId: route.params.id // Pass id from route parameters
               })
             },
             {
-              path: 'view/:id',
+              path: 'view/:recordId',
               component: () => import('@/pages/record/ViewRecord.vue'),
               props: (route) => ({
-                userId: route.params.id, // Pass id from route parameters
-                data: Object
+                recordId: route.params.id // Pass id from route parameters
               })
             },
             {
@@ -116,33 +126,97 @@ const router = createRouter({
             }
           ]
         },
+
+        // Create Record
         {
-          path: 'create',
+          path: 'create-record',
           component: () => import('@/pages/record/CreateRecord.vue')
+        },
+
+        // Patient Flow
+        {
+          path: 'patient/:recordId',
+          component: () => import('@/pages/patient/PatientView.vue'),
+          props: (route) => ({
+            recordId: route.params.recordId
+          }),
+          children: [
+            {
+              path: 'edit/:fileId',
+              component: () => import('@/pages/patient/EditPatient.vue'),
+              props: (route) => ({
+                fileId: route.params.fileId
+              })
+            },
+            {
+              path: 'view/:fileId',
+              component: () => import('@/pages/patient/ViewPatient.vue'),
+              props: (route) => ({
+                fileId: route.params.fileId
+              })
+            },
+            {
+              path: 'table-settings',
+              component: () => import('@/pages/patient/PatientShowTable.vue'),
+              props: {
+                shownHeaders: Object,
+                allHeaders: Object
+              }
+            }
+          ]
+        },
+
+        // File Flow
+        {
+          path: 'file/:fileId',
+          component: () => import('@/pages/file/FileView.vue'),
+          children: [
+            {
+              path: 'info',
+              component: () => import('@/pages/file/FileInfo.vue')
+            },
+            {
+              path: 'editInfo',
+              component: () => import('@/pages/file/EditFileInfo.vue')
+            }
+          ]
         }
       ]
     },
 
-    // PATIENT VIEW
-    {
-      path: '/patient/:id',
-      component: () => import('@/pages/notfound/NotFoundView.vue')
-    },
-
     // UPLOAD VIEW
+
     {
       path: '/upload',
-      component: () => import('@/pages/notfound/NotFoundView.vue')
+      component: () => import('@/pages/upload/UploadIndex.vue'),
+      children: [
+        {
+          path: 'files',
+          name: 'uploadFiles',
+          component: () => import('@/pages/upload/UploadFiles.vue')
+        },
+        {
+          path: 'select',
+          name: 'uploadSelect',
+          component: () => import('@/pages/upload/UploadSelect.vue')
+        },
+        {
+          path: 'form',
+          name: 'uploadForm',
+          component: () => import('@/pages/upload/UploadForm.vue')
+        },
+        {
+          path: 'doing',
+          name: 'uploadDoing',
+          component: () => import('@/pages/upload/UploadDoing.vue')
+        },
+        {
+          path: 'finish',
+          name: 'uploadFinish',
+          component: () => import('@/pages/upload/UploadFinish.vue')
+        }
+      ]
     },
-    {
-      path: '/upload/prepare',
-      component: () => import('@/pages/notfound/NotFoundView.vue')
-    },
-    {
-      path: '/upload/waiting',
-      component: () => import('@/pages/notfound/NotFoundView.vue')
-    },
-
     // NOT FOUND PAGE
     {
       path: '/:pathMatch(.*)*',

@@ -1,10 +1,8 @@
 <template>
-  <div class="icon-button-component" @click="handleClick">
-    <component :is="firstIcon" size="1.5rem" color="var(--gray-2)" />
-
+  <div class="icon-button-component" :class="{ disabled: props.disabled }" @click="handleClick">
+    <component v-if="firstIcon" :is="firstIcon" size="1.5rem" color="var(--gray-2)" />
     <p>{{ msg }}</p>
-
-    <component :is="secondIcon" size="1.5rem" color="var(--gray-2)" />
+    <component v-if="secondIcon" :is="secondIcon" size="1.5rem" color="var(--gray-2)" />
   </div>
 </template>
 
@@ -20,20 +18,28 @@ const props = defineProps({
   },
   firstIcon: {
     type: Object,
-    required: true
+    required: false,
+    default: null
   },
   secondIcon: {
     type: Object,
-    required: true
+    required: false,
+    default: null
   },
-  onClick: Function
+  onClick: {
+    type: Function,
+    default: null
+  }
 })
+
 function handleClick() {
-  props.onClick()
+  if (!props.disabled && props.onClick) {
+    props.onClick()
+  }
 }
 </script>
 
-<style>
+<style scoped>
 .icon-button-component {
   padding: 0.4rem 1rem;
   border-radius: 0.7vh;
@@ -47,10 +53,16 @@ function handleClick() {
 
 .icon-button-component p {
   color: var(--gray-1);
-  font-size: 2.2vh;
+  font-size: small;
 }
 
 .icon-button-component:hover {
   background-color: var(--gray-3);
+}
+
+.icon-button-component.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  pointer-events: none;
 }
 </style>

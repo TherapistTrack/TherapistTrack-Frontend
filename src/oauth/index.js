@@ -1,12 +1,17 @@
 import { createAuth0 } from '@auth0/auth0-vue'
 
+// console.log('OAUTH_DOMAIN:' + import.meta.env.VITE_OAUTH_DOMAIN)
+// console.log('CLIENT ID:' + import.meta.env.VITE_OAUTH_CLIENT_ID)
+// console.log('REDIRECT URI:' + import.meta.env.VITE_OAUTH_REDIRECT_URI)
+// console.log('AUDIENCE:' + import.meta.env.VITE_OAUTH_AUDIENCE)
+
 export const authClient = createAuth0({
   domain: import.meta.env.VITE_OAUTH_DOMAIN,
   clientId: import.meta.env.VITE_OAUTH_CLIENT_ID,
   authorizationParams: {
     redirect_uri: import.meta.env.VITE_OAUTH_REDIRECT_URI,
-    audience: import.meta.env.VITE_OAUTH_AUDIENCE
-    // scope: "openid profile email offline_access",
+    audience: import.meta.env.VITE_OAUTH_AUDIENCE,
+    scope: 'openid profile email offline_access'
   },
   cacheLocation: 'localstorage',
   useRefreshTokens: true

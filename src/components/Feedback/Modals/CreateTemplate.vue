@@ -45,10 +45,10 @@ const modalTitle = computed(() =>
   props.type === 'template' ? 'Crear Nueva Plantilla' : 'Crear Nuevo Archivo'
 )
 const modalMessage = computed(() =>
-  props.type === 'template' ? 'Asigne un nombre al archivo:' : 'Asigne un nombre y tipo al campo:'
+  props.type === 'template' ? 'Asigne un nombre a la plantilla:' : 'Asigne un nombre al archivo:'
 )
 const placeholderText = computed(() =>
-  props.type === 'template' ? 'Nombre del archivo' : 'Nombre del campo'
+  props.type === 'template' ? 'Nombre de la plantilla' : 'Nombre del archivo'
 )
 const showDropdown = computed(() => props.type === 'field') // Mostrar el dropdown solo si es 'field'
 

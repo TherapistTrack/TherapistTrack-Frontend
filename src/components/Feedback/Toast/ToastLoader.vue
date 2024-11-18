@@ -1,7 +1,7 @@
 <template>
   <div class="loader">
     <span class="toast-container" v-for="(toast, key) in localList" :key="key">
-      <Toast :type="toast.type" :content="toast.content" :onClose="() => onClose(key)" />
+      <Toast :type="toast.type" :content="toast.content" :onClose="() => onClose(toast.id)" />
     </span>
   </div>
 </template>
@@ -18,16 +18,27 @@ const props = defineProps({
 localList.value = props.toastList
 
 const onClose = (key) => {
-  localList.value.splice(key, 1)
+  localList.value.filter((item) => item.id != key)
   emit('update:toastList', localList)
 }
 </script>
 
-<style>
+<style scoped>
 .loader {
-  margin: 1rem;
+  position: absolute;
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  flex-direction: column-reverse;
+  background-color: blue;
+  margin-left: 1rem;
+  height: 100vh;
+  bottom: 0;
+  width: 0;
+  flex-shrink: 0;
+  justify-content: end;
+  align-items: start;
+}
+
+.toast-container {
+  height: fit-content;
 }
 </style>

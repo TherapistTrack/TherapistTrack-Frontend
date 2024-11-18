@@ -1,12 +1,13 @@
 <template>
   <div class="R-sideBtn">
-    <img
-      @click="handleClick"
-      class="sideLogo"
-      src="@/assets/Logo/LogoSoloWhite.png"
-      alt="Therapist Track Logo"
-      :id="localMin ? 'minimized' : 'maximized'"
-    />
+    <div class="clickable" @click="handleClick">
+      <img
+        class="sideLogo"
+        src="@/assets/Logo/LogoSoloWhite.png"
+        alt="Therapist Track Logo"
+        :id="localMin ? 'minimized' : 'maximized'"
+      />
+    </div>
 
     <div class="bar" :id="localMin ? 'minimized' : 'maximized'">
       <div class="gravityTop">
@@ -15,34 +16,80 @@
           <RiArrowLeftDoubleFill size="1.5rem" color="White" alt="minimize" />
         </div>
         <div class="mid">
-          <b>Recientes</b>
-          <div class="option" :id="select == 0 ? 'selected' : ''" @click="setSelect(0)">
-            ● Daniel Rayo
-          </div>
-          <div class="option" :id="select == 1 ? 'selected' : ''" @click="setSelect(1)">
-            ● Esteban Zambrano
-          </div>
-          <div class="option" :id="select == 2 ? 'selected' : ''" @click="setSelect(2)">
-            ● Juan Pablo Solis
+          <div class="option" @click="goToHomepage">
+            <RiFileTextLine />
+            <p>Home Page</p>
           </div>
         </div>
       </div>
 
       <div class="bottom">
         <div class="userData">
-          <p><b>Josue Rodriguez</b></p>
+          <p>
+            <b>{{ auth0.user.value.name }}</b>
+          </p>
           <p>Administrador</p>
         </div>
-        <RiSettings3Fill class="icon" size="1.5rem" color="var(--light-blue-1)" />
+        <div class="settings-menu">
+          <SettingsMenu
+            v-if="trySetting"
+            v-on:logout="handleLogout"
+            :on-secondary="handleProfile"
+            :onClickOutside="undoSetting"
+          />
+          <RiSettings3Fill
+            class="icon"
+            size="1.4rem"
+            color="var(--light-blue-1)"
+            @click="doSetting"
+          />
+        </div>
       </div>
     </div>
   </div>
   <div class="sideSpace" :id="localMin ? 'minimized' : 'maximized'"></div>
+  <AlertOptionSimple
+    v-if="logoutAttempt"
+    msg="¿Estas seguro que deseas cerrar sesión?"
+    :on-no="abortLogout"
+    :on-yes="logout"
+  />
 </template>
 
 <script setup>
-import { RiArrowLeftDoubleFill, RiSettings3Fill } from '@remixicon/vue'
+import { RiArrowLeftDoubleFill, RiSettings3Fill, RiFileTextLine } from '@remixicon/vue'
+import SettingsMenu from '@/components/DataDisplay/Tooltip/SettingsTooltip.vue'
+import AlertOptionSimple from '@/components/Feedback/Alerts/AlertOptionSimple.vue'
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuth0 } from '@auth0/auth0-vue'
+import { useTabStore } from '@/stores/tabStore'
+
+const tabManager = useTabStore()
+const auth0 = useAuth0()
+const trySetting = ref(false)
+const logoutAttempt = ref(false)
+const router = useRouter()
+
+const doSetting = () => {
+  trySetting.value = true
+}
+const undoSetting = () => {
+  trySetting.value = false
+}
+const handleLogout = () => {
+  logoutAttempt.value = true
+}
+const abortLogout = () => {
+  logoutAttempt.value = false
+}
+const handleProfile = () => {
+  router.push('/config')
+}
+
+const goToHomepage = () => {
+  tabManager.changeTab('Home Page', '/doctor', {})
+}
 
 defineProps({
   minim: {
@@ -50,12 +97,7 @@ defineProps({
     required: true
   }
 })
-const localMin = ref(false)
-
-const select = ref(0)
-const setSelect = (val) => {
-  select.value = val
-}
+const localMin = ref(true)
 
 const handleClick = () => {
   localMin.value = !localMin.value
@@ -66,19 +108,35 @@ const emit = defineEmits(['updateValue'])
 const emitUpdate = () => {
   emit('updateValue')
 }
+const logout = () => {
+  auth0.logout({
+    logoutParams: {
+      returnTo: import.meta.env.VITE_OAUTH_LOGOUT_URI
+    }
+  })
+}
 </script>
 
 <style>
+.settings-menu {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 .sideSpace {
   width: 0vw;
   transition: Width 0.5s;
 }
 .R-sideBtn .icon {
-  transition: fill 0.2s;
+  transition:
+    fill 0.2s,
+    transform 0.5s;
   cursor: pointer;
 }
 .R-sideBtn .icon:hover {
   fill: var(--white);
+  transform: rotate(45deg);
 }
 .R-sideBtn {
   display: flex;
@@ -142,11 +200,17 @@ const emitUpdate = () => {
 }
 
 .R-sideBtn .bar .mid .option {
+  width: fit-content;
   display: flex;
-  padding: 0.4vh 0.4vh 0 1.5vh;
+  padding: 0.5rem;
   border-radius: 1vh;
+  gap: 1rem;
   cursor: pointer;
   align-items: center;
+}
+
+.R-sideBtn .bar .mid .option:hover {
+  background-color: var(--blue-2);
 }
 /* Bottom */
 .R-sideBtn .bottom {
@@ -159,15 +223,18 @@ const emitUpdate = () => {
   gap: 1vw;
 }
 
-.R-sideBtn .bottom * {
+.R-sideBtn .bottom .userData * {
   font-size: smaller;
   color: var(--white);
 }
 
-/* Animations */
-.R-sideBtn .bar#minimized {
-  left: -20vw;
+.R-sideBtn .clickable {
+  cursor: pointer;
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
+/* Animations */
 
 .R-sideBtn .bar#maximized {
   left: 0;
@@ -178,15 +245,7 @@ const emitUpdate = () => {
 }
 
 .sideSpace#maximized {
-  width: 12vw;
-}
-
-.R-sideBtn .sideLogo#minimized {
-  cursor: pointer;
-}
-
-.R-sideBtn .sideLogo#maximized {
-  cursor: default;
+  width: 160px;
 }
 
 .R-sideBtn .option#selected {
@@ -210,6 +269,9 @@ const emitUpdate = () => {
   .R-sideBtn .sideLogo {
     max-height: 32px;
   }
+  .bar#minimized {
+    left: -200px;
+  }
 }
 
 @media (max-aspect-ratio: 1/1) {
@@ -218,13 +280,13 @@ const emitUpdate = () => {
     width: 6vh;
   }
   .R-sideBtn .bar {
-    min-width: 20vh;
+    min-width: 200px;
   }
   .R-sideBtn .sideLogo {
     max-height: 4vh;
   }
   .bar#minimized {
-    left: -20vh;
+    left: -200px;
   }
 
   .bar#maximized {
@@ -232,7 +294,7 @@ const emitUpdate = () => {
   }
   .R-sideBtn .bar .top .logo {
     height: auto;
-    max-width: 10vh;
+    max-width: 13vh;
   }
   .sideSpace#maximized {
     width: 0vw;

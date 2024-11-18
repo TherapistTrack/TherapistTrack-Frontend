@@ -1,32 +1,45 @@
 <template>
   <router-view
-    :id="selected"
-    v-model:shownHeaders="headers"
+    :doctorId="doctorId"
+    :recordId="selected"
+    :viewData="processedData"
+    :fields="fieldInfo"
+    v-model:shownHeaders="shownHeaders"
     :allHeaders="allHeaders"
-    :data="fetchedData"
+    :allData="fetchedData"
+    @updateData="fetching_pipeline"
+    @openEdit="handleOpenEdit"
+    @addToast="addToast"
+    @openRecord="handleOpenRecord"
   />
   <div class="page">
     <h1><b>Expedientes</b></h1>
     <div class="actions">
-      <IconButton :msg="'Ordenar'" :firstIcon="RiArrowUpDownLine" :secondIcon="RiAddLine" />
-
-      <IconButton :msg="'Nuevo Filtro'" :firstIcon="RiFilterFill" :secondIcon="RiAddLine" />
-      <ButtonSimple :msg="'Nuevo'" :on-click="handleNewRecord" />
+      <FilterTable
+        @updateSorts="updateSorts"
+        @updateFilters="updateFilters"
+        :fields="filterFields"
+      />
+      <div class="new-container">
+        <ButtonSimple :msg="'Nuevo'" :on-click="handleNewRecord" />
+      </div>
     </div>
     <div class="established"></div>
     <div class="table-illusion">
       <DisplayTable
-        :data="fetchedData"
-        :headers="headers"
-        :loading="loading"
+        :data="processedData"
+        :headers="shownHeaders"
+        :fields="fieldInfo"
+        v-model:loading="loading"
+        v-model:page-limit="pageLimit"
+        v-model:current-page="currentPage"
+        :recordCount="recordCount"
         :onClick="handleOpenPreview"
+        @hideHeader="onHideField"
+        :success="true"
+        @updatePage="updatePage"
       />
-      <DisplayTable
-        :data="fetchedData"
-        :headers="fakeHeaders"
-        :loading="loading"
-        :onClick="handleTableSettings"
-      />
+      <ConfigButton :onClick="handleTableSettings" />
     </div>
   </div>
 </template>
@@ -34,167 +47,236 @@
 <script setup>
 import DisplayTable from '@/components/DataDisplay/Tables/DisplayTable.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
-import IconButton from '@/components/Buttons/IconButton.vue'
-import { RiArrowUpDownLine, RiAddLine, RiFilterFill } from '@remixicon/vue'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch, toRaw } from 'vue'
 import { useRouter } from 'vue-router'
+import ConfigButton from '@/components/Buttons/ConfigButton.vue'
+import FilterTable from '@/components/DataDisplay/Tables/Filter/FilterTable.vue'
+import { useAuth0 } from '@auth0/auth0-vue'
+import { useApi } from '@/oauth/useApi'
+import { useTabStore } from '@/stores/tabStore'
+
 // Constants
+// Api calls
+const tabManager = useTabStore()
+const { getRequest, postRequest } = useApi()
+// Navigation and user info
+const auth0 = useAuth0()
+const doctorId = ref(null)
 const router = useRouter()
-const fetchedData = ref({})
-const loading = ref(false)
 const selected = ref(0)
+const loading = ref(true)
+// Data storage
+const fetchedData = ref({})
+const processedData = ref({})
+const shownHeaders = ref([])
+const allHeaders = ref([])
+const localSorts = ref([])
+const fieldInfo = ref({})
+// Page navigation
+const recordCount = ref(0)
+const currentPage = ref(1)
+const pageLimit = ref(6)
+const filterFields = ref(null)
+const isFirst = ref(true)
 
-const headers = ref({
-  id: 'ID',
-  nombre: 'Nombre',
-  apellido: 'Apellidos',
-  escolaridad: 'Escolaridad'
-})
+// TOAST EMITS
+//-------------------------------------------
+const emit = defineEmits(['addToast'])
+const addToast = (toast) => {
+  emit('addToast', toast)
+}
+//-------------------------------------------
 
-const allHeaders = ref({
-  id: 'ID',
-  nombre: 'Nombre',
-  apellido: 'Apellidos',
-  escolaridad: 'Escolaridad',
-  ultimaAct: 'Ultima Actualización',
-  estadoCivil: 'Estado Civil',
-  nombrePareja: 'Nombre de Pareja',
-  nacimiento: 'Fecha de Nacimiento'
-})
+// refining Data, (sort and filters)
+const updateSorts = async (sorts) => {
+  let format_sort = []
+  sorts.forEach((item) => {
+    let tem_sort = {
+      name: item.name,
+      type: item.type,
+      mode: 'desc'
+    }
+    if (item.mode == 'Ascendiente') {
+      tem_sort.mode = 'asc'
+    }
+    format_sort.push(tem_sort)
+  })
+  localSorts.value = format_sort
+  await fetching_pipeline()
+}
 
-const fakeHeaders = ref({
-  moreSettings: '...'
-})
+const updateFilters = async (filters) => {
+  console.log('TODO: ', filters)
+  // localFitlers.value = filters
+  // fetching_pipeline()
+}
 
-// On Mounted
+// Display table
+const updatePage = async (pager) => {
+  pageLimit.value = Number(pager[0])
+  currentPage.value = Number(pager[1])
+  await fetching_pipeline()
+}
+const onHideField = (header) => {
+  shownHeaders.value.splice(shownHeaders.value.indexOf(header), 1)
+}
 
+// OnMounted and Watch
 onMounted(async () => {
   loading.value = true
-  // simulation time
-  await new Promise((resolve) => setTimeout(resolve, 500))
-
-  // fetchData for when the backend gets deployed
-  // fetchedData.value = await fetchData();
-  fetchedData.value = {
-    1: {
-      id: 'EXP-001',
-      nombre: 'Esteban',
-      apellido: 'Zambrano',
-      escolaridad: 'Univseridad',
-      ultimaAct: '2020-04-03',
-      estadoCivil: 'Casado',
-      nombrePareja: 'Juan Fernando Menéndez',
-      nacimiento: '2003-03-03'
-    },
-    2: {
-      id: 'EXP-002',
-      nombre: 'Daniel',
-      apellido: 'Rayo',
-      escolaridad: 'Univseridad',
-      ultimaAct: '2023-03-04',
-      estadoCivil: 'Soltero',
-      nombrePareja: '',
-      nacimiento: '2003-05-05'
-    },
-    3: {
-      id: 'EXP-003',
-      nombre: 'Juanito',
-      apellido: 'Del Valle',
-      escolaridad: 'Básicos',
-      ultimaAct: '2023-03-04',
-      estadoCivil: 'Soltero',
-      nombrePareja: '',
-      nacimiento: '2008-03-03'
-    },
-    4: {
-      id: 'EXP-004',
-      nombre: 'Maria',
-      apellido: 'González',
-      escolaridad: 'Secundaria',
-      ultimaAct: '2022-10-06',
-      estadoCivil: 'Casada',
-      nombrePareja: 'Luis Martínez',
-      nacimiento: '2000-12-07'
-    },
-    5: {
-      id: 'EXP-005',
-      nombre: 'Carlos',
-      apellido: 'Soto',
-      escolaridad: 'Doctorado',
-      ultimaAct: '2021-02-01',
-      estadoCivil: 'Soltero',
-      nombrePareja: '',
-      nacimiento: '1998-08-22'
-    },
-    6: {
-      id: 'EXP-006',
-      nombre: 'Ana',
-      apellido: 'Ramírez',
-      escolaridad: 'Maestría',
-      ultimaAct: '2023-03-18',
-      estadoCivil: 'Casada',
-      nombrePareja: 'Javier Fernández',
-      nacimiento: '2001-04-15'
-    },
-    7: {
-      id: 'EXP-007',
-      nombre: 'Miguel',
-      apellido: 'Torres',
-      escolaridad: 'Univseridad',
-      ultimaAct: '2020-09-17',
-      estadoCivil: 'Soltero',
-      nombrePareja: '',
-      nacimiento: '2002-11-30'
-    },
-    8: {
-      id: 'EXP-008',
-      nombre: 'Laura',
-      apellido: 'Mendoza',
-      escolaridad: 'Bachillerato',
-      ultimaAct: '2022-05-05',
-      estadoCivil: 'Casada',
-      nombrePareja: 'Carlos Hernández',
-      nacimiento: '2004-01-01'
-    },
-    9: {
-      id: 'EXP-009',
-      nombre: 'Roberto',
-      apellido: 'Pérez',
-      escolaridad: 'Primaria',
-      ultimaAct: '2021-12-12',
-      estadoCivil: 'Soltero',
-      nombrePareja: '',
-      nacimiento: '2007-06-14'
-    },
-    10: {
-      id: 'EXP-010',
-      nombre: 'Elena',
-      apellido: 'Rodríguez',
-      escolaridad: 'Univseridad',
-      ultimaAct: '2023-08-22',
-      estadoCivil: 'Casada',
-      nombrePareja: 'Pedro Morales',
-      nacimiento: '2000-02-02'
-    }
-  }
-
-  loading.value = false
-  return fetchedData
+  await get_doctor_id()
+  await get_headers()
+  isFirst.value = false
+  await fetching_pipeline()
 })
 
-// Fucntions
+watch(
+  shownHeaders,
+  () => {
+    if (!isFirst.value) {
+      fetching_pipeline()
+    }
+  },
+  { deep: true }
+)
+
+// Fectching and formatting data
+const fetching_pipeline = async () => {
+  loading.value = true
+  await get_records_raw()
+  format_records()
+  loading.value = false
+}
+
+const get_doctor_id = async () => {
+  let userId = auth0.user.value.sub.split('|')[1]
+  try {
+    const response = await postRequest('/users/@me', { id: userId })
+    doctorId.value = response.data.roleDependentInfo.id
+  } catch {
+    addToast({ content: 'Ocurrio un error obteniendo información del doctor', type: 0 })
+  }
+}
+
+const format_records = () => {
+  let raw_data = toRaw(fetchedData.value)
+  let fields = toRaw(shownHeaders.value)
+  let formatted_data = []
+
+  raw_data.forEach((patient) => {
+    let format_patient = {
+      recordId: patient.recordId,
+      createdAt: patient.createdAt,
+      templateId: patient.templateId,
+      Nombre: patient.patient.names,
+      Apellidos: patient.patient.lastNames
+    }
+    let found_fields = patient.patient.fields.filter((item) => fields.includes(item.name))
+    found_fields.forEach((field) => {
+      let tem = {
+        [field.name]: field.value
+      }
+      if (fieldInfo.value[field.name].type == 'DATE') {
+        tem = {
+          [field.name]: field.value.split('T')[0]
+        }
+      }
+      format_patient = {
+        ...format_patient,
+        ...tem
+      }
+    })
+    formatted_data.push(format_patient)
+  })
+  processedData.value = formatted_data
+}
+
+const get_records_raw = async () => {
+  let fields = shownHeaders.value.filter((item) => item != 'Nombre' && item != 'Apellidos')
+  let body = {
+    doctorId: doctorId.value,
+    limit: pageLimit.value,
+    page: currentPage.value,
+    fields: []
+  }
+  if (localSorts.value.length !== 0) {
+    body['sorts'] = localSorts.value
+  }
+  fields.forEach((item) => {
+    let field = {
+      name: item,
+      type: fieldInfo.value[item].type
+    }
+    body.fields.push(field)
+  })
+  try {
+    const response = await postRequest('/records/search', body)
+    fetchedData.value = response.records
+    recordCount.value = response.total
+  } catch {
+    addToast({ content: 'Ocurrio un error obteniendo los registros', type: 0 })
+  }
+}
+
+const get_headers = async () => {
+  try {
+    const response = await getRequest(`/records/search?doctorId=${doctorId.value}`, {})
+    let data = response.fields
+    let fdata = data.reduce((arr, item) => {
+      arr[item.name] = {
+        type: item.type
+      }
+      return arr
+    }, {})
+    let ext = {
+      Nombre: {
+        type: 'SHORT_TEXT'
+      },
+      Apellidos: {
+        type: 'SHORT_TEXT'
+      }
+    }
+    fieldInfo.value = {
+      ...ext,
+      ...fdata
+    }
+    filterFields.value = {
+      ...fdata
+    }
+    let fields = Object.keys(fdata)
+    allHeaders.value = [...fields, 'Nombre', 'Apellidos']
+    shownHeaders.value = ['Nombre', 'Apellidos', ...fields.slice(0, 2)]
+  } catch {
+    addToast({ content: 'Ocurrio un error obteniendo los registros', type: 0 })
+  }
+}
+
+// Navigation
 
 const handleOpenPreview = (key) => {
-  selected.value = key
-  router.push(`/record/main/view/${key}`)
+  selected.value = processedData.value[key].recordId
+  router.push(`/doctor/records/view/${selected.value}`)
 }
 
 const handleTableSettings = () => {
-  router.push('/record/main/table-settings')
+  router.push('/doctor/records/table-settings')
 }
 
 const handleNewRecord = () => {
-  router.push('/record/create')
+  router.push('create-record')
+}
+
+const handleOpenEdit = () => {
+  router.push(`/doctor/records/edit/${selected.value}`)
+}
+
+const handleOpenRecord = (name) => {
+  let metadata = {
+    patientName: name,
+    doctorId: doctorId.value,
+    recordId: selected.value
+  }
+  tabManager.changeTab(name, `/doctor/patient/${selected.value}`, metadata)
 }
 </script>
 
@@ -206,18 +288,22 @@ const handleNewRecord = () => {
 .page {
   padding: 2rem 3rem 0 3rem;
   width: 100vw;
+  height: auto;
 }
 
 .page .actions {
+  padding-top: 1rem;
   display: flex;
   gap: 1rem;
   padding-bottom: 0.5rem;
+  justify-content: space-between;
 }
 
 .page .table-illusion {
   display: grid;
   grid-template-columns: 10fr 1fr;
 }
+
 /* SideBar Space */
 .sideSpace {
   width: 0vw;
@@ -228,10 +314,23 @@ const handleNewRecord = () => {
   width: 200px;
 }
 
+.icon {
+  height: 5rem;
+  width: 5rem;
+}
+
 /* Media tags */
 @media (max-aspect-ratio: 1/1) {
+  .page {
+    padding: 2rem 1.2rem 0 1.2rem;
+    width: 100vw;
+  }
+
   .sideSpace#max {
     width: 0vw;
+  }
+  .page .actions {
+    flex-direction: column;
   }
 }
 </style>
