@@ -3,6 +3,30 @@
     <h1 class="page-title">{{ templateName }}</h1>
     <p>Aquí se puede editar los campos de información que se debe registrar sobre un paciente.</p>
 
+    <!-- Sección de Categorías -->
+    <div class="categories-section">
+      <label class="categories-label">Categorías:</label>
+      <div class="categories-inputs">
+        <div v-for="(category, index) in categories" :key="index" class="category-input-container">
+          <input
+            type="text"
+            v-model="categories[index]"
+            @focus="handleCategoryFocus(index)"
+            @blur="handleCategoryBlur(index)"
+            @keyup.enter="handleCategoryEnter(index)"
+            placeholder="Escribe una categoría..."
+            class="category-input"
+          />
+          <RiCloseLine
+            v-if="category.trim() !== ''"
+            class="delete-btn"
+            @click="removeCategory(index)"
+            color="red"
+          />
+        </div>
+      </div>
+    </div>
+
     <div class="form-header">
       <span class="header-item">Nombre del Campo</span>
       <span class="header-item">Tipo de Dato</span>
@@ -41,17 +65,21 @@
         </div>
       </div>
       <div class="form-bottom">
-        <ButtonSimple msg="Agregar Campo" @click="showCreateFieldModal" />
+        <ButtonSimple
+          msg="Agregar Campo"
+          class="action-button button-component"
+          @click="showCreateFieldModal"
+        />
         <ButtonSimple
           v-if="!isEditing"
           msg="Guardar"
-          class="save-button button-component"
+          class="action-button button-component"
           @click="saveTemplate"
         />
         <ButtonSimple
           v-else
           msg="Regresar"
-          class="back-button button-component"
+          class="action-button button-component"
           @click="goBackToPatients"
         />
       </div>
@@ -89,7 +117,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import Checkbox from '@/components/Forms/CheckBox/CheckBox.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
@@ -101,7 +129,7 @@ import RenameTemplate from '@/components/Feedback/Modals/RenameTemplate.vue'
 import { useContextMenu } from '@/components/DataDisplay/Composables/useContextMenu.js'
 import { useApi } from '@/oauth/useApi'
 import { useAuth0 } from '@auth0/auth0-vue'
-import { RiMoreFill } from '@remixicon/vue'
+import { RiMoreFill, RiCloseLine } from '@remixicon/vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -126,6 +154,49 @@ const selectedField = ref({})
 const isRemoveModalVisible = ref(false)
 const isCreateFieldModalVisible = ref(false)
 const isRenameModalVisible = ref(false)
+const categories = ref([''])
+
+function handleCategoryFocus(index) {
+  if (index === categories.value.length - 1 && categories.value[index].trim() !== '') {
+    categories.value.push('')
+  }
+}
+
+function handleCategoryBlur(index) {
+  const currentCategory = categories.value[index].trim()
+
+  if (currentCategory === '' && categories.value.length > 1) {
+    categories.value.splice(index, 1)
+  }
+
+  if (index === categories.value.length - 1 && currentCategory !== '') {
+    categories.value.push('')
+  }
+}
+
+function handleCategoryEnter(index) {
+  const currentCategory = categories.value[index].trim()
+
+  event.preventDefault()
+
+  if (index === categories.value.length - 1 && currentCategory !== '') {
+    categories.value.push('')
+  }
+
+  nextTick(() => {
+    const inputs = document.querySelectorAll('.category-input')
+    if (inputs.length > index + 1) {
+      inputs[index + 1].focus()
+    }
+  })
+}
+
+function removeCategory(index) {
+  categories.value.splice(index, 1)
+  if (categories.value.length === 0) {
+    categories.value.push('')
+  }
+}
 
 const {
   position: contextMenuPosition,
@@ -184,12 +255,19 @@ async function saveTemplate() {
     return
   }
 
-  // Validación de campos...
+  const validCategories = categories.value
+    .map((category) => category.trim())
+    .filter((category) => category !== '')
+
+  if (validCategories.length === 0) {
+    alert('Debe agregar al menos una categoría.')
+    return
+  }
 
   const requestBody = {
     doctorId: '66de4e2e2e0651893bc6b225',
     name: templateName.value,
-    categories: ['General'],
+    categories: validCategories,
     fields: fields.value.map((field) => ({
       name: field.name,
       type: field.type,
@@ -200,15 +278,22 @@ async function saveTemplate() {
   }
 
   try {
-    // Crear la nueva plantilla
-    const response = await postRequest('/doctor/PatientTemplate', requestBody)
-    console.log('Plantilla creada exitosamente:', response)
+    if (isEditing.value) {
+      // Modo edición: actualizar la plantilla existente
+      requestBody.templateId = templateId.value
+      const response = await putRequest('/doctor/PatientTemplate', requestBody)
+      console.log('Plantilla actualizada exitosamente:', response)
+      alert('Plantilla actualizada exitosamente')
+    } else {
+      // Modo creación: crear una nueva plantilla
+      const response = await postRequest('/doctor/PatientTemplate', requestBody)
+      console.log('Plantilla creada exitosamente:', response)
+      templateId.value = response.data.patientTemplateId
+      isEditing.value = true
+      alert('Plantilla creada exitosamente')
+    }
 
-    // Actualiza templateId y isEditing para reflejar la nueva plantilla
-    templateId.value = response.data.patientTemplateId
-    isEditing.value = true
-
-    // Redirigir o mostrar mensaje de éxito
+    // Redirigir o actualizar la vista
     router.push('/config/patients')
   } catch (error) {
     console.error('Error al guardar la plantilla:', error)
@@ -232,6 +317,15 @@ async function loadTemplateData(templateId) {
 
     if (response.status === 200 && response.data) {
       templateName.value = response.data.name
+      categories.value = response.data.categories || ['']
+
+      if (
+        categories.value.length === 0 ||
+        categories.value[categories.value.length - 1].trim() !== ''
+      ) {
+        categories.value.push('')
+      }
+
       fields.value = response.data.fields.map((field) => ({
         ...field,
         isConfigured: true
@@ -431,7 +525,7 @@ async function removeField() {
 
 <style scoped>
 .record-template-container {
-  padding: 1rem 3rem 0 3rem;
+  padding: 2rem 4rem;
   width: 100vw;
   background-color: white;
   height: 100vh;
@@ -440,14 +534,15 @@ async function removeField() {
 .page-title {
   font-size: 36px;
   font-weight: bold;
-  margin-bottom: 10px;
+  margin-bottom: 2rem;
 }
 
 .form-header {
   display: grid;
   grid-template-columns: 3fr 2fr 1fr auto;
   align-items: center;
-  margin-bottom: 15px;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
   font-weight: bold;
   border-bottom: 2px solid #ddd;
   gap: 20px;
@@ -561,5 +656,75 @@ async function removeField() {
   display: flex;
   justify-content: space-between;
   margin-bottom: 2rem;
+}
+
+/* Sección de Categorías */
+.categories-section {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 20px;
+}
+
+.categories-label {
+  font-size: 1rem;
+  font-weight: bold;
+  margin-right: 2rem;
+  margin-top: 1rem;
+}
+
+.categories-inputs {
+  flex-grow: 1;
+}
+
+.category-input-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.category-input {
+  flex-grow: 1;
+  max-width: 18.75rem;
+  padding: 1.3rem 0 0.3rem 0; /* padding-top: 0.5rem; padding-right: 0; padding-bottom: 0rem; padding-left: 0 */
+  border: none;
+  border-bottom: 1px solid #ccc;
+  outline: none;
+  background-color: transparent;
+}
+
+.category-input::placeholder {
+  color: #aaa;
+}
+
+.category-input:focus {
+  border-bottom: 1px solid #000;
+}
+
+.delete-btn {
+  margin-left: 1rem;
+  margin-top: 0.7rem;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.delete-btn:hover {
+  color: darkred;
+}
+
+.categories-inputs {
+  max-width: 16rem;
+}
+
+.category-input-container {
+  position: relative;
+}
+
+.delete-btn {
+  position: absolute;
+  right: 0;
+}
+
+.category-input {
+  padding-right: 25px;
 }
 </style>

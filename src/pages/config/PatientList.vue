@@ -149,11 +149,11 @@ async function loadTemplates() {
     const response = await getRequest(`/doctor/PatientTemplate/list?doctorId=${doctorId}`)
     console.log('Plantillas obtenidas:', response)
 
-    // Acceder a response.templates directamente
     if (response.status === 200 && Array.isArray(response.templates)) {
       patients.value = response.templates.map((template) => ({
         templateId: template.templateId,
         name: template.name,
+        categories: template.categories.join(', '),
         createdAt: new Date(template.lastUpdate).toLocaleDateString()
       }))
     } else {
@@ -287,7 +287,7 @@ async function removePatient() {
 <style scoped>
 .patient-container {
   padding: 2rem 4rem;
-  width: 100vw;
+  width: 100%;
   background-color: white;
   height: 100vh;
 }
