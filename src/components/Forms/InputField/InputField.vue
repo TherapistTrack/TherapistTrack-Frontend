@@ -4,7 +4,7 @@
       <span v-if="type !== ''">
         <TypeIconLoader :icon-type="type" />
       </span>
-      {{ label }}
+      <p>{{ label }} <b v-if="required">*</b></p>
     </label>
     <input
       :type="type"
@@ -54,6 +54,10 @@ defineProps({
   showIcon: {
     type: Boolean,
     default: false
+  },
+  required: {
+    type: Boolean,
+    default: false
   }
 })
 </script>
@@ -71,6 +75,11 @@ defineProps({
   display: flex;
   gap: 0.6rem;
   align-items: center;
+}
+
+.input-group label b {
+  color: var(--red-1);
+  font-size: larger;
 }
 
 .input-group input {

@@ -32,11 +32,16 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useUploadStore } from '@/stores/uploadStore'
-import { useRouter, useRoute } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { DotLottieVue } from '@lottiefiles/dotlottie-vue'
 import InfiniteLoading from '@/components/Feedback/InfiniteLoading/InfiniteLoading.vue'
+import { useApi } from '@/oauth/useApi'
+import removeAccents from 'remove-accents'
 
-const router = useRouter()
+const { uploadRequest } = useApi()
+
+const emit = defineEmits(['goToFinish'])
+
 const animationInstance = ref(null)
 const route = useRoute()
 
@@ -53,31 +58,67 @@ const currentFile = ref(uploadStore.files[0]) // Suponemos que se sube un archiv
 
 function goToFinish() {
   console.log('Archivos subidos:', currentFile.value) // Imprimir la información del archivo en la consola
-  router.push('/upload/finish')
+  emit('goToFinish')
 }
 
 function handleAnimation(anim) {
   animationInstance.value = anim
 }
 
-// Habilitar el botón después de 3 segundos y luego redirigir automáticamente después de otros 2 segundos
-onMounted(() => {
-  uploadStore.files.forEach((file, index) => {
-    console.log(`Subiendo archivo ${index + 1}:`, file.data)
+const uploadFile = async (file) => {
+  let metadata = formatMetadata(file.data)
+  let file_data = formatFileName(file.file)
+  try {
+    const response = await uploadRequest('/files/', file_data, metadata)
+    console.log(response)
+  } catch {
+    console.log('Hubo un error subiendo los datos')
+  }
+}
+
+const formatFileName = (file) => {
+  let cleanName = removeAccents(file.name)
+  return new File([file], cleanName, {
+    type: file.type,
+    lastModified: file.lastModified
   })
+}
+
+const formatMetadata = (raw_data) => {
+  let metadata = {
+    doctorId: uploadStore.doctorId,
+    recordId: uploadStore.recordId,
+    templateId: raw_data.templateId,
+    name: raw_data.name,
+    category: 'Testing',
+    fields: []
+  }
+  Object.keys(raw_data).forEach((item) => {
+    if (item != 'name' && item != 'templateId') {
+      let field = {
+        name: item,
+        value: raw_data[item]
+      }
+      metadata.fields.push(field)
+    }
+  })
+  return metadata
+}
+
+// Habilitar el botón después de 3 segundos y luego redirigir automáticamente después de otros 2 segundos
+onMounted(async () => {
+  uploadStore.files.forEach(async (file) => {
+    await uploadFile(file)
+  })
+
+  isButtonDisabled.value = false
+  uploadStatusText.value = 'Archivos Subidos' // Actualizar el texto
+  showLoader.value = true
+
   setTimeout(() => {
-    isButtonDisabled.value = false
-    uploadStatusText.value = 'Archivos Subidos' // Actualizar el texto
-    showLoader.value = true // Ocultar el loader (opcional)
-
-    console.log('El botón se ha habilitado y el texto ha cambiado después de 3 segundos.')
-
-    // Esperar 2 segundos más y redirigir automáticamente
-    setTimeout(() => {
-      console.log('Redirigiendo a la página de finalización después de 2 segundos.')
-      goToFinish() // Navegar a la página final
-    }, 1000) // 2000 milisegundos = 1 segundos
-  }, 3000) // 3000 milisegundos = 3 segundos
+    console.log('Redirigiendo a la página de finalización después de 2 segundos.')
+    goToFinish() // Navegar a la página final
+  }, 1000)
 
   history.pushState(null, null, document.URL)
 
@@ -88,7 +129,6 @@ onMounted(() => {
       history.pushState(null, null, document.URL)
     }
   }
-
   // Añadir el listener para el evento 'popstate'
   window.addEventListener('popstate', handlePopState)
 

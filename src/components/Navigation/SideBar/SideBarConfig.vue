@@ -136,7 +136,7 @@ const { backgroundColor, arrowColor, logoSrc, logoGraySrc, userName, userRole, s
   })
 
 const handleRecords = () => {
-  router.push('/doctor/records')
+  router.push('/doctor')
 }
 const onLogout = () => {
   tryLogout.value = true

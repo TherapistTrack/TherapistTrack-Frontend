@@ -23,8 +23,8 @@
       :data="processedData"
       :headers="headers"
       :loading="loading"
-      :onClick="handleOpenView"
       :success="success"
+      @rowClick="handleOpenView"
     />
   </div>
 </template>
@@ -109,9 +109,9 @@ const handleOpenCreate = () => {
 }
 
 const handleOpenView = async (key) => {
-  selected.value = processedData.value[key].id
+  selected.value = key.id
   await getCurrentUser()
-  router.push(`/admin/user/view/${processedData.value[key].id}`)
+  router.push(`/admin/user/view/${selected.value}`)
 }
 
 const applySearch = (originalData, value) => {

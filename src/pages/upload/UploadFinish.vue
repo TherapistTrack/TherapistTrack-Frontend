@@ -36,6 +36,7 @@ import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import { DotLottieVue } from '@lottiefiles/dotlottie-vue'
 import { useRoute } from 'vue-router'
 
+const emit = defineEmits(['goToStart'])
 const animationInstance = ref(null)
 
 const uploadStore = useUploadStore()
@@ -44,9 +45,7 @@ const route = useRoute()
 const animationPathCheck = new URL('@/assets/animations/check.json', import.meta.url).href
 
 function handleFinish() {
-  uploadStore.files.forEach((file, index) => {
-    console.log(`Archivos subidos ${index + 1}:`, file)
-  })
+  emit('goToStart')
 }
 
 function handleAnimation(anim) {

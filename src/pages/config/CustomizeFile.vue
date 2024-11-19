@@ -1,104 +1,100 @@
 <template>
   <div class="template-container" @click="hideContextMenu">
-    <SideBarConfig
-      backgroundColor="#1f3a93"
-      arrowColor="#ffffff"
-      iconColor="#ffffff"
-      userName="Jose Marchena"
-      userRole="Usuario"
-      selectedOption="Archivos"
+    <h1 class="page-title">{{ fileName }}</h1>
+    <p>Aquí puede editar los campos de información que se deben registrar en el archivo.</p>
+
+    <div class="form-header">
+      <span class="header-item">Nombre del Campo</span>
+      <span class="header-item">Tipo de Dato</span>
+      <span class="header-item">Obligatorio</span>
+      <span class="header-item">Opciones</span>
+    </div>
+
+    <div class="form-section">
+      <div v-for="(field, index) in fields" :key="index" class="form-group">
+        <div class="field-name">
+          <span class="field-label"
+            ><b>{{ field.name }}:</b></span
+          >
+        </div>
+        <!-- Tipo de Dato -->
+        <div class="field-type">
+          <DropdownField
+            :id="'dropdown-' + index"
+            :label="'Seleccione un tipo'"
+            :disabledValue="'Seleccionar...'"
+            :options="dataTypes"
+            v-model="field.type"
+            @change="handleFieldTypeChange(index, $event.target.value)"
+            :disabled="!isEditing"
+          />
+        </div>
+        <div class="field-required">
+          <Checkbox
+            :id="'required-' + index"
+            label=""
+            v-model="field.required"
+            @change="handleFieldRequiredChange(index, $event.target.checked)"
+          />
+        </div>
+        <div class="field-options">
+          <button class="more-options-btn" @click="handleContextMenu($event, field)">
+            <RiMoreFill />
+          </button>
+        </div>
+        <DynamicList
+          v-if="field.type == 'CHOICE'"
+          title="Opciones disponibles"
+          v-model:model-array="field.options"
+          @change="handleChoiceChange(index)"
+        />
+      </div>
+      <button class="add-field-btn button-component" @click="showCreateFieldModal">
+        Agregar Campo +
+      </button>
+    </div>
+
+    <ButtonSimple
+      v-if="!isEditing"
+      msg="Guardar"
+      class="save-button button-component"
+      @click="saveFile"
+    />
+    <ButtonSimple
+      v-else
+      msg="Regresar"
+      class="back-button button-component"
+      @click="goBackToFiles"
     />
 
-    <div class="content">
-      <h1 class="page-title">{{ fileName }}</h1>
-      <p>Aquí puede editar los campos de información que se deben registrar en el archivo.</p>
+    <ContextMenu
+      :position="contextMenuPosition"
+      :visible="contextMenuVisible"
+      @remove="showRemoveModal"
+      @rename="showRenameModal"
+    />
 
-      <div class="form-header">
-        <span class="header-item">Nombre del Campo</span>
-        <span class="header-item">Tipo de Dato</span>
-        <span class="header-item">Obligatorio</span>
-        <span class="header-item">Opciones</span>
-      </div>
+    <RemoveTemplate
+      v-if="isRemoveModalVisible"
+      :currentName="selectedField.name"
+      @close="isRemoveModalVisible = false"
+      @remove="removeField"
+    />
 
-      <div class="form-section">
-        <div v-for="(field, index) in fields" :key="index" class="form-group">
-          <div class="field-name">
-            <span class="field-label">{{ field.name }}</span>
-          </div>
-          <!-- Tipo de Dato -->
-          <div class="field-type">
-            <DropdownField
-              :id="'dropdown-' + index"
-              :label="'Seleccione un tipo'"
-              :disabledValue="'Seleccionar...'"
-              :options="dataTypes"
-              v-model="field.type"
-              @change="handleFieldTypeChange(index, $event.target.value)"
-              :disabled="!isEditing.value"
-            />
-          </div>
-          <div class="field-required">
-            <Checkbox
-              :id="'required-' + index"
-              label=""
-              v-model="field.required"
-              @change="handleFieldRequiredChange(index, $event.target.checked)"
-            />
-          </div>
-          <div class="field-options">
-            <RiMoreFill class="more-options-btn" @click="handleContextMenu($event, field)" />
-          </div>
-        </div>
-        <div class="form-bottom">
-          <ButtonSimple
-            msg="Agregar Campo"
-            class="action-button button-component"
-            @click="showCreateFieldModal"
-          />
-          <ButtonSimple
-            v-if="!isEditing"
-            msg="Guardar"
-            class="action-button button-component"
-            @click="saveFile"
-          />
-          <ButtonSimple
-            v-else
-            msg="Regresar"
-            class="action-button button-component"
-            @click="goBackToFiles"
-          />
-        </div>
-      </div>
+    <CreateTemplate
+      v-if="isCreateFieldModalVisible"
+      type="field"
+      @close="isCreateFieldModalVisible = false"
+      @create="addNewField"
+    />
 
-      <ContextMenu
-        :position="contextMenuPosition"
-        :visible="contextMenuVisible"
-        @remove="showRemoveModal"
-        @rename="showRenameModal"
-      />
-
-      <RemoveTemplate
-        v-if="isRemoveModalVisible"
-        :currentName="selectedField.name"
-        @close="isRemoveModalVisible = false"
-        @remove="removeField"
-      />
-
-      <CreateTemplate
-        v-if="isCreateFieldModalVisible"
-        type="field"
-        @close="isCreateFieldModalVisible = false"
-        @create="addNewField"
-      />
-
-      <RenameTemplate
-        v-if="isRenameModalVisible"
-        :currentName="selectedField.name"
-        type="field"
-        @close="isRenameModalVisible = false"
-        @rename="renameField"
-      />
-    </div>
+    <RenameTemplate
+      v-if="isRenameModalVisible"
+      :currentName="selectedField.name"
+      type="field"
+      @close="isRenameModalVisible = false"
+      @rename="renameField"
+    />
   </div>
 </template>
 
@@ -114,8 +110,13 @@ import CreateTemplate from '@/components/Feedback/Modals/CreateTemplate.vue'
 import RenameTemplate from '@/components/Feedback/Modals/RenameTemplate.vue'
 import { useContextMenu } from '@/components/DataDisplay/Composables/useContextMenu.js'
 import { useApi } from '@/oauth/useApi'
+import { useAuth0 } from '@auth0/auth0-vue'
+import DynamicList from '@/components/Forms/DynamicList/DynamicList.vue'
 import { RiMoreFill } from '@remixicon/vue'
 
+const emit = defineEmits('addToast')
+
+const auth0 = useAuth0()
 const router = useRouter()
 const route = useRoute()
 const { getRequest, postRequest, putRequest, deleteRequest } = useApi()
@@ -125,11 +126,25 @@ const isEditing = ref(false)
 const fileId = ref(route.params.fileId || null)
 const fileName = ref(route.query.name || 'Nuevo Archivo')
 
-const dataTypes = ['SHORT_TEXT', 'TEXT', 'NUMBER', 'FLOAT', 'DATE']
+const dataTypes = ['SHORT_TEXT', 'TEXT', 'NUMBER', 'FLOAT', 'DATE', 'CHOICE']
 
 const fields = ref([
-  { name: 'Número de Documento', type: 'text', value: '', required: true, isConfigured: false },
-  { name: 'Fecha de Emisión', type: 'date', value: '', required: true, isConfigured: false }
+  {
+    name: 'Número de Documento',
+    type: 'text',
+    value: '',
+    required: true,
+    isConfigured: false,
+    options: []
+  },
+  {
+    name: 'Fecha de Emisión',
+    type: 'date',
+    value: '',
+    required: true,
+    isConfigured: false,
+    options: []
+  }
 ])
 
 const selectedField = ref({})
@@ -143,6 +158,18 @@ const {
   showContextMenu,
   hideContextMenu
 } = useContextMenu()
+
+const get_doctor_id = async () => {
+  let userId = auth0.user.value.sub.split('|')[1]
+  let doctorId = ''
+  try {
+    const response = await postRequest('/users/@me', { id: userId })
+    doctorId = response.data.roleDependentInfo.id
+  } catch {
+    emit('addToast', { content: 'Ocurrio un error obteniendo información del doctor', type: 0 })
+  }
+  return doctorId
+}
 
 function showCreateFieldModal() {
   isCreateFieldModalVisible.value = true
@@ -195,8 +222,9 @@ async function saveFile() {
   }
 
   // Prepare the request body
+  let doctorId = await get_doctor_id()
   const requestBody = {
-    doctorId: '66de4e2e2e0651893bc6b225',
+    doctorId: doctorId,
     name: fileName.value,
     categories: ['General'],
     fields: fields.value.map((field) => ({
@@ -235,7 +263,7 @@ async function saveFile() {
 
 async function loadFileData(fileId) {
   try {
-    const doctorId = '66de4e2e2e0651893bc6b225'
+    const doctorId = await get_doctor_id()
     const response = await getRequest(
       `/doctor/FileTemplate?doctorId=${doctorId}&templateId=${fileId}`
     )
@@ -287,9 +315,9 @@ async function addFieldToFile(newField) {
     console.error('El fileId no está definido')
     return
   }
-
+  let doctorId = await get_doctor_id()
   const requestBody = {
-    doctorId: '66de4e2e2e0651893bc6b225',
+    doctorId: doctorId,
     templateId: fileId.value, // Cambiar a 'templateId'
     field: {
       name: newField.name,
@@ -311,14 +339,15 @@ async function addFieldToFile(newField) {
 }
 
 async function editFieldInFile(oldFieldName, updatedFieldData) {
+  console.log('old field name: ', oldFieldName)
   if (!fileId.value || !oldFieldName) {
     alert('Información insuficiente para editar el campo')
     return
   }
-
+  let doctorId = await get_doctor_id()
   const requestBody = {
-    doctorId: '66de4e2e2e0651893bc6b225',
-    templateId: fileId.value, // Cambiar a 'templateId'
+    doctorId: doctorId,
+    templateId: fileId.value, // Cambiar a 'color: var(--gray-1)templateId'
     oldFieldName,
     fieldData: {
       name: updatedFieldData.name,
@@ -342,6 +371,23 @@ async function editFieldInFile(oldFieldName, updatedFieldData) {
   }
 }
 
+const handleChoiceChange = (index) => {
+  const options = fields.value[index].options
+  if (!isEditing.value) {
+    return
+  }
+  if (options.length == 0 || options == undefined || options == null) {
+    return
+  }
+  const field = fields.value[index]
+  const oldFieldName = field.name
+  const updatedFieldData = {
+    ...field,
+    options: options
+  }
+  editFieldInFile(oldFieldName, updatedFieldData)
+}
+
 function handleFieldTypeChange(index, newType) {
   if (!isEditing.value) {
     fields.value[index].type = newType
@@ -355,7 +401,6 @@ function handleFieldTypeChange(index, newType) {
     ...field,
     type: newType
   }
-
   editFieldInFile(oldFieldName, updatedFieldData)
 }
 
@@ -395,9 +440,9 @@ async function deleteFieldFromFile(fieldName) {
     console.error('El fileId no está definido')
     return
   }
-
+  let doctorId = await get_doctor_id()
   const requestBody = {
-    doctorId: '66de4e2e2e0651893bc6b225',
+    doctorId: doctorId,
     templateId: fileId.value, // Usamos 'templateId' en la solicitud
     name: fieldName
   }
@@ -535,7 +580,6 @@ async function removeField() {
 }
 
 .button-component {
-  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
   transition: background-color 0.2s;
 }
 

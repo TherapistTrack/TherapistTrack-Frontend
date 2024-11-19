@@ -69,7 +69,6 @@ import { ref, onMounted, watch, toRaw } from 'vue'
 import { useRouter } from 'vue-router'
 import SearchBar from '@/components/Forms/InputField/SearchBar.vue'
 import TypeIconLoader from '@/assets/TypeIcons/TypeIconLoader.vue'
-
 // EMITS
 const emit = defineEmits(['update:shownHeaders'])
 // PROPS
@@ -96,7 +95,6 @@ const titleTranslate = ref({
   NUMBER: 'Numero',
   FLOAT: 'Decimal'
 })
-
 // FUNCTIONS
 
 // Drag Logic
@@ -167,7 +165,7 @@ const goBack = () => {
   start.value = false
   emit('update:shownHeaders', localShownHeaders.value)
   setTimeout(() => {
-    router.push('/doctor/patient/123')
+    router.back()
   }, 250) // Delay so closing animation plays before unloading component
 }
 </script>

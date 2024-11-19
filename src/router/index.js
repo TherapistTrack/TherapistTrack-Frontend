@@ -95,6 +95,7 @@ const router = createRouter({
     {
       path: '/doctor',
       component: () => import('@/pages/doctor/DoctorIndex.vue'),
+      redirect: '/doctor/records',
       children: [
         // Records Flow
         {
@@ -105,17 +106,14 @@ const router = createRouter({
               path: 'edit/:recordId',
               component: () => import('@/pages/record/EditRecord.vue'),
               props: (route) => ({
-                recordId: route.params.id, // Pass id from route parameters
-                viewData: Object,
-                allData: Object
+                recordId: route.params.id // Pass id from route parameters
               })
             },
             {
               path: 'view/:recordId',
               component: () => import('@/pages/record/ViewRecord.vue'),
               props: (route) => ({
-                recordId: route.params.id, // Pass id from route parameters
-                viewData: Object
+                recordId: route.params.id // Pass id from route parameters
               })
             },
             {
@@ -137,10 +135,10 @@ const router = createRouter({
 
         // Patient Flow
         {
-          path: 'patient/:userId',
+          path: 'patient/:recordId',
           component: () => import('@/pages/patient/PatientView.vue'),
           props: (route) => ({
-            userId: route.params.userId
+            recordId: route.params.recordId
           }),
           children: [
             {
@@ -168,34 +166,18 @@ const router = createRouter({
           ]
         },
 
-        // Create Patient
-        {
-          path: 'create-file',
-          component: () => import('@/pages/patient/CreatePatient.vue')
-        },
-
         // File Flow
         {
-          path: 'file',
-          component: () => import('@/pages/file/FileIndex.vue'),
+          path: 'file/:fileId',
+          component: () => import('@/pages/file/FileView.vue'),
           children: [
             {
-              path: 'view/:id',
-              component: () => import('@/pages/file/FileView.vue'),
-              children: [
-                {
-                  path: 'info',
-                  component: () => import('@/pages/file/FileInfo.vue')
-                },
-                {
-                  path: 'editInfo',
-                  component: () => import('@/pages/file/EditFileInfo.vue')
-                },
-                {
-                  path: 'comments',
-                  component: () => import('@/pages/file/FileComments.vue')
-                }
-              ]
+              path: 'info',
+              component: () => import('@/pages/file/FileInfo.vue')
+            },
+            {
+              path: 'editInfo',
+              component: () => import('@/pages/file/EditFileInfo.vue')
             }
           ]
         }
@@ -203,32 +185,38 @@ const router = createRouter({
     },
 
     // UPLOAD VIEW
+
     {
       path: '/upload',
-      name: 'uploadFiles',
-      component: () => import('@/pages/upload/UploadFiles.vue')
+      component: () => import('@/pages/upload/UploadIndex.vue'),
+      children: [
+        {
+          path: 'files',
+          name: 'uploadFiles',
+          component: () => import('@/pages/upload/UploadFiles.vue')
+        },
+        {
+          path: 'select',
+          name: 'uploadSelect',
+          component: () => import('@/pages/upload/UploadSelect.vue')
+        },
+        {
+          path: 'form',
+          name: 'uploadForm',
+          component: () => import('@/pages/upload/UploadForm.vue')
+        },
+        {
+          path: 'doing',
+          name: 'uploadDoing',
+          component: () => import('@/pages/upload/UploadDoing.vue')
+        },
+        {
+          path: 'finish',
+          name: 'uploadFinish',
+          component: () => import('@/pages/upload/UploadFinish.vue')
+        }
+      ]
     },
-    {
-      path: '/upload/select',
-      name: 'uploadSelect',
-      component: () => import('@/pages/upload/UploadSelect.vue')
-    },
-    {
-      path: '/upload/form',
-      name: 'uploadForm',
-      component: () => import('@/pages/upload/UploadForm.vue')
-    },
-    {
-      path: '/upload/doing',
-      name: 'uploadDoing',
-      component: () => import('@/pages/upload/UploadDoing.vue')
-    },
-    {
-      path: '/upload/finish',
-      name: 'uploadFinish',
-      component: () => import('@/pages/upload/UploadFinish.vue')
-    },
-
     // NOT FOUND PAGE
     {
       path: '/:pathMatch(.*)*',

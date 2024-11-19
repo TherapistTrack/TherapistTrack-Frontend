@@ -22,7 +22,6 @@ const emit = defineEmits(['update:modelValue'])
 
 const updateValue = (event) => {
   emit('update:modelValue', event.target.value)
-  console.log(event.target.value)
 }
 
 const onMouseOver = () => {

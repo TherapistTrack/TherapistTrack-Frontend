@@ -7,20 +7,20 @@
 
     <div
       class="tab-component"
-      :id="activeTab == tab.id ? 'active' : ''"
-      v-for="(tab, key) in tabs"
+      :id="activeTab == id ? 'active' : ''"
+      v-for="(id, key) in Object.keys(tabs)"
       :key="key"
-      @click="() => selectTab(tab.id)"
+      @click="() => selectTab(id)"
     >
       <p>
-        <b>{{ tab.name }}</b>
+        <b>{{ tabs[id].name }}</b>
       </p>
       <span class="close-container" @click.stop>
         <RiCloseLine
           class="close-tab"
           size="1.5rem"
           color="var(--gray-1)"
-          @click="() => closeTab(tab.id)"
+          @click="() => closeTab(id)"
         />
       </span>
     </div>
@@ -29,51 +29,34 @@
 </template>
 
 <script setup>
-import { onBeforeMount, ref, toRaw, watch } from 'vue'
+import { onBeforeMount, ref } from 'vue'
 import { RiCloseLine, RiArrowLeftLine, RiArrowRightLine, RiAddLine } from '@remixicon/vue'
+import { useTabStore } from '@/stores/tabStore'
 
-import { inject } from 'vue'
-const tabManager = inject('tabManager')
+const tabManager = useTabStore()
 
-watch(
-  tabManager.tabs,
-  () => {
-    tabs.value = toRaw(tabManager.tabs.value)
-  },
-  { deep: true }
-)
-watch(
-  tabManager.activeTab,
-  () => {
-    activeTab.value = toRaw(tabManager.activeTab.value)
-  },
-  { deep: true }
-)
-
-const activeTab = ref(null)
-const tabs = ref([])
+const activeTab = ref(0)
+const tabs = ref({})
 
 onBeforeMount(() => {
-  let _tabs = toRaw(tabManager.tabs.value)
-  if (_tabs.length == 0) {
-    tabManager.newTab()
-  }
-  tabs.value = tabManager.tabs.value
-  activeTab.value = tabManager.activeTab.value
+  activeTab.value = tabManager.activeTab
+  tabs.value = tabManager.tabs
 })
 
 const onAddTab = () => {
-  tabManager.newTab()
+  tabManager.addTab()
+  activeTab.value = tabManager.activeTab
 }
 
 const selectTab = (id) => {
-  console.log(id)
-  tabManager.setActiveTab(id)
   activeTab.value = id
+  tabManager.openTab(id)
 }
 
 const closeTab = (id) => {
   tabManager.closeTab(id)
+  activeTab.value = tabManager.activeTab
+  tabs.value = tabManager.tabs
 }
 </script>
 
@@ -106,6 +89,8 @@ const closeTab = (id) => {
   padding-right: 1rem;
   height: 100%;
   gap: 0.6rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tab-component#active {

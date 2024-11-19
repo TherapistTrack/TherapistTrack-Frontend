@@ -1,35 +1,36 @@
 <template>
   <router-view
-    :recordId="selected"
+    :doctorId="doctorId"
     :viewData="processedData"
     v-model:shownHeaders="shownHeaders"
     :allHeaders="allHeaders"
     :allData="fetchedData"
-    :fields="templateFields"
-    @updateData="updateData"
+    :fields="fieldInfo"
+    @updateData="fetchingPipeline"
     @openEdit="handleOpenEdit"
+    @openFile="handleOpenFile"
+    @addToast="addToast"
   />
   <div class="page">
-    <h1><b>Juan Pablo Solis</b></h1>
+    <h1>
+      <b>{{ patientName }}</b>
+    </h1>
     <div class="actions">
-      <FilterTable
-        @updateSorts="updateSorts"
-        @updateFilters="updateFilters"
-        :fields="templateFields"
-      />
+      <FilterTable @updateSorts="updateSorts" @updateFilters="updateFilters" :fields="fieldInfo" />
       <div class="new-container">
-        <ButtonSimple :msg="'Nuevo'" :on-click="handleNewRecord" />
+        <ButtonSimple :msg="'Nuevo'" :on-click="handleNewFile" />
       </div>
     </div>
     <div class="established"></div>
     <div class="table-illusion">
       <DisplayTable
-        :data="processedData"
+        :data="fileData"
         :headers="shownHeaders"
         v-model:loading="loading"
         v-model:page-limit="pageLimit"
-        :fields="templateFields"
+        :fields="fieldInfo"
         v-model:current-page="currentPage"
+        :record-count="fileCount"
         :onClick="handleOpenPreview"
         @hideHeader="onHideField"
         :success="true"
@@ -48,22 +49,11 @@ import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import ConfigButton from '@/components/Buttons/ConfigButton.vue'
 import FilterTable from '@/components/DataDisplay/Tables/Filter/FilterTable.vue'
-import files from './files.json'
-import files_template from './file_template.json'
-import { useAuth0 } from '@auth0/auth0-vue'
-
-// Constants
-const auth0 = useAuth0()
-const router = useRouter()
-const fetchedData = ref({})
-const processedData = ref({})
-const loading = ref(true)
-const selected = ref(0)
-const localSorts = ref([])
-const localFitlers = ref([])
-
-const currentPage = ref(1)
-const pageLimit = ref(6)
+import { useApi } from '@/oauth/useApi'
+import { useRoute } from 'vue-router'
+import { useTabStore } from '@/stores/tabStore'
+import { useUploadStore } from '@/stores/uploadStore'
+import { storeToRefs } from 'pinia'
 // TOAST EMITS
 //-------------------------------------------
 const emit = defineEmits(['addToast'])
@@ -73,168 +63,206 @@ const addToast = (toast) => {
 //-------------------------------------------
 
 // PROPS
-defineProps({
-  userId: String
-})
 
+// Constants
+const uploadStore = useUploadStore()
+const tabManager = useTabStore()
+const { activeTab } = storeToRefs(tabManager)
+const router = useRouter()
+const loading = ref(true)
+const selected = ref(0)
+const localSorts = ref([])
+const localFitlers = ref([])
+
+const { getRequest, postRequest } = useApi()
+const route = useRoute()
+const doctorId = ref('')
+
+const patientName = ref('')
+const recordId = ref('')
+
+const fetchedData = ref({})
+const processedData = ref({})
+
+const shownHeaders = ref([])
+const allHeaders = ref([])
+
+const fileData = ref({})
+const fieldInfo = ref({})
+
+const pageLimit = ref(6)
+const currentPage = ref(1)
+const fileCount = ref(0)
+
+const isFirst = ref(true)
 // refining Data, (sort and filters)
+
+watch(activeTab, async () => {
+  getMetadata()
+  if (recordId.value) {
+    fetchingPipeline()
+  }
+})
 const updateSorts = async (sorts) => {
   localSorts.value = sorts
-  updateData()
 }
 
 const updateFilters = async (filters) => {
   localFitlers.value = filters
-  updateData()
 }
 // Display table navigation
 const updatePage = (page) => {
   currentPage.value = page
-  updateData()
 }
 
 const updateLimit = (limit) => {
   pageLimit.value = limit
-  updateData()
 }
-// Emissions from children
-const updateData = async () => {
-  let fields = shownHeaders.value.map((val) => ({
-    name: val,
-    type: templateFields.value[val].type
-  }))
-  let body = {
-    doctorId: auth0.user.value.sub.split('|')[1],
-    limit: pageLimit.value,
-    page: currentPage.value,
-    fields: fields,
-    filters: localFitlers.value || [],
-    sorts: localSorts.value || []
-  }
-  loading.value = true
-  setTimeout(() => {
-    console.log('API CALL!!!')
-    console.log(JSON.stringify(body))
-    loading.value = false
-  }, 250)
-}
-
-const templateFields = ref({})
-const shownHeaders = ref([])
-const allHeaders = ref([])
 
 watch(
   shownHeaders,
   () => {
-    updateData()
+    if (!isFirst.value) {
+      fetchingPipeline()
+    }
   },
   { deep: true }
 )
 
-// Table field logic
 const onHideField = (header) => {
   shownHeaders.value.splice(shownHeaders.value.indexOf(header), 1)
 }
-// On Mounted
-const getAllHeaders = (template) => {
-  let fields = template.reduce((acc, item) => {
-    acc = item.fields
-    return acc
-  }, {})
 
-  let temFields = fields.reduce((acc, item) => {
-    if (item.type == 'CHOICE') {
-      acc[item.name] = {
-        description: item.description,
-        required: item.required,
-        type: item.type,
-        options: item.options
-      }
-    } else {
-      acc[item.name] = {
-        description: item.description,
-        required: item.required,
-        type: item.type
-      }
-    }
-    return acc
-  }, {})
-  temFields = {
-    ...temFields,
-    Nombre: {
-      description: 'Nombre del archivo',
-      required: true,
-      type: 'SHORT_TEXT'
-    },
-    fileId: {
-      description: 'Id del archivo',
-      required: true,
-      type: 'SHORT_TEXT'
-    }
-  }
-  let headers = fields.map((item) => item.name)
-  headers = [...headers, 'Nombre']
-  templateFields.value = temFields
-  allHeaders.value = headers
-  shownHeaders.value = allHeaders.value.slice(0, 4)
-  return headers
-}
-
-const convertToObject = (files) => {
-  let step1 = files.map((item) => {
-    let file = {
-      fileId: item.fileId,
-      Nombre: item.data.name
-    }
-    let fields = item.data.fields.reduce((acc, item) => {
-      acc[item.name] = item.value
-      return acc
-    }, {})
-    file = {
-      ...file,
-      ...fields
-    }
-    return file
-  })
-  processedData.value = step1
+const getMetadata = () => {
+  let tab_metadata = tabManager.getActiveTab()
+  doctorId.value = tab_metadata.metadata.doctorId
+  patientName.value = tab_metadata.name
+  recordId.value = tab_metadata.metadata.recordId
+  // recordId.value = tab_metadata.recordId
 }
 
 onMounted(async () => {
   loading.value = true
-  // simulation time
-  await new Promise((resolve) => setTimeout(resolve, 500))
-  let successToast = { type: 1, content: 'Toast messages implemented in record view' }
-  addToast(successToast)
-  // Initial data fetch
-  fetchedData.value = files
-  console.log(files)
-
-  // Obtaining headers from data fetch
-  getAllHeaders(files_template.templates)
-  // Convert fetched data into working object
-  convertToObject(files)
-
+  getMetadata()
+  await getHeaders()
+  isFirst.value = false
+  await fetchingPipeline()
   loading.value = false
-  return fetchedData
 })
 
+const fetchingPipeline = async () => {
+  getMetadata()
+  loading.value = true
+  let raw_data = await getFilesRaw()
+  fileData.value = formatFiles(raw_data)
+  loading.value = false
+}
+
+const formatFiles = (raw_data) => {
+  let formatData = []
+  raw_data.forEach((file) => {
+    let fields = file.fields.reduce((arr, item) => {
+      arr[item.name] = item.value
+      return arr
+    }, {})
+    let current_file = {
+      Nombre: file.name,
+      fileId: file.fileId,
+      ...fields
+    }
+    formatData.push(current_file)
+  })
+  return formatData
+}
+
+const getFilesRaw = async () => {
+  let raw_data = []
+  let body = {
+    doctorId: doctorId.value,
+    recordId: recordId.value,
+    limit: pageLimit.value,
+    page: currentPage.value,
+    category: 'Testing',
+    fields: [],
+    sorts: [],
+    filters: []
+  }
+  shownHeaders.value.forEach((item) => {
+    if (item != 'Nombre') {
+      body.fields.push({
+        name: item,
+        type: fieldInfo.value[item].type
+      })
+    }
+  })
+  try {
+    const response = await postRequest('/files/search', body)
+    raw_data = response.files
+    fileCount.value = response.total
+  } catch {
+    addToast({ content: 'Ocurrio un error obteniendo los registros', type: 0 })
+  }
+  return raw_data
+}
+
+const getHeaders = async () => {
+  try {
+    const response = await getRequest(`/files/search?doctorId=${doctorId.value}`)
+    let data = response.fields
+    let fdata = data.reduce((arr, item) => {
+      arr[item.name] = {
+        type: item.type
+      }
+      return arr
+    }, {})
+    let ext = {
+      Nombre: {
+        type: 'SHORT_TEXT'
+      }
+    }
+    fieldInfo.value = {
+      ...ext,
+      ...fdata
+    }
+    let fields = Object.keys(fdata)
+    allHeaders.value = ['Nombre', ...fields]
+    shownHeaders.value = ['Nombre', ...fields.slice(0, 3)]
+  } catch {
+    addToast({ content: 'Ocurrio un error obteniendo los archivos', type: 0 })
+  }
+}
 // Fucntions
 
 const handleOpenPreview = (key) => {
-  selected.value = processedData.value[key].fileId
-  router.push(`123/view/${selected.value}`)
-}
-
-const handleTableSettings = () => {
-  router.push('123/table-settings')
-}
-
-const handleNewRecord = () => {
-  router.push('/doctor/create-file')
+  selected.value = fileData.value[key].fileId
+  let path = route.fullPath
+  router.push(`${path}/view/${selected.value}`)
 }
 
 const handleOpenEdit = () => {
-  router.push(`/doctor/patient/123/edit/${selected.value}`)
+  let path = route.fullPath.split('view')[0]
+  router.push(`${path}edit/${selected.value}`)
+}
+
+const handleTableSettings = () => {
+  let path = route.fullPath.split('?')[0]
+  router.push(`${path}/table-settings`)
+}
+
+const handleNewFile = () => {
+  uploadStore.recordId = recordId.value
+  uploadStore.doctorId = doctorId.value
+  router.push('/upload')
+}
+
+const handleOpenFile = () => {
+  let name = fileData.value.filter((item) => item.fileId == selected.value)[0]['Nombre']
+  console.log(JSON.stringify(name))
+  let metadata = {
+    doctorId: doctorId.value,
+    fileId: selected.value
+  }
+  tabManager.changeTab(name, `/doctor/file/${selected.value}`, metadata)
 }
 </script>
 

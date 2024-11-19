@@ -3,7 +3,7 @@
     <div class="view-record" @click.stop="" :id="start ? 'init' : 'end'">
       <div class="top">
         <h1>
-          <b>{{ userData['Nombre'] }}</b>
+          <b>{{ fileData['Nombre'] }}</b>
         </h1>
         <RiCloseLine
           class-name="icon"
@@ -26,28 +26,28 @@
           size="1.5rem"
           color="var(--gray-1)"
           alt="delete"
-          @click="handleDelete(props.fileId)"
+          @click="handleDelete()"
         />
       </div>
       <div class="mid">
         <SimpleTable
-          :data="userData"
-          :headers="userHeaders"
+          :data="fileData"
+          :headers="fileHeaders"
           :isSet="true"
           :has-type="true"
-          :fields="fields"
+          :fields="fieldInfo"
         />
       </div>
 
       <div class="bottom">
-        <ButtonSimple :msg="'Abrir'" />
+        <ButtonSimple :msg="'Abrir'" :onClick="openFile" />
       </div>
     </div>
   </div>
 
   <AlertDelete
     v-if="tryDelete"
-    :name="`${userData['Nombre']}`"
+    :name="`${fileData['Nombre']}`"
     :on-no="abortDelete"
     :on-yes="onDelete"
     :type="'file'"
@@ -61,50 +61,136 @@ import { useRouter } from 'vue-router'
 import SimpleTable from '@/components/DataDisplay/Tables/SimpleTable.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import AlertDelete from '@/components/Feedback/Alerts/AlertDelete.vue'
+import { useAuth0 } from '@auth0/auth0-vue'
+import { useApi } from '@/oauth/useApi'
 
+const { getRequest, postRequest, deleteRequest } = useApi()
+const auth0 = useAuth0()
 const ready = ref(false)
 const start = ref(false)
 const router = useRouter()
-const userData = ref(null)
-const userHeaders = ref([])
+
+const fileData = ref({})
+const fileHeaders = ref([])
+const fieldInfo = ref({})
+
+const doctorId = ref('')
 const tryDelete = ref(false)
 const props = defineProps({
-  fileId: String,
-  viewData: Object,
-  fields: Object
+  fileId: String
 })
 
-const emit = defineEmits(['updateData', 'openEdit'])
+const emit = defineEmits(['updateData', 'openEdit', 'addToast', 'openFile'])
 
-onMounted(() => {
-  userData.value = props.viewData.filter((item) => item.fileId === props.fileId)[0]
-  userHeaders.value = Object.keys(userData.value)
+const openFile = () => {
+  emit('openFile')
+}
+onMounted(async () => {
+  doctorId.value = await getDoctorId()
+  let raw_data = await getFiles()
+  fieldInfo.value = getHeaders(raw_data)
+  fileHeaders.value = Object.keys(fieldInfo.value)
 
+  let format_files = formatFiles(raw_data)
+  fileData.value = {
+    ...fileData.value,
+    ...format_files
+  }
   ready.value = true
   setTimeout(() => {
     start.value = true
-  }, 2) // You can adjust the delay if needed
+  }, 2)
 })
 
+const formatFiles = (raw_data) => {
+  let ffiles = raw_data.reduce((arr, item) => {
+    arr[item.name] = item.value
+    return arr
+  }, {})
+  return ffiles
+}
+
+const getHeaders = (raw_data) => {
+  let headers = raw_data.reduce((arr, item) => {
+    arr[item.name] = {
+      type: item.type,
+      required: item.required,
+      options: item.options
+    }
+    return arr
+  }, {})
+  let complete_headers = {
+    Nombre: {
+      type: 'SHORT_TEXT',
+      required: true,
+      options: []
+    },
+    ...headers
+  }
+  return complete_headers
+}
+
+const getFiles = async () => {
+  let url = `/files?doctorId=${doctorId.value}&fileId=${props.fileId}`
+  let fields = {}
+  try {
+    const response = await getRequest(url, {})
+    fileData.value['Nombre'] = response.name
+    fileData.value.recordId = response.recordId
+    fileData.value.cagegory = response.category
+    fields = response.fields
+  } catch {
+    addToast({ type: 0, content: 'Hubo un error' })
+  }
+  return fields
+}
+
+const getDoctorId = async () => {
+  let userId = auth0.user.value.sub.split('|')[1]
+
+  let doctorId = ''
+  try {
+    const response = await postRequest('/users/@me', { id: userId })
+    doctorId = response.data.roleDependentInfo.id
+  } catch {
+    addToast({ type: 0, content: 'Hubo un error' })
+  }
+  return doctorId
+}
+
+const addToast = (toast) => {
+  emit('addToast', toast)
+}
 const goBack = () => {
   start.value = false
   setTimeout(() => {
-    router.push('/doctor/patient/123')
+    router.push(`/doctor/patient/${fileData.value.recordId}`)
   }, 250) // You can adjust the delay if needed
 }
 
-const handleDelete = (id) => {
-  // Deleting based on the id
-  console.log(id)
+const handleDelete = () => {
   tryDelete.value = true
 }
 const abortDelete = () => {
   tryDelete.value = false
 }
 
-const onDelete = () => {
-  console.log('SE ELIMINA')
-  tryDelete.value = false
+const onDelete = async () => {
+  let body = {
+    doctorId: doctorId.value,
+    fileId: props.fileId
+  }
+  try {
+    const response = await deleteRequest('/files', body)
+    if (response.status == 200) {
+      addToast({ type: 1, content: 'Eliminado exitosamente' })
+    } else {
+      addToast({ type: 0, content: 'Algo salio mal' })
+    }
+  } catch {
+    addToast({ type: 0, content: 'Algo salio mal' })
+  }
+  emit('updateData')
   goBack()
 }
 

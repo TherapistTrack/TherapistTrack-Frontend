@@ -138,6 +138,33 @@ export function useApi() {
     }
   }
 
+  const uploadRequest = async (url, file, metadata) => {
+    const token = await getAuthToken()
+    if (!token) {
+      isLoading.value = false
+      throw new Error('User is not authenticated')
+    }
+
+    let formData = new FormData()
+    formData.append('metadata', JSON.stringify(metadata))
+    formData.append('file', file)
+
+    try {
+      const response = await axios.post(`${url_base}${url}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data; charset=UTF-8',
+          Authorization: `Bearer ${token}`
+        }
+      })
+      isLoading.value = false
+      return response.data
+    } catch (error) {
+      console.error('Error making PATCH request:', error)
+      isLoading.value = false
+      throw error
+    }
+  }
+
   const initialize = async () => {
     isLoading.value = true
     await getAuthToken()
@@ -148,6 +175,7 @@ export function useApi() {
     isAuthenticated,
     user,
     isLoading,
+    uploadRequest,
     getRequest,
     initialize,
     putRequest,

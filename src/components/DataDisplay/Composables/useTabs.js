@@ -1,34 +1,30 @@
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 export function useTabs() {
-  const tabs = ref([])
-  const activeTab = ref(null)
+  const tabs = ref([
+    {
+      id: Math.floor(Math.random() * 100) + 1,
+      name: 'New Tab',
+      path: '/doctor/records',
+      metadata: {}
+    }
+  ])
+  const activeTab = ref(tabs.value[0].id)
+  const router = useRouter()
 
-  function newTab() {
-    let currentNames = tabs.value.map((item) => item.name)
-    console.log(currentNames)
-    if (!currentNames.includes('Home')) {
-      let tab = {
-        id: Math.floor(Math.random() * 100) + 1,
-        name: 'Home',
-        path: '/record/main',
-        metadata: {}
-      }
-      openTab(tab)
-    } else {
-      let tab = {
-        id: Math.floor(Math.random() * 100) + 1,
-        name: 'New Tab',
-        path: '/record/main',
-        metadata: {}
-      }
-      openTab(tab)
+  function addTab(name, path, metadata) {
+    let tab = {
+      id: Math.floor(Math.random() * 100) + 1,
+      name: name,
+      path: path,
+      metadata: metadata
     }
+    openTab(tab)
   }
+
   function openTab(tab) {
-    if (!tabs.value.some((t) => t.id === tab.id)) {
-      tabs.value.push(tab)
-    }
+    router.push(tab.path)
     setActiveTab(tab.id)
   }
 
@@ -45,5 +41,20 @@ export function useTabs() {
     activeTab.value = tabId
   }
 
-  return { tabs, activeTab, newTab, openTab, closeTab, setActiveTab }
+  function getActiveTab() {
+    let currentTabValue = tabs.value.filter((item) => (item.id = activeTab.value))
+    return currentTabValue
+  }
+  function changeTab(name, path, metadata) {
+    let currentTabValue = tabs.value.filter((item) => (item.id = activeTab.value))
+    let index = tabs.value.indexOf(currentTabValue)
+
+    tabs.value[index] = {
+      name: name,
+      path: path,
+      metadata: metadata
+    }
+  }
+
+  return { tabs, activeTab, getActiveTab, addTab, openTab, closeTab, setActiveTab, changeTab }
 }

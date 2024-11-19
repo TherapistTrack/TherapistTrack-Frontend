@@ -37,9 +37,12 @@
 <script setup>
 import { RiAddLine, RiSubtractLine, RiExpandDiagonalLine } from '@remixicon/vue'
 import { ref, watch } from 'vue'
-import test from './test.pdf'
+// import test from './test.pdf'
 import VuePdfApp from 'vue3-pdf-app'
 
+defineProps({
+  pdfSrc: String
+})
 const scale = ref('60')
 watch(
   scale,
@@ -56,8 +59,6 @@ const idConfig = {
   presentationMode: 'presentationModeId',
   zoom: 'scaleSelect'
 }
-
-const pdfSrc = ref(test)
 </script>
 
 <style scoped>

@@ -52,13 +52,14 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRoute } from 'vue-router'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import { useUploadStore } from '@/stores/uploadStore'
 import { RiCloseLine, RiFile3Fill } from '@remixicon/vue'
 
+const emit = defineEmits(['goToForm'])
+
 const uploadStore = useUploadStore()
-const router = useRouter()
 const route = useRoute()
 const fileInput = ref(null)
 
@@ -89,7 +90,7 @@ function handleCancel() {
 
 // Función para continuar con la subida
 function goToForm() {
-  router.push('/upload/form')
+  emit('goToForm')
 }
 
 onMounted(() => {
