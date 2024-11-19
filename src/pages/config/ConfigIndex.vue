@@ -38,6 +38,7 @@ watch(
     updateSelectedOption(newPath)
   }
 )
+
 const addToast = (toast) => {
   let newToast = {
     ...toast,
