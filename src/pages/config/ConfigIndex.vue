@@ -11,17 +11,22 @@
     />
     <div class="view">
       <div class="sideSpace" :id="minim ? '' : 'max'"></div>
-      <router-view />
+      <router-view @addToast="addToast" />
     </div>
   </div>
+  <span>
+    <ToastLoader v-model:toastList="toastList" />
+  </span>
 </template>
 
 <script setup>
 import SideBarConfig from '@/components/Navigation/SideBar/SideBarConfig.vue'
+import ToastLoader from '@/components/Feedback/Toast/ToastLoader.vue'
 import { useRoute } from 'vue-router'
 import { ref, watch } from 'vue'
 import { useAuth0 } from '@auth0/auth0-vue'
 
+const toastList = ref([])
 const auth0 = useAuth0()
 const route = useRoute()
 const currentOption = ref('Mi Cuenta')
@@ -33,6 +38,14 @@ watch(
     updateSelectedOption(newPath)
   }
 )
+
+const addToast = (toast) => {
+  let newToast = {
+    ...toast,
+    id: [Math.floor(Math.random() * 100) + 1]
+  }
+  toastList.value.push(newToast)
+}
 
 const updateSelectedOption = (path) => {
   if (path.includes('/config/account')) {

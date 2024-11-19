@@ -63,6 +63,14 @@
         <div class="field-options">
           <RiMoreFill class="more-options-btn" @click="handleContextMenu($event, field)" />
         </div>
+        <div class="choice-container">
+          <DynamicList
+            v-if="field.type == 'CHOICE'"
+            title="Opciones"
+            v-model:model-array="field.options"
+            @change="handleChoiceChange(index)"
+          />
+        </div>
       </div>
       <div class="form-bottom">
         <ButtonSimple
@@ -126,10 +134,13 @@ import ContextMenu from '@/components/Feedback/Modals/ContextMenu.vue'
 import RemoveTemplate from '@/components/Feedback/Modals/RemoveTemplate.vue'
 import CreateTemplate from '@/components/Feedback/Modals/CreateTemplate.vue'
 import RenameTemplate from '@/components/Feedback/Modals/RenameTemplate.vue'
+import DynamicList from '@/components/Forms/DynamicList/DynamicList.vue'
 import { useContextMenu } from '@/components/DataDisplay/Composables/useContextMenu.js'
 import { useApi } from '@/oauth/useApi'
 import { useAuth0 } from '@auth0/auth0-vue'
 import { RiMoreFill, RiCloseLine } from '@remixicon/vue'
+
+const emit = defineEmits('addToast')
 
 const router = useRouter()
 const route = useRoute()
@@ -141,7 +152,7 @@ const isEditing = ref(false)
 const templateId = ref(route.params.templateId || null)
 const templateName = ref(route.query.name || 'Nueva Plantilla')
 
-const dataTypes = ['SHORT_TEXT', 'TEXT', 'NUMBER', 'FLOAT', 'DATE']
+const dataTypes = ['SHORT_TEXT', 'TEXT', 'NUMBER', 'FLOAT', 'DATE', 'CHOICE']
 
 const fields = ref([
   { name: 'Primer Nombre', type: '', value: '', required: true, isConfigured: false },
@@ -156,6 +167,21 @@ const isCreateFieldModalVisible = ref(false)
 const isRenameModalVisible = ref(false)
 const categories = ref([''])
 
+const getDoctorId = async () => {
+  let userId = auth0.user.value.sub.split('|')[1]
+  let doctorId = ''
+  try {
+    const response = await postRequest('/users/@me', { id: userId })
+    doctorId = response.data.roleDependentInfo.id
+  } catch {
+    emit('addToast', { content: 'Ocurrio un error obteniendo información del doctor', type: 0 })
+  }
+  return doctorId
+}
+
+// CHOICE OPTION LOGIC
+
+// CATEGORY LOGIC
 function handleCategoryFocus(index) {
   if (index === categories.value.length - 1 && categories.value[index].trim() !== '') {
     categories.value.push('')
@@ -198,6 +224,23 @@ function removeCategory(index) {
   }
 }
 
+const handleChoiceChange = (index) => {
+  const options = fields.value[index].options
+  if (!isEditing.value) {
+    return
+  }
+  if (options.length == 0 || options == undefined || options == null) {
+    return
+  }
+  const field = fields.value[index]
+  const oldFieldName = field.name
+  const updatedFieldData = {
+    ...field,
+    options: options
+  }
+  editFieldInTemplate(oldFieldName, updatedFieldData)
+}
+
 const {
   position: contextMenuPosition,
   visible: contextMenuVisible,
@@ -214,6 +257,7 @@ function showRenameModal() {
 }
 
 function goBackToPatients() {
+  emit('addToast', { type: 1, content: 'Plantilla editada exitosamente' })
   router.push('/config/patients')
 }
 
@@ -263,9 +307,9 @@ async function saveTemplate() {
     alert('Debe agregar al menos una categoría.')
     return
   }
-
+  let doctorId = await getDoctorId()
   const requestBody = {
-    doctorId: '66de4e2e2e0651893bc6b225',
+    doctorId: doctorId,
     name: templateName.value,
     categories: validCategories,
     fields: fields.value.map((field) => ({
@@ -292,10 +336,11 @@ async function saveTemplate() {
       isEditing.value = true
       alert('Plantilla creada exitosamente')
     }
-
+    emit('addToast', { type: 1, content: 'Plantilla creada exitosamente' })
     // Redirigir o actualizar la vista
     router.push('/config/patients')
   } catch (error) {
+    emit('addToast', { type: 0, content: 'Hubo un error guardando la plantilla' })
     console.error('Error al guardar la plantilla:', error)
     if (error.response && error.response.data) {
       console.error('Detalles del error:', error.response.data)
@@ -310,7 +355,7 @@ async function saveTemplate() {
 // Load the template if we're editing an existing one
 async function loadTemplateData(templateId) {
   try {
-    const doctorId = '66de4e2e2e0651893bc6b225'
+    const doctorId = await getDoctorId()
     const response = await getRequest(
       `/doctor/PatientTemplate?doctorId=${doctorId}&templateId=${templateId}`
     )
@@ -380,8 +425,9 @@ async function addFieldToTemplate(newField) {
     console.error('El templateId no está definido')
     return
   }
+  let doctorId = await getDoctorId()
   const requestBody = {
-    doctorId: '66de4e2e2e0651893bc6b225',
+    doctorId: doctorId,
     templateId: templateId.value,
     field: {
       name: newField.name,
@@ -411,8 +457,9 @@ async function editFieldInTemplate(oldFieldName, updatedFieldData) {
     return
   }
 
+  let doctorId = await getDoctorId()
   const requestBody = {
-    doctorId: '66de4e2e2e0651893bc6b225',
+    doctorId: doctorId,
     templateId: templateId.value,
     oldFieldName,
     fieldData: {
@@ -491,9 +538,9 @@ async function deleteFieldFromTemplate(fieldName) {
     console.error('El templateId no está definido')
     return
   }
-
+  let doctorId = await getDoctorId()
   const requestBody = {
-    doctorId: '66de4e2e2e0651893bc6b225',
+    doctorId: doctorId,
     templateId: templateId.value,
     name: fieldName
   }
@@ -726,5 +773,10 @@ async function removeField() {
 
 .category-input {
   padding-right: 25px;
+}
+
+.choice-container {
+  width: 100%;
+  padding-left: 1rem;
 }
 </style>

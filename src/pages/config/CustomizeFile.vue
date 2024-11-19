@@ -38,34 +38,35 @@
           />
         </div>
         <div class="field-options">
-          <button class="more-options-btn" @click="handleContextMenu($event, field)">
-            <RiMoreFill />
-          </button>
+          <RiMoreFill class="more-options-btn" @click="handleContextMenu($event, field)" />
         </div>
         <DynamicList
           v-if="field.type == 'CHOICE'"
-          title="Opciones disponibles"
+          title="Opciones"
           v-model:model-array="field.options"
           @change="handleChoiceChange(index)"
         />
       </div>
-      <button class="add-field-btn button-component" @click="showCreateFieldModal">
-        Agregar Campo +
-      </button>
     </div>
-
-    <ButtonSimple
-      v-if="!isEditing"
-      msg="Guardar"
-      class="save-button button-component"
-      @click="saveFile"
-    />
-    <ButtonSimple
-      v-else
-      msg="Regresar"
-      class="back-button button-component"
-      @click="goBackToFiles"
-    />
+    <div class="form-bottom">
+      <ButtonSimple
+        msg="Agregar Campo"
+        class="action-button button-component"
+        @click="showCreateFieldModal"
+      />
+      <ButtonSimple
+        v-if="!isEditing"
+        msg="Guardar"
+        class="save-button button-component"
+        @click="saveFile"
+      />
+      <ButtonSimple
+        v-else
+        msg="Regresar"
+        class="back-button button-component"
+        @click="goBackToFiles"
+      />
+    </div>
 
     <ContextMenu
       :position="contextMenuPosition"
