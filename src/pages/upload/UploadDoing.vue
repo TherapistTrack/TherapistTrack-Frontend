@@ -99,6 +99,11 @@ const formatMetadata = (raw_data) => {
         name: item,
         value: raw_data[item]
       }
+
+      if (!isNaN(Number(raw_data[item]))) {
+        field.value = Number(raw_data[item])
+      }
+
       metadata.fields.push(field)
     }
   })
