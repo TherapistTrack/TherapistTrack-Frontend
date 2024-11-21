@@ -12,13 +12,6 @@
         />
       </div>
       <div class="actions">
-        <RiEditBoxLine
-          class-name="act-edit"
-          size="1.5rem"
-          color="var(--gray-1)"
-          alt="edit"
-          @click="handleOpenEdit()"
-        />
         <RiDeleteBin7Fill
           class-name="act-delete"
           size="1.5rem"
@@ -49,7 +42,7 @@
 </template>
 
 <script setup>
-import { RiCloseLine, RiEditBoxLine, RiDeleteBin7Fill, RiDownload2Fill } from '@remixicon/vue'
+import { RiCloseLine, RiDeleteBin7Fill, RiDownload2Fill } from '@remixicon/vue'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import SimpleTable from '@/components/DataDisplay/Tables/SimpleTable.vue'
 import AlertDelete from '@/components/Feedback/Alerts/AlertDelete.vue'
@@ -57,10 +50,14 @@ import AlertDelete from '@/components/Feedback/Alerts/AlertDelete.vue'
 // Emits
 const emit = defineEmits(['hideInfo', 'showEdit', 'disableSpace', 'downloadFile'])
 
+const props = defineProps({
+  fileData: Object
+})
+
 // Variables
 const myDiv = ref(null)
 const anim = ref(false)
-const fileData = ref({})
+const fileData = ref({ ...props.fileData })
 const tryDelete = ref(false)
 
 //  FUNCTIONS
@@ -70,14 +67,6 @@ onMounted(() => {
     anim.value = true
     document.addEventListener('click', handleClickOutside)
   }, 2)
-  setTimeout(() => {
-    fileData.value = {
-      fileId: '6612a3f50ba023',
-      Nombre: 'Consulta_1',
-      Páginas: '2',
-      Categoría: 'Prueba Psicometrica'
-    }
-  }, 250)
 })
 
 onBeforeUnmount(() => {
@@ -85,9 +74,6 @@ onBeforeUnmount(() => {
 })
 
 // Open Edit
-const handleOpenEdit = () => {
-  emit('showEdit')
-}
 const handleDownload = () => {
   emit('downloadFile')
 }

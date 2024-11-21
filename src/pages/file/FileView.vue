@@ -1,5 +1,6 @@
 <template>
   <router-view
+    :fileData="fileData"
     @hideInfo="onHideInfo"
     @hideComments="onHideComments"
     @showEdit="onShowEdit"
@@ -58,7 +59,7 @@ const createdAt = ref('')
 const pdfSrc = ref('')
 const ready = ref(false)
 const spaceOverlay = ref(false)
-// const fileData = ref({})
+const fileData = ref({})
 
 // On mounted
 watch(activeTab, () => {
@@ -69,9 +70,7 @@ watch(activeTab, () => {
 })
 
 onMounted(async () => {
-  let currentTab = tabManager.getActiveTab()
-  doctorId.value = currentTab.metadata.doctorId
-  fileId.value = currentTab.metadata.fileId
+  getMetada()
   await getFile()
 })
 const getMetada = () => {
@@ -84,15 +83,25 @@ const getFile = async () => {
   try {
     let url = `/files?doctorId=${doctorId.value}&fileId=${fileId.value}`
     const response = await getRequest(url, {})
+    console.log(response)
+    fileData.value['Nombre'] = response.name
+    fileData.value['Fecha de creación'] = response.createdAt.split('T')[0]
+    buildFileData(response.fields)
     fileName.value = response.name
     createdAt.value = response.createdAt.split('T')[0]
     pdfSrc.value = response.fileURL
+    console.log(fileData.value)
     ready.value = true
   } catch {
     console.log('something went wrong')
   }
 }
 
+const buildFileData = (raw_fields) => {
+  raw_fields.forEach((item) => {
+    fileData.value[item.name] = item.value
+  })
+}
 //Funcions
 const handlePrevious = () => {
   console.log('Go to PREVIOUS file')

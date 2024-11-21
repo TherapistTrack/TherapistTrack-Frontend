@@ -38,34 +38,35 @@
           />
         </div>
         <div class="field-options">
-          <button class="more-options-btn" @click="handleContextMenu($event, field)">
-            <RiMoreFill />
-          </button>
+          <RiMoreFill class="more-options-btn" @click="handleContextMenu($event, field)" />
         </div>
         <DynamicList
           v-if="field.type == 'CHOICE'"
-          title="Opciones disponibles"
+          title="Opciones"
           v-model:model-array="field.options"
           @change="handleChoiceChange(index)"
         />
       </div>
-      <button class="add-field-btn button-component" @click="showCreateFieldModal">
-        Agregar Campo +
-      </button>
     </div>
-
-    <ButtonSimple
-      v-if="!isEditing"
-      msg="Guardar"
-      class="save-button button-component"
-      @click="saveFile"
-    />
-    <ButtonSimple
-      v-else
-      msg="Regresar"
-      class="back-button button-component"
-      @click="goBackToFiles"
-    />
+    <div class="form-bottom">
+      <ButtonSimple
+        msg="Agregar Campo"
+        class="action-button button-component"
+        @click="showCreateFieldModal"
+      />
+      <ButtonSimple
+        v-if="!isEditing"
+        msg="Guardar"
+        class="save-button button-component"
+        @click="saveFile"
+      />
+      <ButtonSimple
+        v-else
+        msg="Regresar"
+        class="back-button button-component"
+        @click="goBackToFiles"
+      />
+    </div>
 
     <ContextMenu
       :position="contextMenuPosition"
@@ -474,7 +475,7 @@ async function removeField() {
 
 <style scoped>
 .template-container {
-  padding: 1rem 3rem 0 3rem;
+  padding: 2rem 4rem;
   width: 100vw;
   background-color: white;
   height: 100vh;
@@ -483,24 +484,26 @@ async function removeField() {
 .page-title {
   font-size: 36px;
   font-weight: bold;
-  margin-bottom: 10px;
+  margin-bottom: 2rem;
 }
 
 .form-header {
   display: grid;
   grid-template-columns: 3fr 2fr 1fr auto;
   align-items: center;
-  margin-bottom: 15px;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
   font-weight: bold;
-  padding: 10px 0;
   border-bottom: 2px solid #ddd;
   gap: 20px;
   text-align: center;
+  padding: 1rem 1.5rem 1rem 1.5rem;
 }
 
 .form-header .header-item:first-child {
   text-align: left;
   padding-left: 10px;
+  color: var(--gray-1);
 }
 
 .form-header .header-item {
@@ -515,16 +518,20 @@ async function removeField() {
   display: grid;
   grid-template-columns: 3fr 2fr 1fr auto;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 1rem;
   background-color: #f8f8f8;
   padding: 10px;
   border-radius: 8px;
   transition: background-color 0.3s ease;
-  gap: 20px;
+  gap: 1rem;
 }
 
 .form-group:hover {
   background-color: #eaeaea;
+}
+
+.form-group * {
+  align-items: center;
 }
 
 .field-name {
@@ -541,19 +548,20 @@ async function removeField() {
   justify-content: center;
   align-items: center;
 }
+.field-type .select-group {
+  margin: 0;
+}
 
 .more-options-btn {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
+  flex-shrink: 0;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 50%;
-  transition: background-color 0.3s ease;
+  border-radius: 0.4rem;
+  transition: background-color 0.2s ease;
+  margin-right: 1.5rem;
 }
 
 .more-options-btn:hover {
-  background-color: #e0e0e0;
+  background-color: var(--gray-4);
 }
 
 .add-field-btn,
@@ -591,5 +599,12 @@ async function removeField() {
 
 .reconfigure-button:hover {
   background-color: #ff9900;
+}
+
+.form-bottom {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2rem;
 }
 </style>

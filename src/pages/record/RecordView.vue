@@ -197,7 +197,9 @@ const get_records_raw = async () => {
     doctorId: doctorId.value,
     limit: pageLimit.value,
     page: currentPage.value,
-    fields: []
+    fields: [],
+    sorts: [],
+    filters: []
   }
   if (localSorts.value.length !== 0) {
     body['sorts'] = localSorts.value

@@ -131,7 +131,7 @@ const getRecord = async () => {
     templateId.value = response.tempalteId
     createdAt.value = response.createdAt
     recordData.value['Nombre'] = response.patient.names
-    recordData.value['Apellidos'] = response.patient.lastNames
+    recordData.value['Apellidos'] = response.patient.lastnames
     fields = response.patient.fields
   } catch {
     emit('addToast', { type: 0, content: 'Ocurrio un error obteniendo el expediente' })
