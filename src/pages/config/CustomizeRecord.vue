@@ -13,20 +13,21 @@
             v-model="categories[index]"
             @focus="handleCategoryFocus(index)"
             @blur="handleCategoryBlur(index)"
-            @keyup.enter="handleCategoryEnter(index)"
+            @keyup.enter="handleCategoryEnter(index, $event)"
             placeholder="Escribe una categoría..."
             class="category-input"
           />
           <RiCloseLine
             v-if="category.trim() !== ''"
             class="delete-btn"
-            @click="removeCategory(index)"
+            @click.stop="removeCategory(index)"
             color="red"
           />
         </div>
       </div>
     </div>
 
+    <!-- Encabezado de la tabla de campos -->
     <div class="form-header">
       <span class="header-item">Nombre del Campo</span>
       <span class="header-item">Tipo de Dato</span>
@@ -34,11 +35,14 @@
       <span class="header-item">Opciones</span>
     </div>
 
+    <!-- Lista de campos -->
     <div class="form-section">
       <div v-for="(field, index) in fields" :key="index" class="form-group">
+        <!-- Nombre del campo -->
         <div class="field-name">
           <span class="field-label">{{ field.name }}</span>
         </div>
+
         <!-- Tipo de Dato -->
         <div class="field-type">
           <DropdownField
@@ -52,6 +56,8 @@
             :disabled="!isEditing.value"
           />
         </div>
+
+        <!-- Campo Obligatorio -->
         <div class="field-required">
           <Checkbox
             :id="'required-' + index"
@@ -60,18 +66,24 @@
             @change="handleFieldRequiredChange(index, $event.target.checked)"
           />
         </div>
+
+        <!-- Opciones (Context Menu) -->
         <div class="field-options">
           <RiMoreFill class="more-options-btn" @click="handleContextMenu($event, field)" />
         </div>
+
+        <!-- Opciones adicionales si es CHOICE -->
         <div class="choice-container">
           <DynamicList
-            v-if="field.type == 'CHOICE'"
+            v-if="field.type === 'CHOICE'"
             title="Opciones"
             v-model:model-array="field.options"
             @change="handleChoiceChange(index)"
           />
         </div>
       </div>
+
+      <!-- Botones inferiores -->
       <div class="form-bottom">
         <ButtonSimple
           msg="Agregar Campo"
@@ -93,6 +105,7 @@
       </div>
     </div>
 
+    <!-- Menú contextual -->
     <ContextMenu
       :position="contextMenuPosition"
       :visible="contextMenuVisible"
@@ -100,6 +113,7 @@
       @rename="showRenameModal"
     />
 
+    <!-- Modales -->
     <RemoveTemplate
       v-if="isRemoveModalVisible"
       :currentName="selectedField.name"
@@ -125,8 +139,18 @@
 </template>
 
 <script setup>
+/**
+ * Este componente permite crear o editar una plantilla de paciente.
+ * Se pueden:
+ *  - Agregar / renombrar / eliminar campos.
+ *  - Definir categorías.
+ *  - Guardar o actualizar la plantilla en el backend.
+ */
+
 import { ref, onMounted, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+
+// Componentes internos
 import Checkbox from '@/components/Forms/CheckBox/CheckBox.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import DropdownField from '@/components/Forms/SelectDropDown/SelectDropDown.vue'
@@ -135,30 +159,36 @@ import RemoveTemplate from '@/components/Feedback/Modals/RemoveTemplate.vue'
 import CreateTemplate from '@/components/Feedback/Modals/CreateTemplate.vue'
 import RenameTemplate from '@/components/Feedback/Modals/RenameTemplate.vue'
 import DynamicList from '@/components/Forms/DynamicList/DynamicList.vue'
+
+// Iconos
+import { RiMoreFill, RiCloseLine } from '@remixicon/vue'
+
+// Composables
 import { useContextMenu } from '@/components/DataDisplay/Composables/useContextMenu.js'
 import { useApi } from '@/oauth/useApi'
 import { useAuth0 } from '@auth0/auth0-vue'
-import { RiMoreFill, RiCloseLine } from '@remixicon/vue'
 
-const emit = defineEmits('addToast')
+// Emisor de eventos
+const emit = defineEmits(['addToast'])
 
+// Router & API
 const router = useRouter()
 const route = useRoute()
 const { getRequest, postRequest, putRequest, deleteRequest } = useApi()
 const auth0 = useAuth0()
 
+// Estado principal
 const isEditing = ref(false)
-
 const templateId = ref(route.params.templateId || null)
 const templateName = ref(route.query.name || 'Nueva Plantilla')
-
 const dataTypes = ['SHORT_TEXT', 'TEXT', 'NUMBER', 'FLOAT', 'DATE', 'CHOICE']
 
+// Estado inicial de campos (ejemplo)
 const fields = ref([
-  { name: 'Primer Nombre', type: '', value: '', required: true, isConfigured: false },
-  { name: 'Apellido Familiar', type: '', value: '', required: true, isConfigured: false },
-  { name: 'Hijos', type: '', value: '', required: false, isConfigured: false },
-  { name: 'Estado Civil', type: '', value: '', required: false, isConfigured: false }
+  { name: 'Primer Nombre', type: '', required: true, isConfigured: false },
+  { name: 'Apellido Familiar', type: '', required: true, isConfigured: false },
+  { name: 'Hijos', type: '', required: false, isConfigured: false },
+  { name: 'Estado Civil', type: '', required: false, isConfigured: false }
 ])
 
 const selectedField = ref({})
@@ -167,48 +197,113 @@ const isCreateFieldModalVisible = ref(false)
 const isRenameModalVisible = ref(false)
 const categories = ref([''])
 
-const getDoctorId = async () => {
+// Context Menu
+const {
+  position: contextMenuPosition,
+  visible: contextMenuVisible,
+  showContextMenu,
+  hideContextMenu
+} = useContextMenu()
+
+// ===========================================================
+// Hooks
+// ===========================================================
+onMounted(() => {
+  if (templateId.value) {
+    // Modo edición: cargar datos del servidor
+    isEditing.value = true
+    loadTemplateData(templateId.value)
+  } else {
+    // Modo creación: sin ID definido aún
+    // No se requiere acción adicional.
+  }
+
+  // Obtener token
+  auth0
+    .getAccessTokenSilently()
+    .then(() => {
+      console.log('Access Token obtenido correctamente.')
+    })
+    .catch((error) => {
+      console.error('Error obteniendo Access Token:', error)
+    })
+})
+
+// ===========================================================
+// Funciones utilitarias y API
+// ===========================================================
+async function getDoctorId() {
   let userId = auth0.user.value.sub.split('|')[1]
-  let doctorId = ''
   try {
     const response = await postRequest('/users/@me', { id: userId })
-    doctorId = response.data.roleDependentInfo.id
+    return response.data.roleDependentInfo.id
   } catch {
-    emit('addToast', { content: 'Ocurrio un error obteniendo información del doctor', type: 0 })
+    emit('addToast', { content: 'Ocurrió un error obteniendo información del doctor', type: 0 })
+    return ''
   }
-  return doctorId
 }
 
-// CHOICE OPTION LOGIC
+async function loadTemplateData(id) {
+  try {
+    const doctorId = await getDoctorId()
+    if (!doctorId) return
 
-// CATEGORY LOGIC
+    const response = await getRequest(
+      `/doctor/PatientTemplate?doctorId=${doctorId}&templateId=${id}`
+    )
+    if (response.status === 200 && response.data) {
+      templateName.value = response.data.name
+      categories.value = response.data.categories || ['']
+
+      // Asegurar último campo vacío para nueva categoría
+      if (
+        categories.value.length === 0 ||
+        categories.value[categories.value.length - 1].trim() !== ''
+      ) {
+        categories.value.push('')
+      }
+
+      fields.value = response.data.fields.map((field) => ({ ...field, isConfigured: true }))
+    } else {
+      console.error('No se encontraron datos de la plantilla:', response)
+    }
+  } catch (error) {
+    console.error('Error al cargar datos de la plantilla:', error)
+  }
+}
+
+// ===========================================================
+// Manejo de Categorías
+// ===========================================================
 function handleCategoryFocus(index) {
+  // Si el usuario se enfoca en la última categoría y no está vacía, agregar una nueva vacía
   if (index === categories.value.length - 1 && categories.value[index].trim() !== '') {
     categories.value.push('')
   }
 }
 
 function handleCategoryBlur(index) {
-  const currentCategory = categories.value[index].trim()
-
-  if (currentCategory === '' && categories.value.length > 1) {
+  const current = categories.value[index].trim()
+  // Eliminar la categoría vacía si no es la última
+  if (current === '' && categories.value.length > 1) {
     categories.value.splice(index, 1)
   }
-
-  if (index === categories.value.length - 1 && currentCategory !== '') {
+  // Asegurar que exista un último campo vacío
+  if (index === categories.value.length - 1 && current !== '') {
     categories.value.push('')
   }
 }
 
-function handleCategoryEnter(index) {
-  const currentCategory = categories.value[index].trim()
-
+function handleCategoryEnter(index, event) {
   event.preventDefault()
+  const current = categories.value[index].trim()
 
-  if (index === categories.value.length - 1 && currentCategory !== '') {
+  // Si presiona Enter en la última categoría y no está vacía, agregar otra
+  if (index === categories.value.length - 1 && current !== '') {
     categories.value.push('')
   }
 
+  // Mover el foco a la siguiente entrada
   nextTick(() => {
     const inputs = document.querySelectorAll('.category-input')
     if (inputs.length > index + 1) {
@@ -224,175 +319,23 @@ function removeCategory(index) {
   }
 }
 
-const handleChoiceChange = (index) => {
-  const options = fields.value[index].options
-  if (!isEditing.value) {
-    return
-  }
-  if (options.length == 0 || options == undefined || options == null) {
-    return
-  }
+// ===========================================================
+// Manejo de Campos (CHOICE, etc.)
+// ===========================================================
+function handleChoiceChange(index) {
+  if (!isEditing.value) return
   const field = fields.value[index]
+  const options = field.options || []
+  if (options.length === 0) return
+
   const oldFieldName = field.name
-  const updatedFieldData = {
-    ...field,
-    options: options
-  }
+  const updatedFieldData = { ...field, options }
   editFieldInTemplate(oldFieldName, updatedFieldData)
 }
 
-const {
-  position: contextMenuPosition,
-  visible: contextMenuVisible,
-  showContextMenu,
-  hideContextMenu
-} = useContextMenu()
-
-function showCreateFieldModal() {
-  isCreateFieldModalVisible.value = true
-}
-
-function showRenameModal() {
-  isRenameModalVisible.value = true
-}
-
-function goBackToPatients() {
-  emit('addToast', { type: 1, content: 'Plantilla editada exitosamente' })
-  router.push('/config/patients')
-}
-
-function addNewField({ name, type, required = false }) {
-  const newField = {
-    name,
-    type,
-    required
-  }
-
-  // Llamar a la función de agregar campo al servidor
-  addFieldToTemplate(newField)
-  isCreateFieldModalVisible.value = false
-}
-
-function renameField(newName) {
-  const field = selectedField.value
-  const oldFieldName = field.name
-  field.name = newName
-  isRenameModalVisible.value = false
-
-  if (!isEditing.value) {
-    // Modo creación: el cambio se guarda localmente y se enviará al guardar
-    return
-  }
-
-  const updatedFieldData = {
-    ...field,
-    name: newName
-  }
-
-  // Llamar a la función para editar el campo en el backend
-  editFieldInTemplate(oldFieldName, updatedFieldData)
-}
-
-async function saveTemplate() {
-  if (!templateName.value.trim()) {
-    alert('El nombre de la plantilla es requerido')
-    return
-  }
-
-  const validCategories = categories.value
-    .map((category) => category.trim())
-    .filter((category) => category !== '')
-
-  if (validCategories.length === 0) {
-    alert('Debe agregar al menos una categoría.')
-    return
-  }
-  let doctorId = await getDoctorId()
-  const requestBody = {
-    doctorId: doctorId,
-    name: templateName.value,
-    categories: validCategories,
-    fields: fields.value.map((field) => ({
-      name: field.name,
-      type: field.type,
-      required: field.required === true,
-      options: field.options || [],
-      description: field.description || 'Descripción predeterminada'
-    }))
-  }
-
-  try {
-    if (isEditing.value) {
-      // Modo edición: actualizar la plantilla existente
-      requestBody.templateId = templateId.value
-      const response = await putRequest('/doctor/PatientTemplate', requestBody)
-      console.log('Plantilla actualizada exitosamente:', response)
-      alert('Plantilla actualizada exitosamente')
-    } else {
-      // Modo creación: crear una nueva plantilla
-      const response = await postRequest('/doctor/PatientTemplate', requestBody)
-      console.log('Plantilla creada exitosamente:', response)
-      templateId.value = response.data.patientTemplateId
-      isEditing.value = true
-      alert('Plantilla creada exitosamente')
-    }
-    emit('addToast', { type: 1, content: 'Plantilla creada exitosamente' })
-    // Redirigir o actualizar la vista
-    router.push('/config/patients')
-  } catch (error) {
-    emit('addToast', { type: 0, content: 'Hubo un error guardando la plantilla' })
-    console.error('Error al guardar la plantilla:', error)
-    if (error.response && error.response.data) {
-      console.error('Detalles del error:', error.response.data)
-      alert(`Error al guardar la plantilla: ${error.response.data.message}`)
-    } else {
-      console.error('No se recibió respuesta del servidor')
-      alert('Error al guardar la plantilla')
-    }
-  }
-}
-
-// Load the template if we're editing an existing one
-async function loadTemplateData(templateId) {
-  try {
-    const doctorId = await getDoctorId()
-    const response = await getRequest(
-      `/doctor/PatientTemplate?doctorId=${doctorId}&templateId=${templateId}`
-    )
-
-    if (response.status === 200 && response.data) {
-      templateName.value = response.data.name
-      categories.value = response.data.categories || ['']
-
-      if (
-        categories.value.length === 0 ||
-        categories.value[categories.value.length - 1].trim() !== ''
-      ) {
-        categories.value.push('')
-      }
-
-      fields.value = response.data.fields.map((field) => ({
-        ...field,
-        isConfigured: true
-      }))
-      console.log('Datos de la plantilla cargados:', response.data)
-    } else {
-      console.error('No se encontraron datos de la plantilla en la respuesta:', response)
-    }
-  } catch (error) {
-    console.error('Error al cargar los datos de la plantilla:', error)
-  }
-}
-
-onMounted(() => {
-  if (templateId.value) {
-    isEditing.value = true
-    loadTemplateData(templateId.value)
-  } else {
-    console.log('Esta es una nueva plantilla sin un ID en el backend aún.')
-  }
-})
-
+// ===========================================================
+// Manejo del Context Menu
+// ===========================================================
 function handleContextMenu(event, field) {
   event.stopPropagation()
   selectedField.value = field
@@ -403,46 +346,114 @@ function showRemoveModal() {
   isRemoveModalVisible.value = true
 }
 
-// Agregar un log para verificar el token al inicio (debugging)
-auth0
-  .getAccessTokenSilently()
-  .then((token) => {
-    console.log('Access Token obtenido:', token)
-  })
-  .catch((error) => {
-    console.error('Error obteniendo el Access Token:', error)
-  })
+function showCreateFieldModal() {
+  isCreateFieldModalVisible.value = true
+}
+
+function showRenameModal() {
+  isRenameModalVisible.value = true
+}
+
+// ===========================================================
+// Navegación
+// ===========================================================
+function goBackToPatients() {
+  emit('addToast', { type: 1, content: 'Plantilla editada exitosamente' })
+  router.push('/config/patients')
+}
+
+// ===========================================================
+// Guardar/Crear Plantilla
+// ===========================================================
+async function saveTemplate() {
+  if (!templateName.value.trim()) {
+    alert('El nombre de la plantilla es requerido')
+    return
+  }
+
+  const validCategories = categories.value.map((c) => c.trim()).filter((c) => c !== '')
+  if (validCategories.length === 0) {
+    alert('Debe agregar al menos una categoría.')
+    return
+  }
+
+  const doctorId = await getDoctorId()
+  if (!doctorId) return
+
+  const requestBody = {
+    doctorId,
+    name: templateName.value,
+    categories: validCategories,
+    fields: fields.value.map((field) => ({
+      name: field.name,
+      type: field.type,
+      required: !!field.required,
+      options: field.options || [],
+      description: field.description || 'Descripción predeterminada'
+    }))
+  }
+
+  try {
+    if (isEditing.value) {
+      // Actualizar plantilla existente
+      requestBody.templateId = templateId.value
+      await putRequest('/doctor/PatientTemplate', requestBody)
+      alert('Plantilla actualizada exitosamente')
+    } else {
+      // Crear nueva plantilla
+      const response = await postRequest('/doctor/PatientTemplate', requestBody)
+      templateId.value = response.data.patientTemplateId
+      isEditing.value = true
+      alert('Plantilla creada exitosamente')
+    }
+    emit('addToast', { type: 1, content: 'Plantilla guardada exitosamente' })
+    router.push('/config/patients')
+  } catch (error) {
+    emit('addToast', { type: 0, content: 'Hubo un error guardando la plantilla' })
+    console.error('Error al guardar la plantilla:', error)
+    const message = error.response?.data?.message || 'Error al guardar la plantilla'
+    alert(message)
+  }
+}
+
+// ===========================================================
+// CRUD de Campos
+// ===========================================================
+async function addNewField({ name, type, required = false }) {
+  const newField = { name, type, required }
+  addFieldToTemplate(newField)
+  isCreateFieldModalVisible.value = false
+}
 
 async function addFieldToTemplate(newField) {
   if (!isEditing.value) {
-    // Modo creación: agregar el campo localmente
+    // Modo creación: agregar localmente
     fields.value.push({ ...newField, isConfigured: true })
     return
   }
 
-  // Modo edición: enviar solicitud al backend
   if (!templateId.value) {
-    console.error('El templateId no está definido')
+    console.error('No se puede añadir campo sin templateId')
     return
   }
-  let doctorId = await getDoctorId()
+
+  const doctorId = await getDoctorId()
+  if (!doctorId) return
+
   const requestBody = {
-    doctorId: doctorId,
+    doctorId,
     templateId: templateId.value,
     field: {
       name: newField.name,
       type: newField.type,
-      required: newField.required === true,
+      required: !!newField.required,
       options: newField.options || [],
       description: newField.description || 'Descripción predeterminada'
     }
   }
 
-  console.log('Datos para enviar a la API:', JSON.stringify(requestBody, null, 2))
-
   try {
-    const response = await postRequest('/doctor/PatientTemplate/fields', requestBody)
-    console.log('Campo añadido exitosamente:', response.message)
+    await postRequest('/doctor/PatientTemplate/fields', requestBody)
     fields.value.push({ ...newField, isConfigured: true })
   } catch (error) {
     console.error('Error al añadir el campo:', error)
@@ -450,32 +461,31 @@ async function addFieldToTemplate(newField) {
   }
 }
 
-// Función para editar un campo de la plantilla
 async function editFieldInTemplate(oldFieldName, updatedFieldData) {
   if (!templateId.value || !oldFieldName) {
     alert('Información insuficiente para editar el campo')
     return
   }
 
-  let doctorId = await getDoctorId()
+  const doctorId = await getDoctorId()
+  if (!doctorId) return
+
   const requestBody = {
-    doctorId: doctorId,
+    doctorId,
     templateId: templateId.value,
     oldFieldName,
     fieldData: {
       name: updatedFieldData.name,
       type: updatedFieldData.type,
-      required: updatedFieldData.required === true,
+      required: !!updatedFieldData.required,
       options: updatedFieldData.options || [],
       description: updatedFieldData.description || 'Descripción predeterminada'
     }
   }
 
   try {
-    const response = await putRequest('/doctor/PatientTemplate/fields', requestBody)
-    console.log('Campo editado exitosamente:', response.message)
-    // Actualiza el campo en el estado local
-    const index = fields.value.findIndex((field) => field.name === oldFieldName)
+    await putRequest('/doctor/PatientTemplate/fields', requestBody)
+    const index = fields.value.findIndex((f) => f.name === oldFieldName)
     if (index !== -1) {
       fields.value[index] = { ...updatedFieldData, isConfigured: true }
     }
@@ -485,38 +495,25 @@ async function editFieldInTemplate(oldFieldName, updatedFieldData) {
   }
 }
 
-function handleFieldTypeChange(index, newType) {
-  if (!isEditing.value) {
-    fields.value[index].type = newType
-    return
-  }
-
-  const field = fields.value[index]
+function renameField(newName) {
+  const field = selectedField.value
   const oldFieldName = field.name
+  field.name = newName
+  isRenameModalVisible.value = false
 
-  const updatedFieldData = {
-    ...field,
-    type: newType
-  }
+  if (!isEditing.value) return // Modo creación: solo local
 
+  const updatedFieldData = { ...field, name: newName }
   editFieldInTemplate(oldFieldName, updatedFieldData)
 }
 
-function handleFieldRequiredChange(index, isRequired) {
-  if (!isEditing.value) {
-    fields.value[index].required = isRequired
+async function removeField() {
+  const field = selectedField.value
+  if (!field || !field.name) {
+    alert('Campo inválido para eliminar.')
     return
   }
-
-  const field = fields.value[index]
-  const oldFieldName = field.name
-
-  const updatedFieldData = {
-    ...field,
-    required: isRequired
-  }
-
-  editFieldInTemplate(oldFieldName, updatedFieldData)
+  await deleteFieldFromTemplate(field.name)
 }
 
 async function deleteFieldFromTemplate(fieldName) {
@@ -526,29 +523,29 @@ async function deleteFieldFromTemplate(fieldName) {
   }
 
   if (!isEditing.value) {
-    // Modo creación: eliminar el campo localmente
+    // Modo creación: eliminar localmente
     fields.value = fields.value.filter((field) => field.name !== fieldName)
     isRemoveModalVisible.value = false
     hideContextMenu()
     return
   }
 
-  // Modo edición: enviar solicitud al backend
   if (!templateId.value) {
     console.error('El templateId no está definido')
     return
   }
-  let doctorId = await getDoctorId()
+
+  const doctorId = await getDoctorId()
+  if (!doctorId) return
+
   const requestBody = {
-    doctorId: doctorId,
+    doctorId,
     templateId: templateId.value,
     name: fieldName
   }
 
   try {
-    const response = await deleteRequest('/doctor/PatientTemplate/fields', requestBody)
-    console.log('Campo eliminado exitosamente:', response.message)
-    // Actualizar el estado local
+    await deleteRequest('/doctor/PatientTemplate/fields', requestBody)
     fields.value = fields.value.filter((field) => field.name !== fieldName)
   } catch (error) {
     console.error('Error al eliminar el campo:', error)
@@ -559,14 +556,27 @@ async function deleteFieldFromTemplate(fieldName) {
   }
 }
 
-async function removeField() {
-  const field = selectedField.value
-  if (!field || !field.name) {
-    alert('Campo inválido para eliminar.')
-    return
-  }
+// ===========================================================
+// Manejo de Cambios Simples en Campos
+// ===========================================================
+function handleFieldTypeChange(index, newType) {
+  const field = fields.value[index]
+  const oldFieldName = field.name
+  field.type = newType
 
-  await deleteFieldFromTemplate(field.name)
+  if (!isEditing.value) return
+  const updatedFieldData = { ...field, type: newType }
+  editFieldInTemplate(oldFieldName, updatedFieldData)
+}
+
+function handleFieldRequiredChange(index, isRequired) {
+  const field = fields.value[index]
+  const oldFieldName = field.name
+  field.required = isRequired
+
+  if (!isEditing.value) return
+  const updatedFieldData = { ...field, required: isRequired }
+  editFieldInTemplate(oldFieldName, updatedFieldData)
 }
 </script>
 
@@ -584,6 +594,7 @@ async function removeField() {
   margin-bottom: 2rem;
 }
 
+/* Encabezado de campos */
 .form-header {
   display: grid;
   grid-template-columns: 3fr 2fr 1fr auto;
@@ -607,10 +618,12 @@ async function removeField() {
   color: var(--gray-1);
   font-size: 0.9rem;
 }
+
 .form-section {
   padding: 0 1.5rem 0 1.5rem;
 }
 
+/* Grupo de campos */
 .form-group {
   display: grid;
   grid-template-columns: 3fr 2fr 1fr auto;
@@ -644,6 +657,7 @@ async function removeField() {
   justify-content: center;
   align-items: center;
 }
+
 .field-type .select-group {
   margin: 0;
 }
@@ -660,44 +674,12 @@ async function removeField() {
   background-color: var(--gray-4);
 }
 
-.add-field-btn,
-.save-button {
-  background-color: var(--green-1);
-  color: white;
-  border: none;
-  padding: 0.75rem;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-top: 20px;
-}
-
-.add-field-btn:hover,
-.save-button:hover {
-  background-color: var(--green-2);
-}
-
 .button-component {
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
   transition: background-color 0.2s;
 }
 
-.reconfigure-button-container {
-  margin-top: 10px;
-}
-
-.reconfigure-button {
-  background-color: #ffcc00;
-  color: white;
-  border: none;
-  padding: 0.5rem;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.reconfigure-button:hover {
-  background-color: #ff9900;
-}
-
+/* Sección inferior de la forma */
 .form-bottom {
   width: 100%;
   display: flex;
@@ -705,7 +687,7 @@ async function removeField() {
   margin-bottom: 2rem;
 }
 
-/* Sección de Categorías */
+/* Categorías */
 .categories-section {
   display: flex;
   align-items: flex-start;
@@ -721,22 +703,25 @@ async function removeField() {
 
 .categories-inputs {
   flex-grow: 1;
+  max-width: 16rem;
 }
 
 .category-input-container {
   display: flex;
   align-items: center;
   margin-bottom: 10px;
+  position: relative;
 }
 
 .category-input {
   flex-grow: 1;
   max-width: 18.75rem;
-  padding: 1.3rem 0 0.3rem 0; /* padding-top: 0.5rem; padding-right: 0; padding-bottom: 0rem; padding-left: 0 */
+  padding: 1.3rem 0 0.3rem 0;
   border: none;
   border-bottom: 1px solid #ccc;
   outline: none;
   background-color: transparent;
+  padding-right: 25px;
 }
 
 .category-input::placeholder {
@@ -748,7 +733,8 @@ async function removeField() {
 }
 
 .delete-btn {
-  margin-left: 1rem;
+  position: absolute;
+  right: 0;
   margin-top: 0.7rem;
   cursor: pointer;
   font-size: 1.2rem;
@@ -756,23 +742,6 @@ async function removeField() {
 
 .delete-btn:hover {
   color: darkred;
-}
-
-.categories-inputs {
-  max-width: 16rem;
-}
-
-.category-input-container {
-  position: relative;
-}
-
-.delete-btn {
-  position: absolute;
-  right: 0;
-}
-
-.category-input {
-  padding-right: 25px;
 }
 
 .choice-container {

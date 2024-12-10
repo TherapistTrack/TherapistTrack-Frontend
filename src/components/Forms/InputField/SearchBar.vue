@@ -1,10 +1,16 @@
 <template>
   <div class="searchBar">
     <RiSearchLine size="1rem" color="var(--gray-1)" alt="search" />
-    <input :placeholder="pholder" :value="searchValue" @input="updateValue" />
+    <input :placeholder="pholder" :value="modelValue" @input="onInput" />
 
     <div class="container" :id="isEmpty ? '' : 'active'">
-      <RiCloseLine v-if="showIcon" size="1rem" color="var(--gray-1)" class="close" @click="empty" />
+      <RiCloseLine
+        v-if="showIcon"
+        size="1rem"
+        color="var(--gray-1)"
+        class="close"
+        @click="clearInput"
+      />
     </div>
   </div>
 </template>
@@ -12,46 +18,49 @@
 <script setup>
 import { RiSearchLine, RiCloseLine } from '@remixicon/vue'
 import { ref, watch } from 'vue'
-const isEmpty = ref(true)
-const showIcon = ref(false)
-defineProps({
-  pholder: String,
-  searchValue: String
+
+// Props
+const props = defineProps({
+  pholder: { type: String, default: 'Buscar...' },
+  modelValue: { type: String, default: '' } // Cambiamos a modelValue
 })
 
-watch(isEmpty, async () => {
-  if (isEmpty.value == false) {
+// Emisor de eventos
+const emit = defineEmits(['update:modelValue']) // Cambiamos a update:modelValue
+
+const isEmpty = ref(true)
+const showIcon = ref(false)
+
+// Observamos cambios en isEmpty para controlar el ícono
+watch(isEmpty, () => {
+  if (!isEmpty.value) {
     setTimeout(() => {
-      if (isEmpty.value == false) {
-        showIcon.value = true
-      } else {
-        showIcon.value = false
-      }
+      showIcon.value = !isEmpty.value
     }, 300)
   } else {
     showIcon.value = false
   }
 })
 
-const updateLol = (val) => {
-  if (val == '') {
-    isEmpty.value = true
-  } else {
-    isEmpty.value = false
-  }
+function updateState(val) {
+  isEmpty.value = val === ''
 }
 
-const empty = () => {
-  emit('update:searchValue', '')
+// Función para limpiar el input
+function clearInput() {
+  emit('update:modelValue', '')
   isEmpty.value = true
 }
 
-const emit = defineEmits(['update:searchValue'])
-
-const updateValue = (event) => {
-  emit('update:searchValue', event.target.value)
-  updateLol(event.target.value)
+// Maneja la entrada del usuario
+function onInput(event) {
+  const value = event.target.value
+  emit('update:modelValue', value)
+  updateState(value)
 }
+
+// Inicializa el estado según el valor inicial
+updateState(props.modelValue)
 </script>
 
 <style scoped>
@@ -73,16 +82,13 @@ const updateValue = (event) => {
   max-width: 150px;
 }
 
-.searchBar img {
-  height: 3vh;
-}
-
 .searchBar .container {
   width: 0;
   display: flex;
   position: relative;
   transition: width 0.5s;
 }
+
 .searchBar .container#active {
   width: 1rem;
 }

@@ -3,6 +3,7 @@
     <h1 class="page-title">{{ fileName }}</h1>
     <p>Aquí puede editar los campos de información que se deben registrar en el archivo.</p>
 
+    <!-- Encabezado de la tabla -->
     <div class="form-header">
       <span class="header-item">Nombre del Campo</span>
       <span class="header-item">Tipo de Dato</span>
@@ -10,14 +11,17 @@
       <span class="header-item">Opciones</span>
     </div>
 
+    <!-- Sección de campos -->
     <div class="form-section">
       <div v-for="(field, index) in fields" :key="index" class="form-group">
+        <!-- Nombre del campo -->
         <div class="field-name">
           <span class="field-label"
             ><b>{{ field.name }}:</b></span
           >
         </div>
-        <!-- Tipo de Dato -->
+
+        <!-- Tipo de dato -->
         <div class="field-type">
           <DropdownField
             :id="'dropdown-' + index"
@@ -29,6 +33,8 @@
             :disabled="!isEditing"
           />
         </div>
+
+        <!-- Campo obligatorio -->
         <div class="field-required">
           <Checkbox
             :id="'required-' + index"
@@ -37,17 +43,23 @@
             @change="handleFieldRequiredChange(index, $event.target.checked)"
           />
         </div>
+
+        <!-- Opciones (menú contextual) -->
         <div class="field-options">
           <RiMoreFill class="more-options-btn" @click="handleContextMenu($event, field)" />
         </div>
+
+        <!-- Lista dinámica (solo para tipo CHOICE) -->
         <DynamicList
-          v-if="field.type == 'CHOICE'"
+          v-if="field.type === 'CHOICE'"
           title="Opciones"
           v-model:model-array="field.options"
           @change="handleChoiceChange(index)"
         />
       </div>
     </div>
+
+    <!-- Botones inferiores -->
     <div class="form-bottom">
       <ButtonSimple
         msg="Agregar Campo"
@@ -68,6 +80,7 @@
       />
     </div>
 
+    <!-- Menú contextual -->
     <ContextMenu
       :position="contextMenuPosition"
       :visible="contextMenuVisible"
@@ -75,6 +88,7 @@
       @rename="showRenameModal"
     />
 
+    <!-- Modales -->
     <RemoveTemplate
       v-if="isRemoveModalVisible"
       :currentName="selectedField.name"
@@ -100,8 +114,19 @@
 </template>
 
 <script setup>
+/**
+ * Este componente permite crear o editar una plantilla de campos asociada a un "archivo".
+ * Puede:
+ * - Crear un archivo nuevo.
+ * - Editar un archivo existente (si se proporciona un fileId en la ruta).
+ * - Agregar, renombrar, eliminar y configurar campos de la plantilla.
+ */
+
+// Imports Vue
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+
+// Imports de componentes
 import Checkbox from '@/components/Forms/CheckBox/CheckBox.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import DropdownField from '@/components/Forms/SelectDropDown/SelectDropDown.vue'
@@ -109,50 +134,22 @@ import ContextMenu from '@/components/Feedback/Modals/ContextMenu.vue'
 import RemoveTemplate from '@/components/Feedback/Modals/RemoveTemplate.vue'
 import CreateTemplate from '@/components/Feedback/Modals/CreateTemplate.vue'
 import RenameTemplate from '@/components/Feedback/Modals/RenameTemplate.vue'
-import { useContextMenu } from '@/components/DataDisplay/Composables/useContextMenu.js'
-import { useApi } from '@/oauth/useApi'
-import { useAuth0 } from '@auth0/auth0-vue'
 import DynamicList from '@/components/Forms/DynamicList/DynamicList.vue'
 import { RiMoreFill } from '@remixicon/vue'
 
-const emit = defineEmits('addToast')
+// Imports de lógica y API
+import { useContextMenu } from '@/components/DataDisplay/Composables/useContextMenu.js'
+import { useApi } from '@/oauth/useApi'
+import { useAuth0 } from '@auth0/auth0-vue'
 
+// Emit
+const emit = defineEmits(['addToast'])
+
+// Composables
 const auth0 = useAuth0()
 const router = useRouter()
 const route = useRoute()
 const { getRequest, postRequest, putRequest, deleteRequest } = useApi()
-
-const isEditing = ref(false)
-
-const fileId = ref(route.params.fileId || null)
-const fileName = ref(route.query.name || 'Nuevo Archivo')
-
-const dataTypes = ['SHORT_TEXT', 'TEXT', 'NUMBER', 'FLOAT', 'DATE', 'CHOICE']
-
-const fields = ref([
-  {
-    name: 'Número de Documento',
-    type: 'text',
-    value: '',
-    required: true,
-    isConfigured: false,
-    options: []
-  },
-  {
-    name: 'Fecha de Emisión',
-    type: 'date',
-    value: '',
-    required: true,
-    isConfigured: false,
-    options: []
-  }
-])
-
-const selectedField = ref({})
-const isRemoveModalVisible = ref(false)
-const isCreateFieldModalVisible = ref(false)
-const isRenameModalVisible = ref(false)
-
 const {
   position: contextMenuPosition,
   visible: contextMenuVisible,
@@ -160,70 +157,93 @@ const {
   hideContextMenu
 } = useContextMenu()
 
-const get_doctor_id = async () => {
+// Variables reactivas de estado
+const isEditing = ref(false)
+const fileId = ref(route.params.fileId || null)
+const fileName = ref(route.query.name || 'Nuevo Archivo')
+const selectedField = ref({})
+const isRemoveModalVisible = ref(false)
+const isCreateFieldModalVisible = ref(false)
+const isRenameModalVisible = ref(false)
+
+// Datos iniciales
+const dataTypes = ['SHORT_TEXT', 'TEXT', 'NUMBER', 'FLOAT', 'DATE', 'CHOICE']
+const fields = ref([
+  {
+    name: 'Número de Documento',
+    type: 'text',
+    required: true,
+    isConfigured: false,
+    options: []
+  },
+  {
+    name: 'Fecha de Emisión',
+    type: 'date',
+    required: true,
+    isConfigured: false,
+    options: []
+  }
+])
+
+// Hooks del ciclo de vida
+onMounted(() => {
+  if (fileId.value) {
+    // Editar archivo existente
+    isEditing.value = true
+    loadFileData(fileId.value)
+  } else {
+    // Crear nuevo archivo
+    console.log('Creando un nuevo archivo.')
+  }
+})
+
+/**
+ * Obtiene el ID del doctor autenticado.
+ */
+async function getDoctorId() {
   let userId = auth0.user.value.sub.split('|')[1]
-  let doctorId = ''
   try {
     const response = await postRequest('/users/@me', { id: userId })
-    doctorId = response.data.roleDependentInfo.id
+    return response.data.roleDependentInfo.id
   } catch {
-    emit('addToast', { content: 'Ocurrio un error obteniendo información del doctor', type: 0 })
+    emit('addToast', { content: 'Ocurrió un error obteniendo información del doctor', type: 0 })
+    return ''
   }
-  return doctorId
 }
 
-function showCreateFieldModal() {
-  isCreateFieldModalVisible.value = true
-}
+/**
+ * Carga los datos de un archivo existente en base a su ID.
+ * @param {String} id - ID del archivo
+ */
+async function loadFileData(id) {
+  try {
+    const doctorId = await getDoctorId()
+    if (!doctorId) return
 
-function showRenameModal() {
-  isRenameModalVisible.value = true
-}
-
-function goBackToFiles() {
-  router.push('/config/files')
-}
-
-function addNewField({ name, type, required = false }) {
-  const newField = {
-    name,
-    type,
-    required
+    const response = await getRequest(`/doctor/FileTemplate?doctorId=${doctorId}&templateId=${id}`)
+    if (response.status === 200 && response.data) {
+      fileName.value = response.data.name
+      fields.value = response.data.fields.map((field) => ({ ...field, isConfigured: true }))
+    } else {
+      console.error('No se encontraron datos del archivo:', response)
+    }
+  } catch (error) {
+    console.error('Error al cargar los datos del archivo:', error)
   }
-
-  // Llamar a la función de agregar campo al servidor
-  addFieldToFile(newField)
-  isCreateFieldModalVisible.value = false
 }
 
-function renameField(newName) {
-  const field = selectedField.value
-  const oldFieldName = field.name
-  field.name = newName
-  isRenameModalVisible.value = false
-
-  if (!isEditing.value) {
-    // Modo creación: el cambio se guarda localmente y se enviará al guardar
-    return
-  }
-
-  const updatedFieldData = {
-    ...field,
-    name: newName
-  }
-
-  // Llamar a la función para editar el campo en el backend
-  editFieldInFile(oldFieldName, updatedFieldData)
-}
-
+/**
+ * Guarda el archivo actual (creando uno nuevo si no existe, o actualizando si ya existe).
+ */
 async function saveFile() {
   if (!fileName.value.trim()) {
     alert('El nombre del archivo es requerido')
     return
   }
 
-  // Prepare the request body
-  let doctorId = await get_doctor_id()
+  const doctorId = await getDoctorId()
+  if (!doctorId) return
+
   const requestBody = {
     doctorId: doctorId,
     name: fileName.value,
@@ -231,7 +251,7 @@ async function saveFile() {
     fields: fields.value.map((field) => ({
       name: field.name,
       type: field.type,
-      required: field.required === true,
+      required: !!field.required,
       options: field.options || [],
       description: field.description || 'Descripción predeterminada'
     }))
@@ -239,99 +259,108 @@ async function saveFile() {
 
   try {
     if (!isEditing.value) {
-      // Create the new file
+      // Crear un archivo nuevo
       const response = await postRequest('/doctor/FileTemplate', requestBody)
-      console.log('Archivo creado exitosamente:', response)
-
-      // Update fileId and isEditing to reflect the new file
       fileId.value = response.data.fileTemplateId
       isEditing.value = true
-
-      // Redirect or show a success message
       router.push('/config/files')
     } else {
-      // Logic for updating the file if needed
+      // Lógica para actualizar el archivo existente (pendiente si se requiere)
     }
   } catch (error) {
     console.error('Error al guardar el archivo:', error)
-    if (error.response && error.response.data) {
-      alert(`Error al guardar el archivo: ${error.response.data.message}`)
-    } else {
-      alert('Error al guardar el archivo')
-    }
+    const message = error.response?.data?.message || 'Error al guardar el archivo'
+    alert(message)
   }
 }
 
-async function loadFileData(fileId) {
-  try {
-    const doctorId = await get_doctor_id()
-    const response = await getRequest(
-      `/doctor/FileTemplate?doctorId=${doctorId}&templateId=${fileId}`
-    )
-
-    if (response.status === 200 && response.data) {
-      fileName.value = response.data.name
-      fields.value = response.data.fields.map((field) => ({
-        ...field,
-        isConfigured: true
-      }))
-      console.log('Datos del archivo cargados:', response.data)
-    } else {
-      console.error('No se encontraron datos del archivo en la respuesta:', response)
-    }
-  } catch (error) {
-    console.error('Error al cargar los datos del archivo:', error)
-  }
+/**
+ * Retorna a la vista de archivos configurados.
+ */
+function goBackToFiles() {
+  router.push('/config/files')
 }
 
-onMounted(() => {
-  if (fileId.value) {
-    // Editing an existing file
-    isEditing.value = true
-    loadFileData(fileId.value)
-  } else {
-    // Creating a new file
-    console.log('Creating a new file without an ID in the backend yet.')
-  }
-})
-
-function handleContextMenu(event, field) {
-  event.stopPropagation()
-  selectedField.value = field
-  showContextMenu(event)
+/**
+ * Muestra el modal para crear un nuevo campo.
+ */
+function showCreateFieldModal() {
+  isCreateFieldModalVisible.value = true
 }
 
+/**
+ * Muestra el modal para renombrar el campo seleccionado.
+ */
+function showRenameModal() {
+  isRenameModalVisible.value = true
+}
+
+/**
+ * Muestra el modal para eliminar el campo seleccionado.
+ */
 function showRemoveModal() {
   isRemoveModalVisible.value = true
 }
 
+/**
+ * Maneja la creación de un nuevo campo.
+ * @param {Object} param0 - Objeto con propiedades del nuevo campo: { name, type, required }
+ */
+function addNewField({ name, type, required = false }) {
+  const newField = { name, type, required }
+  addFieldToFile(newField)
+  isCreateFieldModalVisible.value = false
+}
+
+/**
+ * Renombra un campo existente.
+ * @param {String} newName - Nuevo nombre para el campo.
+ */
+function renameField(newName) {
+  const field = selectedField.value
+  const oldFieldName = field.name
+  field.name = newName
+  isRenameModalVisible.value = false
+
+  if (!isEditing.value) return // Modo creación: cambios locales
+
+  const updatedFieldData = { ...field, name: newName }
+  editFieldInFile(oldFieldName, updatedFieldData)
+}
+
+/**
+ * Añade un campo al archivo (local o servidor).
+ * @param {Object} newField - Campo a agregar.
+ */
 async function addFieldToFile(newField) {
   if (!isEditing.value) {
-    // Modo creación: agregar el campo localmente
+    // Modo creación: agregar localmente
     fields.value.push({ ...newField, isConfigured: true })
     return
   }
 
   if (!fileId.value) {
-    console.error('El fileId no está definido')
+    console.error('No se puede añadir campo sin fileId')
     return
   }
-  let doctorId = await get_doctor_id()
+
+  const doctorId = await getDoctorId()
+  if (!doctorId) return
+
   const requestBody = {
-    doctorId: doctorId,
-    templateId: fileId.value, // Cambiar a 'templateId'
+    doctorId,
+    templateId: fileId.value,
     field: {
       name: newField.name,
       type: newField.type,
-      required: newField.required === true,
+      required: !!newField.required,
       options: newField.options || [],
       description: newField.description || 'Descripción predeterminada'
     }
   }
 
   try {
-    const response = await postRequest('/doctor/FileTemplate/fields', requestBody)
-    console.log('Campo añadido exitosamente:', response.message)
+    await postRequest('/doctor/FileTemplate/fields', requestBody)
     fields.value.push({ ...newField, isConfigured: true })
   } catch (error) {
     console.error('Error al añadir el campo:', error)
@@ -339,29 +368,35 @@ async function addFieldToFile(newField) {
   }
 }
 
+/**
+ * Edita un campo en el archivo.
+ * @param {String} oldFieldName - Nombre anterior del campo.
+ * @param {Object} updatedFieldData - Datos actualizados del campo.
+ */
 async function editFieldInFile(oldFieldName, updatedFieldData) {
-  console.log('old field name: ', oldFieldName)
   if (!fileId.value || !oldFieldName) {
     alert('Información insuficiente para editar el campo')
     return
   }
-  let doctorId = await get_doctor_id()
+
+  const doctorId = await getDoctorId()
+  if (!doctorId) return
+
   const requestBody = {
-    doctorId: doctorId,
-    templateId: fileId.value, // Cambiar a 'color: var(--gray-1)templateId'
+    doctorId,
+    templateId: fileId.value,
     oldFieldName,
     fieldData: {
       name: updatedFieldData.name,
       type: updatedFieldData.type,
-      required: updatedFieldData.required === true,
+      required: !!updatedFieldData.required,
       options: updatedFieldData.options || [],
       description: updatedFieldData.description || 'Descripción predeterminada'
     }
   }
 
   try {
-    const response = await putRequest('/doctor/FileTemplate/fields', requestBody)
-    console.log('Campo editado exitosamente:', response.message)
+    await putRequest('/doctor/FileTemplate/fields', requestBody)
     const index = fields.value.findIndex((field) => field.name === oldFieldName)
     if (index !== -1) {
       fields.value[index] = { ...updatedFieldData, isConfigured: true }
@@ -372,56 +407,58 @@ async function editFieldInFile(oldFieldName, updatedFieldData) {
   }
 }
 
-const handleChoiceChange = (index) => {
-  const options = fields.value[index].options
-  if (!isEditing.value) {
-    return
-  }
-  if (options.length == 0 || options == undefined || options == null) {
-    return
-  }
+/**
+ * Maneja el cambio de opciones de un campo tipo CHOICE.
+ * @param {Number} index - Índice del campo en el array.
+ */
+function handleChoiceChange(index) {
+  if (!isEditing.value) return
   const field = fields.value[index]
   const oldFieldName = field.name
-  const updatedFieldData = {
-    ...field,
-    options: options
-  }
+  const options = field.options || []
+
+  if (!options.length) return
+
+  const updatedFieldData = { ...field, options }
   editFieldInFile(oldFieldName, updatedFieldData)
 }
 
+/**
+ * Maneja el cambio de tipo de dato de un campo.
+ * @param {Number} index - Índice del campo.
+ * @param {String} newType - Nuevo tipo de dato.
+ */
 function handleFieldTypeChange(index, newType) {
-  if (!isEditing.value) {
-    fields.value[index].type = newType
-    return
-  }
-
   const field = fields.value[index]
   const oldFieldName = field.name
+  field.type = newType
 
-  const updatedFieldData = {
-    ...field,
-    type: newType
-  }
+  if (!isEditing.value) return // Modo creación: solo local
+
+  const updatedFieldData = { ...field, type: newType }
   editFieldInFile(oldFieldName, updatedFieldData)
 }
 
+/**
+ * Maneja el cambio en el campo obligatorio.
+ * @param {Number} index - Índice del campo.
+ * @param {Boolean} isRequired - Nuevo valor de "required".
+ */
 function handleFieldRequiredChange(index, isRequired) {
-  if (!isEditing.value) {
-    fields.value[index].required = isRequired
-    return
-  }
-
   const field = fields.value[index]
   const oldFieldName = field.name
+  field.required = isRequired
 
-  const updatedFieldData = {
-    ...field,
-    required: isRequired
-  }
+  if (!isEditing.value) return // Modo creación: solo local
 
+  const updatedFieldData = { ...field, required: isRequired }
   editFieldInFile(oldFieldName, updatedFieldData)
 }
 
+/**
+ * Elimina un campo del archivo, ya sea localmente o en el servidor.
+ * @param {String} fieldName - Nombre del campo a eliminar.
+ */
 async function deleteFieldFromFile(fieldName) {
   if (!fieldName) {
     alert('Información insuficiente para eliminar el campo.')
@@ -429,30 +466,26 @@ async function deleteFieldFromFile(fieldName) {
   }
 
   if (!isEditing.value) {
-    // Modo creación: eliminar el campo localmente
-    fields.value = fields.value.filter((field) => field.name !== fieldName)
+    // Modo creación: eliminar localmente
+    fields.value = fields.value.filter((f) => f.name !== fieldName)
     isRemoveModalVisible.value = false
     hideContextMenu()
     return
   }
 
-  // Modo edición: enviar solicitud al backend
   if (!fileId.value) {
-    console.error('El fileId no está definido')
+    console.error('No se puede eliminar campo sin fileId')
     return
   }
-  let doctorId = await get_doctor_id()
-  const requestBody = {
-    doctorId: doctorId,
-    templateId: fileId.value, // Usamos 'templateId' en la solicitud
-    name: fieldName
-  }
+
+  const doctorId = await getDoctorId()
+  if (!doctorId) return
+
+  const requestBody = { doctorId, templateId: fileId.value, name: fieldName }
 
   try {
-    const response = await deleteRequest('/doctor/FileTemplate/fields', requestBody)
-    console.log('Campo eliminado exitosamente:', response.message)
-    // Actualizar el estado local
-    fields.value = fields.value.filter((field) => field.name !== fieldName)
+    await deleteRequest('/doctor/FileTemplate/fields', requestBody)
+    fields.value = fields.value.filter((f) => f.name !== fieldName)
   } catch (error) {
     console.error('Error al eliminar el campo:', error)
     alert(`Error al eliminar el campo: ${error.response?.data?.message || error.message}`)
@@ -462,14 +495,27 @@ async function deleteFieldFromFile(fieldName) {
   }
 }
 
+/**
+ * Confirma la eliminación de un campo.
+ */
 async function removeField() {
   const field = selectedField.value
   if (!field || !field.name) {
     alert('Campo inválido para eliminar.')
     return
   }
-
   await deleteFieldFromFile(field.name)
+}
+
+/**
+ * Maneja la apertura del menú contextual en un campo.
+ * @param {Event} event - Evento del click.
+ * @param {Object} field - Campo sobre el que se hace click.
+ */
+function handleContextMenu(event, field) {
+  event.stopPropagation()
+  selectedField.value = field
+  showContextMenu(event)
 }
 </script>
 
@@ -497,7 +543,7 @@ async function removeField() {
   border-bottom: 2px solid #ddd;
   gap: 20px;
   text-align: center;
-  padding: 1rem 1.5rem 1rem 1.5rem;
+  padding: 1rem 1.5rem;
 }
 
 .form-header .header-item:first-child {
@@ -510,8 +556,9 @@ async function removeField() {
   color: var(--gray-1);
   font-size: 0.9rem;
 }
+
 .form-section {
-  padding: 0 1.5rem 0 1.5rem;
+  padding: 0 1.5rem;
 }
 
 .form-group {
@@ -530,10 +577,6 @@ async function removeField() {
   background-color: #eaeaea;
 }
 
-.form-group * {
-  align-items: center;
-}
-
 .field-name {
   display: flex;
   justify-content: flex-start;
@@ -548,9 +591,6 @@ async function removeField() {
   justify-content: center;
   align-items: center;
 }
-.field-type .select-group {
-  margin: 0;
-}
 
 .more-options-btn {
   flex-shrink: 0;
@@ -564,47 +604,14 @@ async function removeField() {
   background-color: var(--gray-4);
 }
 
-.add-field-btn,
-.save-button {
-  background-color: var(--green-1);
-  color: white;
-  border: none;
-  padding: 0.75rem;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-top: 20px;
-}
-
-.add-field-btn:hover,
-.save-button:hover {
-  background-color: var(--green-2);
-}
-
-.button-component {
-  transition: background-color 0.2s;
-}
-
-.reconfigure-button-container {
-  margin-top: 10px;
-}
-
-.reconfigure-button {
-  background-color: #ffcc00;
-  color: white;
-  border: none;
-  padding: 0.5rem;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.reconfigure-button:hover {
-  background-color: #ff9900;
-}
-
 .form-bottom {
   width: 100%;
   display: flex;
   justify-content: space-between;
   margin-bottom: 2rem;
+}
+
+.button-component {
+  transition: background-color 0.2s;
 }
 </style>
