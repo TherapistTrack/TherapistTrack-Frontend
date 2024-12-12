@@ -11,51 +11,38 @@
           :options="templateOptions"
           v-model:modelValue="selectedTemplate"
         />
-        <div v-for="(key, item) in templateData" :key="key">
-          <span v-if="key.type == 'CHOICE'">
-            <span v-if="key.required">
-              <SelectDropDownRequired
-                :id="'key'"
-                :label="key.name"
-                :disabledValue="'Seleccione una opción'"
-                :options="key.options"
-                v-model:modelValue="localInfo[item].value"
-                :description="key.description"
-              />
-            </span>
-            <span v-else>
-              <SelectDropDown
-                :id="'key'"
-                :label="key.name"
-                :disabledValue="'Seleccione una opción'"
-                :options="key.options"
-                v-model:modelValue="localInfo[item].value"
-              />
-            </span>
+        <div v-for="(key, item) in Object.keys(templateData)" :key="key">
+          <span v-if="templateData[key].type == 'CHOICE'">
+            <SelectDropDown
+              :id="'key'"
+              :label="key"
+              :disabledValue="'Seleccione una opción'"
+              :options="templateData[key].options"
+              v-model:modelValue="localInfo[item].value"
+              :show-type-icon="true"
+              :required="templateData[key].required"
+              :description="templateData[key].description"
+            />
           </span>
           <span v-else>
-            <span v-if="key.required">
-              <InputFieldRequired
-                :id="'required-field'"
-                :label="key.name"
-                :type="key.type"
-                :description="key.description"
-                v-model:modelValue="localInfo[item].value"
-              />
-            </span>
-            <span v-else>
-              <InputField
-                :id="'normal-field'"
-                :label="key.name"
-                :type="key.type"
-                v-model:modelValue="localInfo[item].value"
-              />
-            </span>
+            <InputField
+              :id="key"
+              :label="key"
+              :type="templateData[key].type"
+              v-model:modelValue="localInfo[item].value"
+              :required="templateData[key].required"
+              :description="templateData[key].description"
+            />
           </span>
         </div>
       </div>
       <div class="button-space">
-        <ButtonSimple :msg="'Crear'" :disabled="!valid" :onClick="createRecord" />
+        <div class="error-msg" v-if="!dataIsValid">
+          <p v-for="(message, key) in errors" :key="key">
+            {{ message }}
+          </p>
+        </div>
+        <ButtonSimple :msg="'Crear'" :disabled="!dataIsValid" :onClick="createRecord" />
       </div>
     </span>
   </div>
@@ -63,28 +50,31 @@
 
 <script setup>
 import InputField from '@/components/Forms/InputField/InputField.vue'
-import InputFieldRequired from '@/components/Forms/InputField/InputFieldRequired.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import SelectDropDown from '@/components/Forms/SelectDropDown/SelectDropDown.vue'
-import SelectDropDownRequired from '@/components/Forms/SelectDropDown/SelectDropDownRequired.vue'
 import DataLoader from '@/components/Feedback/Spinner/DataLoader.vue'
 import { ref, onMounted, watch, toRaw } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApi } from '@/oauth/useApi'
 import { useAuth0 } from '@auth0/auth0-vue'
+import { recordSchema } from '@/schemas/recordSchema'
+
 // Constants
 const { getRequest, postRequest } = useApi()
+const { getTemplateSchema } = recordSchema()
 const auth0 = useAuth0()
 const router = useRouter()
 const templateOptions = ref({})
 const loading = ref(false)
-const valid = ref(false)
 const doctorId = ref(null)
 
 const templateInfo = ref(null)
 const selectedTemplate = ref(null)
-const templateData = ref(null)
+const templateData = ref({})
 const localInfo = ref({})
+
+const dataIsValid = ref(false)
+const errors = ref([])
 
 // Emits
 const emit = defineEmits(['addToast'])
@@ -96,12 +86,7 @@ const addToast = (toast) => {
 watch(
   localInfo,
   () => {
-    let check = localInfo.value.filter((item) => item.required == true && item.value == '')
-    if (check.length == 0) {
-      valid.value = true
-    } else {
-      valid.value = false
-    }
+    verifyData()
   },
   { deep: true }
 )
@@ -117,29 +102,38 @@ const getTemplateData = async () => {
     const response = await getRequest(
       `/doctor/PatientTemplate?doctorId=${doctorId.value}&templateId=${templateId}`
     )
-    templateData.value = [
-      {
-        name: 'Nombres',
-        required: true,
-        type: 'SHORT_TEXT',
-        options: [],
-        description: 'Nombres del paciente'
-      },
-      {
-        name: 'Apellidos',
+    templateData.value = response.data.fields.reduce((arr, item) => {
+      arr[item.name] = {
+        type: item.type,
+        required: item.required,
+        options: item.options,
+        description: item.description
+      }
+      return arr
+    }, {})
+    templateData.value = {
+      Nombres: {
         required: true,
         type: 'SHORT_TEXT',
         options: [],
         description: 'Apellidos del paciente'
       },
-      ...response.data.fields
-    ]
+      Apellidos: {
+        required: true,
+        type: 'SHORT_TEXT',
+        options: [],
+        description: 'Apellidos del paciente'
+      },
+      ...templateData.value
+    }
   } catch {
+    addToast({ type: 0, content: 'Hubo un error obteniendo las plantillas' })
     // Error message
   }
   resetLocalInfo()
   loading.value = false
 }
+
 // On Mounted
 onMounted(async () => {
   loading.value = true
@@ -152,12 +146,28 @@ onMounted(async () => {
     }))
     templateOptions.value = response.templates.map((item) => item.name)
     selectedTemplate.value = templateOptions.value[0]
-    getTemplateData()
+    await getTemplateData()
   } catch {
     //Connection error message
   }
   loading.value = false
 })
+
+const verifyData = () => {
+  let recordData = localInfo.value.reduce((arr, item) => {
+    arr[item.name] = item.value
+    return arr
+  }, {})
+
+  const validate = getTemplateSchema(templateData.value)
+  validate
+    .validate(recordData)
+    .then(() => (dataIsValid.value = true))
+    .catch((err) => {
+      dataIsValid.value = false
+      errors.value = err.errors
+    })
+}
 
 const get_doctor_id = async () => {
   let userId = auth0.user.value.sub.split('|')[1]
@@ -170,10 +180,10 @@ const get_doctor_id = async () => {
 }
 
 const resetLocalInfo = () => {
-  localInfo.value = templateData.value.map((item) => ({
-    name: item.name,
-    type: item.type,
-    required: item.required,
+  localInfo.value = Object.keys(templateData.value).map((item) => ({
+    name: item,
+    type: templateData.value[item].type,
+    required: templateData.value[item].required,
     value: ''
   }))
 }
@@ -231,6 +241,11 @@ const createRecord = async () => {
 </script>
 
 <style>
+.error-msg * {
+  color: var(--red-1);
+  font-weight: bold;
+}
+
 .create-record {
   padding: 2rem;
   width: 100vw;
@@ -239,8 +254,16 @@ const createRecord = async () => {
 .create-record .button-space {
   width: 100%;
   display: flex;
-  justify-content: end;
+  flex-direction: column;
+  align-items: center;
   padding-top: 2rem;
+}
+
+.create-record .button-space button {
+  align-self: end;
+}
+.button-space {
+  align-self: end;
 }
 
 .create-record .actions {

@@ -1,10 +1,13 @@
 <template>
   <div class="input-group">
-    <label :for="id">
+    <label @mouseover="onMouseOver" @mouseleave="onMouseLeave" :for="id">
       <span v-if="type !== ''">
         <TypeIconLoader :icon-type="type" />
       </span>
       <p>{{ label }} <b v-if="required">*</b></p>
+      <div v-if="isHovered && required" class="descriptor">
+        {{ description }}
+      </div>
     </label>
     <input
       :type="type"
@@ -20,13 +23,9 @@
 
 <script setup>
 import TypeIconLoader from '@/assets/TypeIcons/TypeIconLoader.vue'
+import { ref } from 'vue'
 const emit = defineEmits(['update:modelValue'])
-
-const updateValue = (event) => {
-  emit('update:modelValue', event.target.value)
-}
-
-defineProps({
+const props = defineProps({
   modelValue: {
     type: String,
     required: true
@@ -58,16 +57,48 @@ defineProps({
   required: {
     type: Boolean,
     default: false
+  },
+  description: {
+    type: String,
+    default: ''
   }
 })
+
+const isHovered = ref(false)
+
+const updateValue = (event) => {
+  emit('update:modelValue', event.target.value)
+}
+
+const onMouseOver = () => {
+  if (props.description !== '' && props.description !== undefined) {
+    isHovered.value = true
+  }
+}
+
+const onMouseLeave = () => {
+  isHovered.value = false
+}
 </script>
 
 <style scoped>
+.input-group .descriptor {
+  padding: 0.2rem;
+  position: absolute;
+  background-color: white;
+  left: 7rem;
+  top: 1rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  min-width: 100px;
+  font-size: x-small;
+}
+
 .input-group {
   margin-bottom: 1rem;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 2fr;
   gap: 1rem;
+  position: relative;
 }
 
 .input-group label {
@@ -86,7 +117,6 @@ defineProps({
   padding: 0.75rem;
   border: 1px solid var(--gray-3);
   border-radius: 0.5rem;
-  width: 170px;
 }
 
 .input-group .icon-eye {
@@ -96,11 +126,14 @@ defineProps({
   top: 1rem;
 }
 
-@media (max-aspect-ratio: 6/9) {
+@media (max-aspect-ratio: 1/1) {
   .input-group {
     display: flex;
     align-items: start;
     flex-direction: column;
+  }
+  .input-group input {
+    width: 100%;
   }
 }
 </style>
