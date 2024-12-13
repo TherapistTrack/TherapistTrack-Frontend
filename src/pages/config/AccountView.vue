@@ -1,19 +1,24 @@
 <template>
   <div class="account-container">
+    <!-- Estado de Carga -->
     <div v-if="isLoading">
       <p>Cargando información del usuario...</p>
     </div>
+
+    <!-- Estado de Error -->
+    <div v-else-if="hasError">
+      <p>Error al cargar la información del usuario.</p>
+    </div>
+
+    <!-- Estado Normal (Información de Usuario) -->
     <div v-else-if="userData">
       <!-- Nombre del usuario -->
-      <h1 class="user-name">{{ userData.names }} {{ userData.lastNames }}</h1>
+      <h1 class="user-name">{{ fullName }}</h1>
 
       <!-- Información Básica -->
       <section class="info-section">
         <h2>Información Básica</h2>
-        <div class="user-info-row">
-          <p class="label">ID:</p>
-          <p class="value">{{ userData.id }}</p>
-        </div>
+        <!-- Campo de ID removido -->
         <div class="user-info-row">
           <p class="label">Rol:</p>
           <p class="value">{{ userData.rol }}</p>
@@ -44,51 +49,50 @@
       <!-- Información Adicional Dependiente del Rol -->
       <section v-if="userData.roleDependentInfo" class="info-section">
         <h2>Información Adicional</h2>
-        <div class="user-info-row">
+        <div class="user-info-row" v-if="userData.roleDependentInfo?.collegiateNumber">
           <p class="label">Número de Colegiado:</p>
           <p class="value">{{ userData.roleDependentInfo.collegiateNumber }}</p>
         </div>
-        <div class="user-info-row">
+        <div class="user-info-row" v-if="userData.roleDependentInfo?.specialty">
           <p class="label">Especialidad:</p>
           <p class="value">{{ userData.roleDependentInfo.specialty }}</p>
         </div>
-        <!-- Agrega más campos según sea necesario -->
       </section>
-
-      <!-- Enlace para editar información en Auth0 -->
-    </div>
-    <div v-else>
-      <p>Error al cargar la información del usuario.</p>
     </div>
   </div>
 </template>
 
 <script setup>
+import { onMounted, ref, computed } from 'vue'
 import { useAuth0 } from '@auth0/auth0-vue'
 import { useApi } from '@/oauth/useApi'
-import { onMounted, ref } from 'vue'
 
-// Constants
 const { postRequest } = useApi()
 const auth0 = useAuth0()
-const id = ref('')
 
-// Variables reactivas
+// Reactive vars
+const isLoading = ref(true)
+const hasError = ref(false)
 const userData = ref(null)
-const isLoading = ref(true) // Declarar e inicializar isLoading
+const userId = ref('')
 
-// Functions
+// Computed
+const fullName = computed(() => {
+  const names = userData.value?.names || ''
+  const lastNames = userData.value?.lastNames || ''
+  return `${names} ${lastNames}`.trim()
+})
+
 onMounted(async () => {
-  id.value = auth0.user.value.sub.split('|')[1]
   try {
-    const response = await postRequest('/users/@me', { id: id.value })
-    console.log(response.data)
-    userData.value = response.data // Asigna directamente response.data
+    userId.value = auth0.user.value.sub.split('|')[1]
+    const response = await postRequest('/users/@me', { id: userId.value })
+    userData.value = response.data
   } catch (error) {
     console.error('Error al obtener la información del usuario:', error)
-    // Manejar el error si es necesario
+    hasError.value = true
   } finally {
-    isLoading.value = false // Actualizar isLoading a false cuando la carga finaliza
+    isLoading.value = false
   }
 })
 </script>
@@ -102,25 +106,18 @@ onMounted(async () => {
   margin: 0 auto;
 }
 
+/* Ajustes en el título del usuario */
 h1 {
   font-size: 32px;
   margin-bottom: 20px;
 }
 
-.account-info a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.account-info a:hover {
-  color: inherit;
-  text-decoration: none;
-}
-
+/* Nombre del usuario a la izquierda y en negrita */
 .user-name {
   font-size: 2rem;
   margin-bottom: 1.5rem;
-  text-align: center;
+  font-weight: bold;
+  text-align: left;
 }
 
 .info-section {
@@ -134,10 +131,12 @@ h1 {
   padding-bottom: 0.5rem;
 }
 
+/* Mover la información más a la derecha para reforzar jerarquía */
 .user-info-row {
   display: flex;
   align-items: center;
   margin-bottom: 0.75rem;
+  margin-left: 2rem; /* mayor margen a la izquierda */
 }
 
 .user-info-row .label {
@@ -152,13 +151,14 @@ h1 {
 }
 
 .user-info-row .value ul {
-  list-style-type: disc;
-  padding-left: 1.5rem;
+  list-style-type: none; /* Sin bullet points */
+  padding-left: 0;
   margin: 0;
 }
 
-.userData {
-  color: #ffffff !important;
+/* Opcional: Podrías ajustar el estilo de las li si prefieres */
+.user-info-row .value li {
+  margin-bottom: 0.5rem;
 }
 
 .edit-profile-link {
