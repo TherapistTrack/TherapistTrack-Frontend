@@ -53,7 +53,8 @@ import InputField from '@/components/Forms/InputField/InputField.vue'
 import ButtonSimple from '@/components/Buttons/ButtonSimple.vue'
 import SelectDropDown from '@/components/Forms/SelectDropDown/SelectDropDown.vue'
 import DataLoader from '@/components/Feedback/Spinner/DataLoader.vue'
-import { ref, onMounted, watch, toRaw } from 'vue'
+import { ref, onMounted, watch, toRaw, onBeforeUnmount } from 'vue'
+import { onBeforeRouteLeave } from 'vue-router'
 import { useRouter } from 'vue-router'
 import { useApi } from '@/oauth/useApi'
 import { useAuth0 } from '@auth0/auth0-vue'
@@ -75,12 +76,41 @@ const localInfo = ref({})
 
 const dataIsValid = ref(false)
 const errors = ref([])
+const changesSaved = ref(false)
 
 // Emits
 const emit = defineEmits(['addToast'])
 const addToast = (toast) => {
   emit('addToast', toast)
 }
+
+onMounted(() => {
+  window.addEventListener('beforeunload', handleBeforeUnload)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('beforeunload', handleBeforeUnload)
+})
+
+const handleBeforeUnload = (event) => {
+  if (!changesSaved.value) {
+    event.preventDefault()
+    event.returnValue = ''
+  }
+}
+
+onBeforeRouteLeave((to, from, next) => {
+  if (!changesSaved.value) {
+    const confirmLeave = window.confirm('Tus cambios no serán guardados ¿Deseas continuar?')
+    if (confirmLeave) {
+      next()
+    } else {
+      next(false)
+    }
+  } else {
+    next() // No unsaved changes
+  }
+})
 
 // Watching required values
 watch(
@@ -223,6 +253,7 @@ const format_record = () => {
 }
 
 const createRecord = async () => {
+  changesSaved.value = true
   loading.value = true
   let body = format_record()
   try {
