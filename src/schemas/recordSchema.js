@@ -20,17 +20,11 @@ export const recordSchema = () => {
         } else {
           schemaShape[field] = Yup.string().nullable()
         }
-      }
-      // else if (fieldInfo[field].type=='CHOICE'){
-      //     if(fieldInfo[field].required){
-      //         schemaShape[field] = Yup.string()
-      //         .oneOf(fieldInfo[field].options,`${field} debe ser una de las opciones`)
-      //         .required(`${field} es un valor requerido`)
-      //     } else{
-      //         schemaShape[field] = Yup.oneOf(fieldInfo[field].options,`${field} debe ser una de las opciones`).nullable()
-      //     }
-      // }
-      else if (fieldInfo[field].type == 'NUMBER') {
+      } else if (fieldInfo[field].type == 'CHOICE') {
+        if (fieldInfo[field].required) {
+          schemaShape[field] = Yup.string().required(`${field} es un valor requerido`)
+        }
+      } else if (fieldInfo[field].type == 'NUMBER') {
         if (fieldInfo[field].required) {
           schemaShape[field] = Yup.number()
             .typeError(`${field} debe ser un numero`)
